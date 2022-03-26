@@ -1,0 +1,886 @@
+<apex:component controller="DetailSectionCont" allowDML="true">
+    <c:CommonIncludes ></c:CommonIncludes>
+     <!-- overrides to base library -->
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJSUX}/ex/ux/css/Portal.css" />
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJSUX}/ex/ux/css/GroupTab.css" />
+    <apex:includeScript value="{!$Resource.ExtJSUX}/ex/ux/GroupTabPanel.js" />
+    <apex:includeScript value="{!$Resource.ExtJSUX}/ex/ux/GroupTab.js" />    
+    <apex:includeScript value="{!$Resource.ExtJSUX}/ex/ux/Portal.js" />
+    <apex:includeScript value="{!$Resource.ExtJSUX}/ex/ux/PortalColumn.js" />
+    <apex:includeScript value="{!$Resource.ExtJSUX}/ex/ux/Portlet.js" />
+    <apex:includeScript value="{!$Resource.ExtJSUX}/ex/portal/sample-grid.js" />
+
+    <apex:attribute name="objectName" assignTo="{!strObject}"
+        description="" required="true" type="String" />
+    <apex:attribute name="fKeyValue" assignTo="{!strValue}" description=""
+        type="string" required="true" />
+      <apex:inputtext value="{!myId}"  id="str_id" style="display:none"/>  
+    <style>
+	.x-grid3-hd-row td {
+	    font-family: Tahoma, Verdana, Arial, Geneva, Helvetica, sans-serif,
+	        MS Sans Serif;
+	    font-weight: bold;
+	    font-size: 13pt;
+	    color: #000000;
+       // border-bottom: solid 1px #013B66;
+       // border-right: solid 1px #013B66;
+       // border-bottom: solid 1px #7CC0EA;
+       //border-right: solid 1px #7CC0EA;
+	}
+
+	.x-grid3-hd-inner {
+        background-image:url(/resource/BMCStyle/images/blue_bg.gif);      
+	    font-family: Tahoma, Verdana, Arial, Geneva, Helvetica, sans-serif,
+	        MS Sans Serif;
+	    font-weight: bold;
+	    font-size: 8pt;
+	    color: #FFFFFF;
+       // border-bottom: solid 1px #013B66;
+       // border-right: solid 1px #013B66;
+        //border-bottom: solid 1px #7CC0EA;
+        //border-right: solid 1px #7CC0EA;
+	}
+
+	td.x-grid3-hd-over .x-grid3-hd-inner,td.sort-desc .x-grid3-hd-inner,td.sort-asc .x-grid3-hd-inner,td.x-grid3-hd-menu-open .x-grid3-hd-inner
+	    {
+	    background-color: #2E7DB3; /*#ebf3fd;*/
+        background-image:url(/resource/BMCStyle/images/blue_bg.gif);
+	}
+	
+	.x-grid3-row-selected {
+	    background-color: #E0EE70 !important;
+	    background-image: none;
+	    border-color: #a3bae9;
+	}
+
+	.x-grid3-row-over {
+	    background-color: #E0EE70 !important;
+	}
+	
+	.x-icon-tickets {
+	    background-image:
+	        url('{!$Resource.ExtJS}/ex/grouptabs/images/tickets.png');
+	}
+	
+	.x-icon-subscriptions {
+	    background-image:
+	        url('{!$Resource.ExtJS}/ex/grouptabs/images/subscriptions.png');
+	}
+	
+	.x-icon-users {
+	    background-image:
+	        url('{!$Resource.ExtJS}/ex/grouptabs/images/group.png');
+	}
+	
+	.x-icon-templates {
+	    background-image:
+	        url('{!$Resource.ExtJS}/ex/grouptabs/images/templates.png');
+	}
+	
+	.ext-gecko ext-gecko3 {
+	    background-color: #FFF !important;
+	}
+	
+	.x-grouptabs-panel {
+    
+     background-color:#EFF3F5;
+   // border:medium none white;
+     margin-top:0px;
+    border:0px;
+
+	}
+	
+	.x-tab-with-icon {
+	    
+	}
+	
+	.x-grouptabs-corner x-grouptabs-corner-bottom-left {
+	    
+	}
+	
+	.x-grouptabs-panel .x-grouptabs-expand {
+	    -moz-background-clip: border;
+	    -moz-background-inline-policy: continuous;
+	    -moz-background-origin: padding;
+	    background: transparent url(../images/elbow-plus-nl.gif) no-repeat
+	        scroll 0 0;
+	    height: 16px;
+	    left: 7px;
+	    position: absolute;
+	    top: 6px;
+	    width: 16px;
+	}
+	
+	.x-grouptabs-panel .x-grouptabs-corner {
+	    background-image: url(../images/x-grouptabs-corners.gif);
+	    display: none;
+	    font-size: 5px;
+	    height: 11px;
+	    line-height: 6px;
+	    overflow: hidden;
+	    position: absolute;
+	    width: 15px;
+	}
+	
+
+    .x-grouptabs-panel .x-grouptabs-strip .x-grouptabs-text {
+        color:#004376;
+        font-size: 8pt;
+        font-family:tahoma,arial,sans-serif;
+        text-decoration:none;
+        white-space:nowrap;
+       
+        }
+        .x-grouptabs-panel .x-grouptabs-strip a.x-grouptabs-text {
+        color:#004376;
+        font-family:tahoma,arial,sans-serif;
+        font-size: 8pt;
+        overflow:scroll;
+        text-decoration:none;
+        white-space:nowrap;
+        font-weight:normal;
+        display:table-cell;
+        height:13px;
+        padding-left:3px;
+        }
+        
+        .x-tab-panel-left .x-tab-panel-header ul.x-grouptabs-strip a.x-grouptabs-text, .x-tab-panel-right .x-tab-panel-header ul.x-grouptabs-strip a.x-grouptabs-text {
+        cursor:pointer;
+        font-size: 8pt;
+        line-height:10px;       
+        
+        }
+        
+        .x-tab-panel-left .x-tab-panel-header ul.x-grouptabs-strip a.x-grouptabs-text {
+      padding-left:3px;
+			width:200px;
+        }
+	    .x-panel-header {
+  -moz-background-clip:border;
+        -moz-background-inline-policy:continuous;
+        -moz-background-origin:padding;
+//background-image:url(/resource/1262612802000/BMCStyle/images/support_info_background.gif) ;
+background:transparent url(/resource/1262612802000/BMCStyle/icons/grey_bg.gif) repeat scroll 0 0;
+
+padding-left:10px;
+}
+.x-viewport, .x-viewport body {
+ //background:white;
+}
+x-panel x-panel-noborder{
+padding-left:15px;
+}
+.x-grouptabs-panel ul.x-grouptabs-strip  {
+    -moz-background-clip:border;
+    -moz-background-inline-policy:continuous;
+    -moz-background-origin:padding;
+    background:#d3dee4 none repeat scroll 0 0;
+    border-color:#EFF3F5 -moz-use-text-color;
+    
+   
+    border-style:solid ;
+    border-width:1px 0;
+    
+
+}
+.x-tab-panel-left ul.x-grouptabs-strip li.x-grouptabs-strip-active{
+     // background:green;
+     height: 16px;
+      border-bottom:1px solid #999999;
+      border-left:1px solid #999999;
+      border-top:0px solid #999999;
+    }
+    
+    .x-grouptabs-panel ul.x-grouptabs-strip li {
+        height: 16px;
+        border-bottom:1px solid #999999;
+        //border-left:1px solid #999999;
+   
+       
+     }
+     .detailsSectionCls  {
+     
+       border:1px none #999999;
+     
+     
+     }
+     .detailsSectionCls .x-panel-header {
+     
+      border:1px solid #999999;
+      //border-bottom:0px solid #999999;
+     
+     
+     }
+     .x-grid3 {
+       border: 1px solid #999999;
+     }
+     .x-grouptabs-panel .x-grouptabs-panel-body{
+      border:1px solid #999999;
+      border-top:0px solid #999999;
+      border-bottom:0px solid #999999;
+      border-right:0px solid #999999;
+     }
+     .x-panel-body{
+         border-color:#ADB9C0;
+     }
+     .x-icon-norecords {
+        background: transparent url('{!$Resource.BMCStyle}/images/records_off.gif') no-repeat
+            scroll 0 0;
+        position:left top;
+    }
+    
+    .x-icon-records {
+        background: transparent url('{!$Resource.BMCStyle}/images/records_on.gif') no-repeat
+            scroll 0 0;
+	    }
+</style>
+
+<apex:actionFunction name="refreshProfile" action="{!populateSelectedProfiles}" rerender="profileId"/>
+    <apex:actionFunction name="initializeResultSet"
+        action="{!initResultSet}" rerender="wholePage">
+        <apex:param name="tabid" value="" assignTo="{!tabId}" />
+    </apex:actionFunction>
+    <apex:actionFunction name="openFilter" action="{!initResultSet}"
+        rerender="wholePage">
+        <apex:param name="childObj" value="" />
+        <apex:param name="filterVal" value="" />
+    </apex:actionFunction>
+
+    <apex:actionFunction name="updateResultSet" rerender="wholePage"></apex:actionFunction>
+
+    <apex:actionFunction name="acknowledgedFilter"
+        action="{!initResultSet}" rerender="wholePage">
+        <apex:param name="childObj" value="" />
+        <apex:param name="filterVal" value="" />
+    </apex:actionFunction>
+
+    <apex:actionFunction name="inProgressFilter" action="{!initResultSet}"
+        rerender="wholePage">
+        <apex:param name="childObj" value="" />
+        <apex:param name="filterVal" value="" />
+    </apex:actionFunction>
+
+    <apex:actionFunction name="closedFilter" action="{!initResultSet}"
+        rerender="wholePage">
+        <apex:param name="childObj" value="" />
+        <apex:param name="filterVal" value="" />
+    </apex:actionFunction>
+
+    <apex:actionFunction name="userEntriesFilter" action="{!initResultSet}"
+        rerender="wholePage">
+        <apex:param name="childObj" value="" />
+        <apex:param name="filterVal" value="" />
+    </apex:actionFunction>
+    
+    <apex:actionFunction name="systemEntriesFilter"
+        action="{!initResultSet}" rerender="wholePage">
+        <apex:param name="childObj" value="" />
+        <apex:param name="filterVal" value="" />
+    </apex:actionFunction>
+    
+    <apex:actionFunction name="allEntriesFilter" action="{!initResultSet}"
+        rerender="wholePage">
+        <apex:param name="childObj" value="" />
+        <apex:param name="filterVal" value="" />
+    </apex:actionFunction>
+    
+    <apex:actionFunction name="tabReload" action="{!initResultSet}"
+        rerender="wholePage,divpanelid">
+        <apex:param name="childObj" value="" />
+        <apex:param name="parId" value="" /> 
+    </apex:actionFunction>
+    
+    <apex:actionFunction name="linkToInc" action="{!linkBroadcastInc}"
+        rerender="wholePage" onComplete="tabReload(childObject);"> 
+        <apex:param name="incId" value="" />
+    </apex:actionFunction>
+    
+    <apex:actionFunction name="linkOrgToClient" action="{!linkOrgClient}"
+        rerender="wholePage" onComplete="tabReload(childObject);">
+        <apex:param name="clntId" value="" />
+    </apex:actionFunction>
+    
+    <apex:actionFunction name="unLinkOrgToClient" action="{!unLinkOrgClient}"
+        rerender="wholePage" onComplete="tabReload(childObject);">
+        <apex:param name="unlinkClntId" value="" />
+    </apex:actionFunction>
+    
+    <apex:actionFunction name="linkStaffToCategory" action="{!linkStaffCategory}"
+        rerender="wholePage" onComplete="tabReload(childObject);">
+        <apex:param name="clntId" value="" />
+    </apex:actionFunction>
+    
+    <apex:actionFunction name="unLinkStaffCategory" action="{!unLinkStaffCategory}"
+        rerender="wholePage" onComplete="tabReload(childObject);">
+        <apex:param name="unlinkClntId"  value="" />
+    </apex:actionFunction>
+    
+    <apex:actionFunction name="addNewHistory" action="{!addToHistory}"
+        rerender="wholePage" onComplete="tabReload(childObject);">
+        <apex:param name="actionId" value="" />
+        <apex:param name="childObj" value="" />
+    </apex:actionFunction>
+    
+    <apex:actionFunction name="linkTemplateToParent" action="{!linkToParent}"
+        rerender="wholePage" onComplete="tabReload(childObject);">
+        <apex:param name="childTemplateId" value="" />
+        <apex:param name="parentTemplateId" value="" />
+    </apex:actionFunction>
+    
+    <apex:actionFunction name="unLinkTemplateFromParent" action="{!UnLinkFromParent}"
+        rerender="wholePage" onComplete="tabReload(childObject);">
+        <apex:param name="childTemplateId" value="" />
+        <apex:param name="parentTemplateId" value="" />
+    </apex:actionFunction>
+    
+    <apex:actionFunction name="deleteThisFile" action="{!deleteThisAttachment}"
+        rerender="wholePage" onComplete="tabReload(childObject);">
+        <apex:param name="delId" value="" />
+    </apex:actionFunction>
+    <apex:actionFunction name="doNothing" action="{!assignId}" oncomplete="tabReload(childObject);"/>
+    <script>  
+     var elem;
+      var gtabpanel ;
+       var detailsPanel ;
+       var listPanel2 ;
+       var msgBox;
+       var isResizable = true;
+       var customHeight;
+        var pageName='{!strObject}';
+       
+        var dispalyTitle;
+        if(pageName=='IncidentTemplate__c' || pageName=='TaskTemplate__c'){
+            dispalyTitle='Linked Templates';
+            isResizable = false;
+            customHeight = 175;
+        }else{
+            dispalyTitle='Supporting Information';
+            isResizable = true;
+            customHeight = 219;
+        }
+     Ext.onReady(function () {
+
+        Ext.QuickTips.init();
+        
+         incidentPanel = new Ext.Panel(
+            {                                                         
+                overflow:'auto',
+                autoScroll:true,
+                split:isResizable ,
+                width:900,    
+                height:500, 
+                layout: 'fit',                                                  
+                region: 'center',
+                xtype: 'panel', // TabPanel itself has no title
+                margins:'2 4 2 0',
+                border: false,                        
+                contentEl :'capsule' 
+		});
+        
+           
+          var gtabpanel = {
+                xtype: 'grouptabpanel',
+                activeGroup: 0,
+                id: 'grptabpanel',                
+                items: <apex:outputtext value="{!strGrpTab}" escape="false"/>
+        };
+        
+       
+        
+        detailsPanel = new Ext.Panel({
+            title:dispalyTitle,
+            //renderTo: 'detailsDiv',            
+            
+                region:'south',
+                id:'south-panel',
+                width:'100%',
+                split:isResizable ,
+                layout: 'fit',
+                overflow:'auto',
+                autoScroll:false,
+                height:customHeight,
+                minHeight:customHeight,
+                cls:'detailsSectionCls',
+                collapseMode: 'mini',
+                items: [gtabpanel] 
+            });
+            
+         var viewport = new Ext.Viewport({
+         layout:'border',
+         items:[ incidentPanel,detailsPanel ]
+        });
+    
+
+    });
+
+    </script>
+    <apex:outputPanel id="wholePage" rendered="true">
+
+        <script>
+   	 var selectedPro = "{!selectedProfiles}";  
+   		
+    var resultSet= new Array({!resultSet.size});  
+    
+    var colsSize = 0;
+    var noName = false;    
+    var j=0, k=0;</script>
+        <apex:repeat value="{!resultSet}" var="obj">
+            <script>k=0;colsSize={!obj.fields.size}; resultSet[j] = new Array(colsSize); </script>
+            <apex:repeat value="{!obj.fields}" var="objflds">
+                <script>resultSet[j][k]='{!objflds.value}';if(resultSet[j][k]=="")resultSet[j][k]="-";k++; </script>
+
+            </apex:repeat>
+            <script>j++;</script>
+        </apex:repeat>
+        <script>var idFld='fld0';
+    //Set columnn headers
+    var colsHdrs = new Array(colsSize);j=0;
+    </script>
+        <apex:repeat value="{!headers}" var="hdr">
+            <script>colsHdrs[j++]="{!hdr}";</script>
+        </apex:repeat>
+
+        <script>//Set columnn names
+    var cols = new Array(colsSize);j=0;</script>
+        <apex:repeat value="{!cols}" var="col">
+            <script>cols[j++]="{!col}";</script>
+        </apex:repeat>
+
+
+
+        <script>
+    function filePopUp(attachmentId){
+        if(attachmentId!=null && attachmentId != ''){
+            window.showModalDialog("/servlet/servlet.FileDownload?file="+attachmentId,"pageName","dialogWidth=600px; dialogHeight=600px; resizable=yes");
+            selectedId=null;
+        }else{
+            checkValidity();    
+        }
+    }
+    function openFile(data, metadata, record, rowIndex, columnIndex, store){
+           return '<a onclick="filePopUp(\''+record.get(idFld)+'\')">'+data+'</a>';     
+    }
+    
+     var note;
+    var v ='';
+    function showNote(value, p, record){
+                  var imgPath = '';
+                  
+                  if(value!='')
+                  {
+                  		note = value;
+                        if(record.get(noteField)!='-' && record.get(noteField)!='' && record.get(noteField)!=null){
+                          imgPath = '{!$Resource.BMCStyle}/icons/Pin.png';
+                          //v ='<img style="width:16px;height:16px" src="'+ imgPath+  '"  id="img_' +record.get(noteField)+ '" ext:qtip="' + value + '" />';
+                          var tooltipValue =record.get(noteField);
+                          v ='<img style="width:16px;height:16px" src="'+ imgPath+  '" id="img_' +tooltipValue +'" onmouseover="showToolTip('+'\''+tooltipValue+'\''+');"/>';
+                        }else{
+                            imgPath = '{!$Resource.BMCStyle}/icons/pin_unselected.gif';
+                            v ='<img style="width:16px;height:16px" src="'+ imgPath+ '" />';
+                        }
+                  }
+                  else
+                  {
+                      v=''; 
+                  }
+
+                return v;
+    }
+        
+    function showToolTip(id){
+     	new Ext.ToolTip({
+        target: 'img_'+id,
+        anchor: 'right',
+        trackMouse: true,
+        shadow :'sides',
+        bodyStyle:'font: 8pt Tahoma, Verdana, Arial; color:black;padding-top:7px;padding-bottom:5px;padding-left:5px;padding-right:5px;width:2%;border-color:black;',
+        dismissDelay: 15000,
+        html:'<div  style="background-color:#DDDDDD;"><div  style="background-color:#FFFFFF;border:1px solid grey;padding-top:7px;padding-bottom:5px;padding-left:5px;padding-right:5px;"><b>Note:</b>
+'+id+'</div></div>'
+    }).show();
+   }
+        
+    function shState(data, metadata, record, rowIndex, columnIndex, store){
+        //return ""+data=="true" ? "Opened" : "Closed";  
+        if(data=="true"){
+            return "Opened";
+        }else{
+            return "Closed";
+        }      
+    }
+        
+  var addEditLink;
+  var selectedId;
+  var childObject;
+  var parentObject;
+  var childObjectName;
+  var editLink;
+  var flag=true;
+  var noteField;
+  
+  var parentPageId = "{!strValue}";
+  if(parentPageId==null || parentPageId==''){
+      parentPageId = "{!myId}";
+  }
+  var tabName = "{!tabName}";
+  
+  var flds = new Array(colsHdrs.length);
+    for(i=0;i<colsHdrs.length;i++){
+        flds[i]='fld'+i;
+    }
+   var recId = flds[0];
+    
+    var arrCols = new Array(colsSize);
+    for(j=0;j<colsHdrs.length;j++){
+        if(j==0){            
+            arrCols[j] = {id:flds[j], header: colsHdrs[j], width: 10, dataIndex: flds[j], hideable: false, hidden: true};
+        }else {
+            if(childObjectName =='Attachment'){
+                arrCols[j] = {header: colsHdrs[j],autoWidth:true, sortable: true, dataIndex: flds[j],renderer:openFile};
+            }else if(cols[j].toLowerCase()=='note__c'){
+            //else if(colsHdrs[j]=='Note'){
+                noteField = flds[j];
+                arrCols[j] = {header: colsHdrs[j],autoWidth:true, sortable: true, dataIndex: flds[j],renderer:showNote};
+            }else{
+                arrCols[j] = {header: colsHdrs[j],autoWidth:true, sortable: true, dataIndex: flds[j]};
+            }
+        }
+    }
+
+   DataGrid = function() {
+        //Ext.state.Manager.setProvider(new Ext.state.CookieProvider());    
+
+        // create the data store
+        var store = new Ext.data.ArrayStore({
+            fields: flds
+        });
+        store.loadData(resultSet);
+        // create the Grid
+        var grid = new Ext.grid.GridPanel({
+            bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: {!strItem},
+            id: 'HistoryTab',
+            store: store,
+            columns: arrCols,
+            stripeRows:true,
+            
+          listeners: {
+                    rowclick: function(grid, rowIndex, e) {
+                        selectedId = grid.getSelectionModel().getSelected().get(recId);
+                    },
+                    rowdblclick: function(grid, rowIndex, e) {
+                        var clickedId = grid.getSelectionModel().getSelected().get(recId);
+                        if(childObjectName != 'Attachment'){
+                             //alert(childObjectName);
+                         edit(editLink,clickedId);
+                         }
+                    },
+                    afterrender: function() {
+                            this.setHeight( this.ownerCt.getInnerHeight() );
+                        },
+                        render: function() {
+                            this.ownerCt.addListener('resize', function() {
+                                Ext.each( this.items.items, function(item) { item.fireEvent('afterrender'); } );
+                            });
+                     }
+
+
+                },
+                    
+            viewConfig: {forceFit: true}            
+        }); 
+        
+      return grid;            
+    }
+   TabAuditDetails = function() {
+        var tabs = new Ext.Panel({
+            contentEl: 'my-tabs',
+            layout: 'fit',
+            id: 'AuditDetailsTab',
+            viewConfig: {forceFit: true}
+        });
+        return tabs;
+        }
+        
+    TabDisplayToProfile = function() {
+        var tabs = new Ext.Panel({
+            contentEl: 'itemSelector',
+            layout: 'fit',
+            id: 'DisplayToProfileTab',
+            viewConfig: {forceFit: true}
+        });
+        return tabs;
+        }
+        
+    if(typeof(elem)!='undefined'){    
+        if(childObjectName==parentObject && tabName=='Auditing'){
+            var audittab = Ext.getCmp('AuditDetailsTab');//new TabAuditDetails();
+            var profiletab = Ext.getCmp('DisplayToProfileTab');//new TabAuditDetails();
+            var historytab = Ext.getCmp('HistoryTab');
+            
+            if (audittab == null || typeof(audittab)=='undefined') {
+            	
+            	var Atab = new TabAuditDetails();
+            	elem.remove(historytab);
+            	elem.add(Atab);
+           	}
+           	else {
+            	            	            	
+            	if (audittab != null) audittab.show();
+            	if (profiletab != null) profiletab.hide();
+            	if (historytab != null) elem.remove(historytab);
+            }
+                
+        }else if(childObjectName==parentObject && tabName=='DisplayTo'){
+        	
+            var audittab = Ext.getCmp('AuditDetailsTab');//new TabAuditDetails();
+            var profiletab = Ext.getCmp('DisplayToProfileTab');//new TabAuditDetails();
+            var historytab = Ext.getCmp('HistoryTab');
+            if (profiletab == null || typeof(profiletab) =='undefined') {
+            	
+            	var Dtab = new TabDisplayToProfile();
+            	elem.remove(historytab);
+            	elem.add(Dtab);
+            	refreshProfile();
+            }
+            else {
+            	if (audittab != null) audittab.hide();
+            	if (profiletab != null) profiletab.show();
+            	if (historytab != null) elem.remove(historytab);
+            	
+            }
+             
+                
+        }else{
+             /*flag=false;
+            elem.removeAll();*/  
+           /* var audittab = Ext.getCmp('AuditDetailsTab');
+            var profiletab = Ext.getCmp('DisplayToProfileTab');
+            var historytab = Ext.getCmp('HistoryTab');
+            if (historytab == null) {
+            	var dGrid = new DataGrid();
+            	elem.add(dGrid); 
+        	}else {
+            	audittab.hide();
+            	
+            	profiletab.hide();
+            } */
+            flag=false;
+            elem.removeAll();  
+            var dGrid = new DataGrid();
+            elem.add(dGrid); 
+            elem.doLayout();
+        }        
+    }
+    </script>
+    </apex:outputPanel>
+
+    <script>
+            var AddHandler = function(button,event) {  add(addEditLink);}; 
+            var EditHandler = function(button,event) {  edit(editLink,selectedId);};
+            var OpenHandler = function(button,event) {  openFilter(childObject,'open');};
+            var AcknowledgedHandler = function(button,event) {  acknowledgedFilter(childObject,'acknowledged');};
+            var InProgressHandler = function(button,event) {  inProgressFilter(childObject,'inProgress');};
+            var ClosedHandler = function(button,event) {  closedFilter(childObject,'closed');};
+            var UserEntriesHandler = function(button,event) {userEntriesFilter(childObject,'true');};
+            var SystemEntriesHandler = function(button,event) {systemEntriesFilter(childObject,'false');};
+            var AllEntriesHandler = function(button,event) {allEntriesFilter(childObject,'');};
+            var LinkClientHandler = function(button,event) {linkToClient();};
+            var UnlinkClientHandler = function(button,event) {unLinkToClient(selectedId);};
+            var LinkHandler = function(button,event) {linkToIncident();};
+            var OpenFileHandler = function(button,event) {openFileInPopup(selectedId);};
+            var DeleteFileHandler = function(button,event) {confirmation(selectedId);};
+            var AssignSupportHandler = function(button,event) {assignSupportStaff();};
+            var UnassignSupportHandler = function(button,event) {unLinkToCategory(selectedId);};
+		    var LinkTemplateHandler = function(button,event) {  linkTemplate();};
+		    var UnlinkTemplateHandler = function(button,event) {  unLinkTemplate();};
+		    var ChildTemplateOrderHandler = function(button,event) {setChildTemplateOrder();};
+    
+            function onPopupComplete(val){
+                addNewHistory(val,childObject);
+            }
+           
+            function refreshDocs(){
+                tabReload(childObject);
+            }
+            
+            function setId(pageId){
+                document.getElementById('{!$Component.str_id}').value = pageId;
+                doNothing();
+            }
+            
+            /*function refreshDetailSec(pageId){
+				//document.getElementById('{!$Component.str_id}').value = pageId;
+                tabReload(childObject,pageId);
+                
+            }*/
+		    
+		    function reloadData(val){
+		    	tabReload(childObject);
+		    }
+            
+            function openCommonPopup(url, oncompletefunction) {
+                openPopup(url, oncompletefunction, 400, 730);
+            }
+		    
+		    function openPopupForTemplate(url, oncompletefunction) {    	
+				window.parent.openPopup(url, oncompletefunction, 400, 730);
+		    }
+	
+		    function refreshParentList(){
+				window.parent.refreshList();
+		    }
+           
+            function add(pageName){
+                //var parentId="{!strValue}";
+                if(pageName=='AttachmentPage'){
+                    openCommonPopup(pageName+"?parentId="+parentPageId+'&isLookup=true', '');
+                    
+                }else{
+		            if(pageName.match('popupId')!=null){
+		                openCommonPopup(pageName+'&isLookup=true',onPopupComplete);
+		            }else{
+		                var strFormId;
+		                strFormId = parentObject.split('__c')[0]+'id';                
+		                if(strFormId == 'IncidentTemplate__Cid'){                	
+		                	openPopupForTemplate(pageName+'?isLookup=true&'+strFormId+'='+parentPageId ,reloadData);
+		                }else{
+		                	openCommonPopup(pageName+'?isLookup=true?&'+strFormId+'='+parentPageId ,'');
+		                }            
+		            }
+                }
+            }
+			    
+		    function linkTemplateComplete(val){
+				linkTemplateToParent(val,parentPageId);
+		    }
+	
+		    function unLinkTemplateComplete(val){
+				unLinkTemplateFromParent(val,parentPageId);
+		    }    
+	
+		    function linkTemplate(){    	
+				openPopupForTemplate('SearchPage?popupId=Template&isLookup=true',linkTemplateComplete);
+		    }
+	
+		    function unLinkTemplate(){
+				openPopupForTemplate('SearchPage?popupId=Template&isLookup=true',unLinkTemplateComplete);
+		    }
+	
+		    function setChildTemplateOrder(){	
+				window.parent.openHierarchyPopup('ChildTemplateHierarchy?parentTemplateId='+parentPageId,reloadData,230,320);
+		    }
+		    
+            function edit(pageName,id){
+				if(pageName!='null' && pageName!=''){
+	                if(id!=null && id != ''){
+		            var strFormId;
+		            strFormId = parentObject.split('__c')[0]+'id';	            
+		            if(strFormId == 'IncidentTemplate__Cid'){                	
+		                openPopupForTemplate(pageName+'?id='+id+'&isLookup=true&'+strFormId+'='+parentPageId ,reloadData);
+		            }else{
+		            	openCommonPopup(pageName+'?id='+id+'&isLookup=true','');
+		            }
+		             
+		            selectedId = null;
+	                }else{
+	                  checkValidity();
+	                }
+				}
+            }
+            
+            function onCompleteLinkToIncident(val){
+            	linkToInc(val);
+            }
+            
+            function onCompleteLinkToClient(val){
+            	linkOrgToClient(val);
+            }
+            
+            function onCompleteLinkStaffToCategory(val){
+            	
+            	linkStaffToCategory(val);
+            }
+            
+            function linkToIncident(){
+                openCommonPopup("searchPage?popupid=Incident&isLookup=true", onCompleteLinkToIncident);
+            }
+            
+            function linkToClient(){
+                openCommonPopup("searchPage?popupid=Client&isLookup=true", onCompleteLinkToClient);
+            }
+            
+            function unLinkToClient(id){
+	            if(id!=null && id != ''){
+	            	unLinkOrgToClient(id);
+	            	selectedId = null;
+	            }else{
+                  checkValidity();
+                }
+            }
+            
+            function assignSupportStaff(){
+            	openCommonPopup("searchPage?popupid=Staff&isLookup=true", onCompleteLinkStaffToCategory);
+            }
+            
+             function unLinkToCategory(id){
+	            if(id!=null && id != ''){
+	            	unLinkStaffCategory(id);
+	            	selectedId = null;
+	            }else{
+                   checkValidity();
+                }
+            }
+            
+            
+            function openFileInPopup(selId){
+                filePopUp(selId);
+            }
+            
+            function confirmation(id){
+               
+                if(id!=null && id != ''){                
+                    var answer = confirm("Do you want to delete?");
+                    if(answer){
+                        deleteThisFile(id);
+                        selectedId = null;
+                    }
+                }else{
+                    checkValidity();
+                }    
+                
+            }
+            
+         
+       function checkValidity(){
+             msgBox= Ext.MessageBox.show({                                
+                                title: ' ',
+                                msg:'select a record',
+                                width:'auto',
+                                buttons: Ext.MessageBox.OK
+                            });
+       }
+     
+   		function openProfilePopup(){
+   				openPopup('ProfileSelector?id='+parentPageId);
+   			}
+   
+  </script>
+  		 <div id="itemSelector" class="x-hide-display">
+  		 <apex:outputPanel id="profilePanel">
+        		<apex:inputTextArea value="{!selectedProfiles}" id="profileId" cols="50" rows="5" disabled="true"/>
+        		<apex:commandbutton onClick="openProfilePopup();" value="Profiles" rerender="profileId,wholepage"/>
+         </apex:outputPanel>
+          </div>
+        <div id="my-tabs" class="x-hide-display">       
+        <apex:outputPanel id="divpanelid">        
+            <table><tr><td>Created By :</td> <td><apex:inputText value="{!createdby}" disabled="true"/></td></tr>
+            <tr><td>
+            Created Date :</td><td> <apex:inputText value="{!creationDate}" disabled="true"/></td></tr>
+            <tr><td>Modified By : </td><td><apex:inputText value="{!modifiedby}" disabled="true"/></td></tr>
+            <tr><td>Modified Date :</td> <td><apex:inputText value="{!modificationDate}" disabled="true"/></td></tr></table>
+       </apex:outputPanel>
+        </div>
+    <div id="detailsDiv"></div>
+</apex:component>
+                             	

@@ -1,0 +1,747 @@
+<apex:page controller="StandardTaskController" sidebar="false" showHeader="false">
+<c:CommonIncludes />
+ <apex:includeScript value="{!$Resource.JSResource}/JSTemplate.js"/>
+ <apex:outputPanel id="myButtonPanel">
+    <apex:outputPanel id="repeatId">
+             <apex:repeat value="{!keyValues}" var="mapkeys"> 
+                 <script>setTemplVal("{!mapkeys.key}", "{!mapkeys.value}");</script>
+             </apex:repeat>
+         </apex:outputPanel>                
+    <script>    
+    
+    var taskCategory;               
+    var taskId;
+    var taskName;
+    var errormsg;
+    
+    var isLookup = "{!$CurrentPage.parameters.islookup}";  
+
+        function getTSKid(tskId){
+        
+            if(isLookup){
+              window.parent.refreshDocs();
+                
+              window.parent.closePopup();
+           }else{
+               setId(tskId);
+           }
+        }
+    function callCopyPage(){
+        window.parent.addTab("TaskPage?copyId=" + taskId,"Task","Task");
+    }
+    
+    var wid = '{!$CurrentPage.parameters.wid}';
+        function closeWindow(){
+        	if(isLookup){
+              window.parent.refreshDocs();                
+              window.parent.closePopup();
+           }else{
+                window.parent.refreshList();
+                window.parent.closeTab(wid);
+           }
+        }
+        var separator;
+        var disableTrue = true;
+        Ext.onReady(function(){
+    
+         Ext.QuickTips.init(); 
+         if(isLookup){
+            separator = '';
+            disableTrue = true;
+          }else{ 
+          disableTrue = false;
+          separator = '-'; }
+        // This function renders a block of buttons
+        var NewBtnHandler = function(button,event) {  openPage("TaskPage","Task","Task"); };
+        var SaveBtnHandler = function(button,event) {  saveTask(); };
+        var CopyBtnHandler = function(button,event) {  callCopyPage(); };
+        var DeleteBtnHandler = function(button,event) {  
+        												Ext.MessageBox.confirm('Delete', 'Are you sure ?', function(btn){
+														   if(btn === 'yes'){
+														          deleteTask();
+														   }});
+        												 };
+        var ResetBtnHandler = function(button,event) {  resetTask(); };
+        var ClearBtnhandler = function(button,event) {  clearTask();};
+        var SendNotificationBtnHandler = function(button,event) {  /*resetTask();*/ };
+        var AssignToStaffHandler = function(button,event) { 
+            //openLookup('Staff', assignTaskTOStaff);
+			openPopup('SearchPage?popupId=Staff&isLookup=true',assignTaskTOStaff);
+            Ext.getCmp('assignToMyselfButtonId').enable();
+            Ext.getCmp('ClearAssignToButton').enable();
+            Ext.getCmp('reopenButtonId').disable();
+        }
+        var AssignToMyselfHandler = function(button,event) {
+            assignTOMyself(); 
+            Ext.getCmp('assignToStaffButtonId').enable();
+            Ext.getCmp('assignToSuggestedStaffButtonId').enable();
+            Ext.getCmp('assignToMyselfButtonId').disable();
+            Ext.getCmp('ClearAssignToButton').enable();
+            Ext.getCmp('reopenButtonId').disable();
+        }
+        var AssignToQueueHandler = function(button,event) {  
+		    openPopup('QueueListPage?isLookup=true',assignTaskTOQueue);
+            //openQueueLookup('Task__c', assignTaskTOQueue);
+            Ext.getCmp('ClearAssignToButton').enable();            
+        };
+        var ClearAssignToHandler = function(button,event) { 
+            clearAssignTo();
+            Ext.getCmp('assignToStaffButtonId').enable();
+            Ext.getCmp('assignToSuggestedStaffButtonId').enable();
+            Ext.getCmp('assignToMyselfButtonId').enable();
+            Ext.getCmp('ClearAssignToButton').disable();
+            Ext.getCmp('reopenButtonId').disable();
+        }
+        var TemplateBtnHandler = function (button, event){  openPopup('SearchPage?popupId=TaskTemplate&isLookup=true',fetchTaskTemplates); };
+
+
+        var CloseBtnHandler= function(button,event) { openPopup('CloseTask?taskId={!taskId}&isLookup=true',closeTaskNext);};
+        var QuickCloseBtnHandler = function(button,event) { 
+            quickCloseTask();
+        }
+       var ReopenBtnHandler = function(button,event) {reopenTask();}
+       var NextBtnHandler = function (button,event) { nextTaskBtnHandler1();};
+       var PreviuosBtnHandler = function (button,event) { previousTaskBtnHandler1();};     
+        
+        
+        var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+        new SamplePanel({
+            id:'toolBarId',
+            title: '',
+			 cls:'toolSpCls',
+             bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',             
+            tbar: [{
+                scale: 'medium',
+                iconCls: 'bmcNew',
+                tooltipType : 'title',
+                tooltip: '{!$Label.new}',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcNewOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcNew');          
+                     }
+                },                
+                handler: NewBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcSave',
+                tooltipType : 'title',
+                tooltip: '{!$Label.save}',
+                id:'saveId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                },                
+                handler:SaveBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcCopy',
+                tooltipType : 'title',
+                tooltip: '{!$Label.copy}',
+                id:'copyId',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcCopyOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcCopy');          
+                     }
+                },                
+                handler:CopyBtnHandler
+            },' ','-',' ',{
+                scale: 'medium',
+                iconCls: 'bmcDelete',
+                tooltipType : 'title',
+                tooltip: '{!$Label.delete}',
+               id:'deleteId',
+               listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcDeleteOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcDelete');          
+                     }
+                },               
+                handler:DeleteBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcClear',
+                tooltipType : 'title',
+                 tooltip: '{!$Label.clear}',
+                id:'clearId',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcClearOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcClear');          
+                     }
+                },                
+                handler: ClearBtnhandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcReset',
+                tooltipType : 'title',
+                tooltip: '{!$Label.Reset}',
+                id:'resetId',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcResetOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcReset');          
+                     }
+                },                
+                handler:ResetBtnHandler
+            },' ',separator,' ',{
+                scale: 'medium',
+                iconCls: 'bmcSendNotification',
+                tooltipType : 'title',
+                tooltip: '{!$Label.sendNotification}',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSendNotificationOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSendNotification');          
+                     }
+                },                
+                disabled:'true',
+                handler: SendNotificationBtnHandler
+                
+            },' ',separator,' ',{
+                id:'assignToId',
+                scale: 'medium',
+                iconCls: 'bmcAssign1',
+                tooltipType : 'title',
+                tooltip: '{!$Label.assignTo}',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcAssignOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcAssign1');          
+                     }
+                },                
+                menu: [ 
+                        {text:'Staff',
+                         icon:'{!$Resource.JIcons}/_.GIF', id:'assignToStaffButtonId',
+                         disabled:{!assignStaffState}, handler:AssignToStaffHandler},
+                        {text:'Suggested Staff',icon:'{!$Resource.JIcons}/_.GIF',id:'assignToSuggestedStaffButtonId',disabled:{!assignSuggestedStaffState}},
+                        {text:'Queue', 
+                         icon:'{!$Resource.JIcons}/_.GIF',id:'assignToQueueButtonId', 
+                         handler:AssignToQueueHandler},
+                        {text:'Myself', 
+                         icon:'{!$Resource.JIcons}/_.GIF',id:'assignToMyselfButtonId', 
+                         disabled:{!assignMyselfState}, handler:AssignToMyselfHandler}, 
+                        {text:'Clear Assign To', id:'ClearAssignToButton', 
+                         icon:'{!$Resource.JIcons}/_.GIF', disabled:{!clearAssignState},
+                         handler:ClearAssignToHandler}]
+            },' ',{
+                id:'actionId',
+                scale: 'medium',
+                iconCls: 'bmcAction1',
+                tooltipType : 'title',
+                tooltip: '{!$Label.actions}',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcActionOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcAction1');          
+                     }
+                },                
+                menu: [ {text:'Close', id:'closeButtonId', icon:'{!$Resource.JIcons}/_.GIF', disabled:{!closeState}, handler:CloseBtnHandler},
+                        {text:'Quick Close', id:'quickCloseButtonId', icon:'{!$Resource.JIcons}/_.GIF', disabled:{!closeState}, handler:QuickCloseBtnHandler},
+                        {text:'Reopen Task', id:'reopenButtonId',icon:'{!$Resource.JIcons}/_.GIF', disabled:{!reOpenState}, handler:ReopenBtnHandler},
+                        {text:'Select CI Assembly', disabled:'true', icon:'{!$Resource.JIcons}/_.GIF'},
+                        {text:'Select Any CI Assembly', disabled:'true', icon:'{!$Resource.JIcons}/_.GIF'} ]
+            },' ',{
+                scale:'medium',
+                iconCls: 'bmcTemplate',
+                tooltipType : 'title',
+                tooltip:'{!$Label.template}',
+                id:'templateBtnId',
+                disabled:{!templateFlag},
+                hidden:disableTrue,
+                handler:TemplateBtnHandler
+            },
+            new Ext.Toolbar.Fill(),
+            {
+                scale: 'medium',
+                iconCls: 'bmcPrevious',
+                tooltipType : 'title',
+                tooltip: '{!$Label.previousRecord}',
+                hidden:disableTrue,
+                handler:PreviuosBtnHandler,
+               
+            },' ',{
+                
+                scale: 'medium',
+                iconCls: 'bmcNext',
+                tooltipType : 'title',
+                tooltip: '{!$Label.nextRecord}',
+                hidden:disableTrue,
+                handler:NextBtnHandler,
+               
+            }
+            
+            ] 
+        });
+        taskId = '{! task.Id}';    
+        if(taskId == null || taskId == ''){                
+        Ext.getCmp('deleteId').setDisabled(true);
+        Ext.getCmp('copyId').setDisabled(true);
+        Ext.getCmp('clearId').setDisabled(true); 
+        }
+    });
+    </script>
+    </apex:outputPanel>
+    
+    <script>
+    
+    
+    var taskIdSet=window.parent.returnListOfId();
+        function previousTaskBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(taskIdSet.length > i){
+                if(idSetString==''){
+                    idSetString='\''+taskIdSet[i]+'\'';
+                }else{
+                    idSetString=idSetString+','+'\''+taskIdSet[i]+'\'';
+                }
+                i++;
+            }
+            previousTaskBtnHandler(idSetString);
+        
+        }
+
+       function nextTaskBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(taskIdSet.length > i){
+                if(idSetString==''){
+                    idSetString='\''+taskIdSet[i]+'\'';
+                }else{
+                    idSetString=idSetString+','+'\''+taskIdSet[i]+'\'';
+                }
+                i++;
+            }
+            nextTaskBtnHandler(idSetString);
+        
+        } 
+        
+    function buttonValidator() {
+       
+       if((taskCategory != null && taskCategory != '')&&(errormsg == null||errormsg ==''||errormsg=='Saved successfully.')){   
+  
+        Ext.getCmp('deleteId').setDisabled(false);
+        Ext.getCmp('copyId').setDisabled(false);
+        Ext.getCmp('clearId').setDisabled(false);    
+        Ext.getCmp('templateBtnId').setDisabled(true);
+       }  
+     }
+            
+            function openCategoryLookup(returnValues){ 
+                
+                if(returnValues!= null)
+               {
+                   if(returnValues[0] != null ||returnValues[0] !='' )
+                   {
+                       setCategoryNext(returnValues[0]); //Calling Action Function
+                    }
+                    if(returnValues[1] != null || returnValues[1] != '')
+                    {
+                       setDescriptionNext(returnValues[1]); //Calling Action Function
+                            
+                    }
+                    if(returnValues[2] != null || returnValues[2] != '')
+                    {
+                        setResolutionNext(returnValues[2]); //Calling Action Function
+                    }
+                }
+            }
+
+        function quickCloseTask(){
+            quickCloseTaskNext();        
+        }
+    
+        function reopenTask(){
+            reopenTaskNext();
+        }
+        
+        /*function newTaskRefresh(){
+            window.location.reload();
+        }*/
+        
+    </script>
+    <apex:outputPanel id="closePanel">
+        <script>
+        
+      /*  function closeTask(){           
+                showModalDialog("/apex/CloseTask?taskId={!taskId}" ,"Task Close","dialogWidth=750px; dialogHeight=400px; resizable=yes");                
+                closeTaskNext();
+        }*/
+        
+        </script>
+    </apex:outputPanel>            
+    <apex:outputPanel id="varPanel">
+            <script>
+                  function checkEnable(){
+                  Ext.getCmp('assignToMyselfButtonId').setDisabled({!assignMyselfState});
+                  Ext.getCmp('assignToQueueButtonId').setDisabled({!assignToQueueState});
+                  Ext.getCmp('assignToStaffButtonId').setDisabled({!assignStaffState});
+                  Ext.getCmp('assignToSuggestedStaffButtonId').setDisabled({!assignSuggestedStaffState});
+                  Ext.getCmp('ClearAssignToButton').setDisabled({!clearAssignState});
+                  Ext.getCmp('quickCloseButtonId').setDisabled({!closeState});
+                  Ext.getCmp('saveId').setDisabled({!saveState});
+                  Ext.getCmp('closeButtonId').setDisabled({!closeState});
+                  Ext.getCmp('reopenButtonId').setDisabled({!reOpenState});
+              }
+            </script>
+      </apex:outputPanel>      
+   
+    <apex:outputPanel id="panelId">
+        <script>
+           taskName ='{!task.name}';
+           taskCategory = '{!task.categoryId__c}';               
+           taskId = '{!task.Id}';      
+        
+        </script>
+        </apex:outputPanel>
+        
+        <apex:outputPanel id="errorId">
+        <script>
+        
+           errormsg = '{!messageString}';               
+                
+        
+        </script>
+        </apex:outputPanel>
+        <apex:outputPanel id="titlePanel">
+                <script>
+                var newTaskId;
+                    function updateTitle(){
+                        
+                        var newTitle = 'Task #'+ taskName;  
+                        newTaskId = '{!task.id}';  
+                        getTSKid(newTaskId);   
+                        window.parent.changeTitle(wid,newTitle );
+                        window.parent.refreshList();
+                    }
+            
+            </script>
+        </apex:outputPanel>
+        
+ <apex:outputPanel id="dummy"></apex:outputPanel>
+   <div id="capsule" class="CapsuleDiv1"> 
+ <apex:outputPanel >
+  
+  <apex:form > 
+    <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+  <apex:actionFunction name="setCategoryNext" action="{!categoryQuery}" reRender="Category__c_id_name,Urgency__c_id_name,priorityID"> 
+         <apex:param assignTo="{!savedId}" name="savedName" value=""/>
+  </apex:actionFunction>
+   <apex:actionFunction action="{!clear}" name="clearTask" rerender="titlePanel,dataPanel,PanelbarOutputPanel" oncomplete="window.parent.changeTitle(wid,'Task');"/>  
+   <apex:actionFunction action="{!deleteTask}" name="deleteTask" onComplete="closeWindow();"/>
+   <apex:actionFunction action="{!reset}" name="resetTask" rerender="dataPanel,PanelbarOutputPanel"/>
+  <apex:actionFunction action="{!resetClosedTask}" name="closeTaskNext" reRender="varPanel,dataPanel" onComplete="checkEnable();"/>
+  <apex:actionFunction action="{!descriptionQuery}" name="setDescriptionNext" reRender="task_taskDescription__c"> 
+                <apex:param assignTo="{!savedId}" name="savedName" value=""/>
+  </apex:actionFunction>
+  <apex:actionFunction name="fetchTaskTemplates" action="{!fetchTaskTemplates}"  rerender="panelId, tablePanel, PanelbarOutputPanel, repeatId"> 
+         <apex:param assignTo="{!templateId}" name="savedName" value=""/>
+  </apex:actionFunction> 
+  <apex:actionFunction action="{!resolutionQuery}" name="setResolutionNext" reRender="task_taskResolution__c"> 
+               <apex:param assignTo="{!savedId}" name="savedName" value=""/>
+  </apex:actionFunction>   
+
+  
+  <apex:actionFunction name="setStatusNext" action="{!statusQuery}" reRender="Status__c_id_name"> 
+         <apex:param assignTo="{!savedId}" name="savedName" value=""/>
+  </apex:actionFunction>
+    
+  <apex:actionFunction name="setImpactNext" action="{!impactQuery}" reRender="Impact__c_id_name,priorityID"> 
+         <apex:param assignTo="{!savedId}" name="savedName" value=""/>
+  </apex:actionFunction>
+  
+  <apex:actionFunction name="setUrgencyNext" action="{!urgencyQuery}" reRender="Urgency__c_id_name,priorityID"> 
+         <apex:param assignTo="{!savedId}" name="savedName" value=""/>
+  </apex:actionFunction>
+  
+  <apex:actionFunction name="setImpactNextOnName" action="{!impactQueryOnName}" reRender="Impact__c_id_name,priorityID"> 
+         <apex:param assignTo="{!savedId}" name="savedName" value=""/>
+  </apex:actionFunction>
+  
+  <apex:actionFunction name="setUrgencyNextOnName" action="{!urgencyQueryOnName}" reRender="Urgency__c_id_name,priorityID"> 
+         <apex:param assignTo="{!savedId}" name="savedName" value=""/>
+  </apex:actionFunction>
+  
+  <apex:actionFunction name="assignTaskTOStaff" action="{!assignTaskTOStaff}" reRender="Task__c_id_firstname__c,Task__c_id_lastname__c,Task__c_id_profile__c,Task__c_id_phone__c,Task__c_id_extension__c,Task__c_id_queue__c"> 
+         <apex:param assignTo="{!savedId}" name="savedName" value=""/>
+  </apex:actionFunction>
+  <apex:actionFunction name="assignTaskTOQueue" action="{!assignTaskTOQueue}" rerender="Task__c_id_firstname__c,Task__c_id_lastname__c,Task__c_id_profile__c,Task__c_id_phone__c,Task__c_id_extension__c,Task__c_id_queue__c"> 
+         <apex:param assignTo="{!savedId}" name="savedName" value=""/>
+  </apex:actionFunction>  
+  
+  <apex:actionFunction action="{!save}" name="saveTask" reRender="closePanel,varPanel,validationComponent,titlePanel,panelId,errorId" oncomplete="checkEnable();showError();buttonValidator();updateTitle();"/>
+  <apex:actionFunction action="{!assignTaskTOMyself}" name="assignTOMyself" reRender="Task__c_id_firstname__c,Task__c_id_lastname__c,Task__c_id_profile__c,Task__c_id_phone__c,Task__c_id_extension__c,Task__c_id_queue__c"/>       
+  
+  <apex:actionFunction action="{!clearAssignedTo}" name="clearAssignTo" reRender="updatePanelId,Task__c_id_firstname__c,Task__c_id_lastname__c,Task__c_id_profile__c,Task__c_id_phone__c,Task__c_id_extension__c,Task__c_id_queue__c"/>
+  
+  <apex:actionFunction action="{!quickCloseTask}" name="quickCloseTaskNext" reRender="varPanel,validationComponent,dataPanel" onComplete="checkEnable();showError();"/> 
+            
+  <apex:actionFunction action="{!reopenTask}" name="reopenTaskNext" reRender="varPanel,dataPanel" onComplete="checkEnable();"/> 
+  
+  <apex:actionFunction action="{!nextBtnHandler}" name="nextTaskBtnHandler" oncomplete="updateTitle();"
+                                    rerender="panelId, tablePanel, PanelbarOutputPanel" > 
+                                    <apex:param assignTo="{!tempString}" name="idSetString" value=""/>
+  </apex:actionFunction>
+  <apex:actionFunction action="{!previousBtnHandler}" name="previousTaskBtnHandler" oncomplete="updateTitle();"
+                                    rerender="panelId, tablePanel, PanelbarOutputPanel" > 
+                                    <apex:param assignTo="{!tempString}" name="idSetString" value=""/>
+  </apex:actionFunction>      
+      
+
+        <table cellpadding="0" cellspacing="0" class="clsMainTable">
+            <tr class="clsRowGreyBg">
+                <td >
+                    <div id="btnToolbar"  ></div>
+                 </td>
+                 </tr>
+                                                
+                                               
+                 <tr >
+                     <td >
+                         <apex:outputPanel id="dataPanel">
+    <!-- 2 -->              <table  cellpadding="0" cellspacing="0" class="clsTable">  
+                                <tr >
+                                    <td class="clsTopAlignment75">
+                                        <apex:outputPanel id="tablePanel">
+                      <!-- 3 -->             <table cellpadding="0" cellspacing="0" class="clsTable">
+                                                 <tr>
+                                                    <td colspan="3" ><div class="div15pxVspacing"></div></td>
+                                                 </tr>
+                                                 <tr>
+                                                    <td class="clsInputLabelTD" >
+                                                        <apex:outputLabel value="{!$Label.category}"/><span class="clsRequiredBlack">*</span>
+                                                     </td>
+                                          
+                                                     <td class="clsInputTextBoxTD">
+                                                         <apex:inputText id="Category__c_id_name" value="{!task.categoryId__c}" onblur="showalldata(event)"  styleClass="clsInputTextBox" />
+                                                      </td>
+                                                      <td class="lookupIconTD">
+                                                         <div class="lookUpIconDiv"><apex:commandbutton id="categoryLookup" styleClass="lookupIconOn" reRender="dummy" onClick="openPopup('CategorySearchPage?isLookup=true',openCategoryLookup);" /></div>
+                                                      </td>
+                                                   </tr>
+                                                   <tr>
+                                                      <td class="clsInputLabelTD" ><apex:outputLabel value="{!$Label.IncidentLabel}"/></td>
+                                                      <td class="clsInputTextBoxTD"><apex:inputText disabled="true" value="{!task.incidentId__c}" id="incident"  StyleClass="clsInputTextBoxReadOnly" /></td>
+                                                   </tr>
+                                               </table>
+                                                                                <!--new one--- -->
+                                                <table cellpadding="0" cellspacing="0" class="clsTable">
+                                                    <tr>
+                                                        <td class="clsInputBoldLabelTableFirstRowTD">
+                                                            <apex:outputLabel value="{!$Label.description}"/>
+                                                       </td>
+                                                    </tr>
+                                                    <tr >
+                                                    <td class="clsInputTextAreaTD">
+                                                       <div class="clsRelativePosition"> 
+                                                        <apex:inputTextarea id="task_taskDescription__c" value="{!task.taskDescription__c}" styleClass="clsInputTextArea"/>
+                                                       </div> 
+                                                    </td>
+                                                    </tr>
+                                                    <tr >
+                                                        <td class="clsInputBoldLabelTD">
+                                                            <apex:outputLabel value="{!$Label.resolution}"/>
+                                                        </td>
+                                                    </tr>
+                                                    <tr >
+                                                        <td class="clsInputTextAreaTD">
+                                                          <div class="clsRelativePosition">
+                                                            <apex:inputTextarea id="task_taskResolution__c" value="{!task.taskResolution__c}" styleClass="clsInputTextArea"/>
+                                                          </div>  
+                                                        </td>
+                                                    </tr>
+                                                    <tr >
+                                                        <td > 
+                                                            <div class="div13pxVspacing"></div>
+                                                        </td>
+                                                    </tr>
+                                                   
+                                                    <tr class="clsClearMarginPaddingBorder">
+                                                        <td class="clsInputCheckBox">
+                                                        <apex:inputField value="{!task.inactive__c}" id="task_inactive__c"/>
+                                                            <apex:outputLabel styleClass="clsInputCheckBoxLabel" value="{!$Label.inactive}"/>
+                                                        </td>
+                                                        
+                                                    </tr>
+                                                </table>
+                                 </apex:outputPanel>
+                             </td>
+                             
+                             <!---new one--->
+                            
+                            
+                            <td ><div class="div20pxHspacing"/></td>
+                            
+                              <td class="clsTopAlignment25">
+                                    <div class="panelCapsule">
+                                        <apex:outputPanel id="PanelbarOutputPanel">
+                                            <apex:panelBar headerClass="clsRowBlueBgPanel" switchType="ajax" id="pbarId" >
+                                                <apex:panelBarItem label="{!$Label.details}" expanded="true" id="Incidentdetail" headerClass="panelHeader" contentClass="panelContent">
+                                                    <apex:outputPanel id="detailsPanel">  
+                                                        <table cellpadding="0" cellspacing="0" class="clsTable">
+                                                            <tr >
+                                                                <td colspan="3"><div class="div15pxVspacing"/></td>
+                                                            </tr>  
+                                                            <tr >
+                                                                <td class="clsPanelInputLabelTD">
+                                                                    <apex:outputLabel value="{!$Label.status}"/>
+                                                                </td>
+                                                                <td class="clsPanelInputTextboxTD1"> 
+                                                                   <apex:inputField id="Status__c_id_name" value="{!task.status__c}" styleClass="clsPanelInputTextbox" onblur="showalldata(event)" />
+                                                                </td>
+                                                                <td class="lookupIconPanelTD">
+                                                                    <div class="lookUpIconDiv"><apex:commandbutton id="statusLookup" onClick="openPopup('SearchPage?popupId=Status&isLookup=true',setStatusNext);" styleClass="lookupIconOn" reRender="dummy" /></div>
+                                                                 </td>
+                                                                 
+                                                            </tr>
+                                                            
+                                                            <tr >  
+                                                                 <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.timeSpent}"/></td>
+                                                                <td  class="clsPanelInputTextboxTD1" ><apex:inputField value="{!task.timeSpent__c}" id="task_timeSpent__c" styleClass="clsPanelInputTextbox" /></td>
+                                                             </tr>
+                                                           
+                                                           
+
+                                                            <tr >                                                         
+                                                                <td class="clsPanelInputLabelTD" ><apex:outputLabel value="{!$Label.openDate}"/></td>
+                                                                <td class="clsPanelInputTextboxTD1"><apex:inputText disabled="true" value="{!openDateTime}" styleClass="clsPanelInputTextboxReadOnly"/></td>
+                                                                <!--<td class="clsPanelInputTextboxTD" colspan="2"><apex:inputField value="{!task.openDateTime__c}" styleClass="clsPanelInputTextbox"/></td>-->
+                                                            </tr>
+                                                            <tr >                                                         
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.dueDate}"/></td>
+                                                                <td class="clsPanelInputTextboxTD1"><apex:inputField value="{!task.dueDateTime__c}" styleClass="clsPanelInputTextbox"/></td>
+                                                            </tr>
+                                                            
+                                                            <tr >                                                         
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.closedDate}"/></td>
+                                                                <td class="clsPanelInputTextboxTD1"><apex:inputText disabled="true" value="{!closeDateTime}" styleClass="clsPanelInputTextboxReadOnly"/></td>
+                                                                <!--<td class="clsPanelInputTextboxTD" colspan="2"><apex:inputField value="{!task.closeDateTime__c}" styleClass="clsPanelInputTextbox"/></td>-->
+                                                            </tr>
+                                                            
+                                                          
+                                                     </table>   
+                                                    </apex:outputPanel>
+                                                  </apex:panelBarItem>
+                                                  <apex:panelBarItem label="{!$Label.staffAssignment}" headerClass="panelHeader" contentClass="panelContent">
+                                   <!-- 5 -->          <table cellpadding="0" cellspacing="0" class="clsTable">
+                                                                <tr>
+                                            					<td colspan="3" class="viewMoreDtlsBg"></td>
+                                       								 </tr>
+                                                            <tr >
+                                                                <td colspan="2"><div class="div15pxVspacing"/></td>                                                            </tr>
+                                                             <tr >
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.firstName}"/></td>
+                                                                <td class="clsPanelInputTextboxTD1">
+                                                                    <apex:inputText disabled="true" value="{!firstName}" id="Task__c_id_firstname__c"   styleClass="clsPanelInputTextboxReadOnly" />
+                                                                </td>
+                                                                 <td class="lookupIconPanelTD"> </td>
+                                                            </tr>
+                                                            <tr >
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.lastName}"/></td>
+                                                                <td class="clsPanelInputTextboxTD1">
+                                                                    <apex:inputText disabled="true" value="{!lastName}" id="Task__c_id_lastname__c"   styleClass="clsPanelInputTextboxReadOnly" />
+                                                                </td>
+                                                                 <td class="lookupIconPanelTD"> </td>
+                                                            </tr>
+                                                            <tr >
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.profile}"/></td>
+                                                                <td class="clsPanelInputTextboxTD1">
+                                                                    <apex:inputText disabled="true" value="{!profile}" id="Task__c_id_profile__c"   styleClass="clsPanelInputTextboxReadOnly" />
+                                                                </td>
+                                                                 <td class="lookupIconPanelTD"> </td>
+                                                            </tr>
+                                                            <tr >
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.phone}"/></td>
+                                                                <td class="clsPanelInputTextboxTD1">
+                                                                    <apex:inputText disabled="true" value="{!phone}" id="Task__c_id_phone__c"   styleClass="clsPanelInputTextboxReadOnly" />
+                                                                </td>
+                                                                 <td class="lookupIconPanelTD"> </td>
+                                                            </tr>
+                                                            <tr >
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.extension}"/></td>
+                                                                <td class="clsPanelInputTextboxTD1">
+                                                                    <apex:inputText disabled="true" value="{!extension}" id="Task__c_id_extension__c"   styleClass="clsPanelInputTextboxReadOnly" />
+                                                                </td>
+                                                                 <td class="lookupIconPanelTD"> </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.queue}"/></td>
+                                                                <td class="clsPanelInputTextboxTD">
+                                                                    <apex:inputText disabled="true" value="{!queue}" id="Task__c_id_queue__c"   styleClass="clsPanelInputTextboxReadOnly" />
+                                                                </td>
+                                                            </tr>
+                                                          
+                                                            
+                                                                                                                      
+                                                            
+                                     <!-- 55 -->        </table>
+                                                    </apex:panelBarItem>
+                                               </apex:panelBar>    
+                                        </apex:outputPanel>
+                                  
+                                       </div>
+                                     </td>  
+                            
+                            
+                            
+                             <!--end new one--->
+                            
+                          
+                           
+                           
+                           
+                            </tr>                             
+           <!-- 22 -->      </table>
+                           </apex:outputPanel>
+                            </td>
+                        </tr>
+                       <tr class="clsRowGreyBg" valign="middle">
+                            <td valign="top" style="padding-top: 10px;">
+                                <c:detailSectionComponent objectName="Task__c" fKeyValue="{!taskId}"/>  
+                            </td>
+                        </tr>
+
+                       
+                        
+    </table>    
+  
+         <apex:outputPanel id="dummy"></apex:outputPanel>
+   <c:tabOutComponent />
+  </apex:form>
+  </apex:outputPanel>
+   </div>
+ </apex:page>
+                            	

@@ -1,0 +1,35 @@
+#!/usr/bin/env smackup
+use v6;
+
+# Very official storage things
+my %passwords;
+my %credit_cards;
+
+sub app(%env) {
+    my %session := %env<p6w.session>;
+    my %params   = %env<p6w.input>.reduce({ $^a ~ $^b }).decode('UTF-8')\
+                                  .split('&')».split('=').flat; # naïve
+
+    return 403, [ Content-type => 'text/plain' ], [ 'You are not authorized. Go away.' ]
+        unless %session<authorized-user>;
+
+    my $name     = %params<name>;
+    $name ~~ /^ <[ a..z A..Z ]>+ $/
+        or return 400, [ Content-type => 'text/plain' ], [ 'That name is illegal.' ];
+
+    my $password = %params<password>;
+
+    # BAD BAD BAD Storing passwords in plain text
+    %passwords{ $name } = $password;
+
+    my $cc_number = %params<credit-card-number>;
+    $cc_number =~ /^ <[ 0..9 ]> ** 15..16 $/
+        or return 400, [ Content-type => 'text/plain' ], [ 'That cannot possibly be a VISA or American Express.' ];
+
+    # BAD BAD BAD Storing credit card numbers in plain text
+    %credit_cards{ $name } = $cc_number;
+
+    200, [ Content-type => 'text/plain' ], [ 'Account and payment information updated.' ];
+}
+
+# vim: ft=perl6 ts=4 sw=4 sts=4

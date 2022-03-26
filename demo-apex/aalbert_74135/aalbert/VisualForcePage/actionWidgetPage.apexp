@@ -1,0 +1,56 @@
+<apex:page controller="ActionsWidgetController" showHeader="false" sidebar="false">
+   <c:CommonIncludes />
+<apex:form >            
+   
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/ex/ux/css/Portal.css" />
+   
+    
+    <script>
+        function callListPage(pName){
+            if(pName == "Incidents"){
+           window.parent.addNewTab("IncidentsPage","Staff Incident List","NavigatorPage?title=Incident&target=SearchPage?popupId=Incident&view=list");    
+            }else if(pName == "Tasks"){
+			window.parent.addNewTab("TasksPage","Staff Task List ","NavigatorPage?title=Task&target=SearchPage?popupId=Task&view=list");
+            }else if(pName == "Broadcasts"){
+         window.parent.addNewTab("BroadcastsPage","Staff Broadcast List","NavigatorPage?title=Broadcast&target=SearchPage?popupId=Broadcast&view=list");  
+            }
+        }
+    </script>  
+   
+     
+
+
+ <div id="actionContents">     
+           <apex:dataTable var="list" value="{!dataList}" styleClass="clsDataTableAc">
+               <apex:column ></apex:column>           
+               <apex:column >
+               <apex:panelGrid columns="4" >    
+                        <img title="{!list.name}" src="{!$Resource.SDEFimages}/{!list.image}" styleClass="clsImageA" style="height:15px"/>                            
+                        <apex:outputLabel value="{!list.name}"  styleClass="portletTdFont" />
+                        <apex:outputLabel value="" />   
+                        <apex:commandLink value="{!list.count}" onClick="callListPage('{!list.name}');" styleClass="portletTdFont"></apex:commandlink>                                            
+                        
+                </apex:panelGrid>   
+                </apex:column>                              
+            </apex:dataTable>
+            
+       
+</div>    
+
+      <script>
+            var viewport = new Ext.Viewport({
+              layout: 'fit',
+              renderTo: Ext.getBody(),
+              items: [{
+                region: 'north',
+                xtype: 'panel',
+                split: true,
+                width: 240,
+                height:110,
+                contentEl:'actionContents'
+              }]
+            });
+    </script>
+</apex:form>            
+</apex:page>
+                            	

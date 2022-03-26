@@ -1,0 +1,322 @@
+<apex:page showHeader="false" controller="UrgencyController">
+   <c:CommonIncludes />
+<!-- <script type="text/javascript" src="{!$Resource.ExtJS}/ext-all-debug.js"></script> -->
+ 
+ 
+    <script>
+	
+	 var urgencyName;               
+     var urgencyId;
+     var errormsg;
+	function callCopyPage(){
+        window.parent.addTab("UrgencyPage?copyId=" + urgencyId,"Urgency","Urgency");
+	}
+	
+	var wid = '{!$CurrentPage.parameters.wid}';
+        function closeWindow(){
+                window.parent.refreshList();
+                window.parent.closeTab(wid);
+        }
+        
+        Ext.onReady(function(){
+        Ext.QuickTips.init();
+        // This function renders a block of buttons
+        var NewBtnhandler = function(button,event) {  openPage("UrgencyPage","Urgency","Urgency"); };
+        var SaveBtnHandler = function(button,event) {  save(); };
+        var CopyBtnHandler = function(button,event) { callCopyPage(); };
+        var DeleteBtnHandler = function(button,event) { 
+        												
+        												Ext.MessageBox.confirm('Delete', 'Are you sure ?', function(btn){
+														   	if(btn === 'yes'){
+														       deleteUrgency();
+														   }});
+        														 };
+        var ClearBtnHandler = function(button,event) {  clearUrgency();  };
+        var ResetBtnHandler = function(button,event) {  resetUrgency();  };
+        var NextBtnHandler = function (button,event) { nextUrgencyBtnHandler1();};
+        var PreviuosBtnHandler = function (button,event) { previousUrgencyBtnHandler1();};
+        
+          var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+        new SamplePanel({
+            title: '',
+            cls:'toolSpCls',
+             bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [ {
+                scale: 'medium',
+                iconCls: 'bmcNew',
+				tooltipType : 'title',
+               tooltip: '{!$Label.new}',
+               listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcNewOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcNew');          
+                     }
+                },               
+                handler:NewBtnhandler
+            } ,' ', {
+                scale: 'medium',
+                iconCls: 'bmcSave',
+				tooltipType : 'title',
+                tooltip: '{!$Label.save}',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                },                
+                handler:SaveBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcCopy',
+				tooltipType : 'title',
+                tooltip: '{!$Label.copy}',
+                id:'copyId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcCopyOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcCopy');          
+                     }
+                },                
+                handler:CopyBtnHandler
+                 },' ','-',' ',{
+                scale: 'medium',
+                iconCls: 'bmcDelete',
+				tooltipType : 'title',
+                tooltip: '{!$Label.delete}',
+                id:'deleteId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcDeleteOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcDelete');          
+                     }
+                },
+                handler:DeleteBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcClear',
+				tooltipType : 'title',
+                 tooltip: '{!$Label.clear}',
+                id:'clearId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcClearOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcClear');          
+                     }
+                },                
+                handler:ClearBtnHandler
+                       
+                            
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcReset',
+				tooltipType : 'title',
+                 tooltip: '{!$Label.reset}',
+                id:'resetId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcResetOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcReset');          
+                     }
+                },                
+                handler:ResetBtnHandler
+                       
+                            
+            },
+            new Ext.Toolbar.Fill(),
+            {
+                scale: 'medium',
+                iconCls: 'bmcPrevious',
+				tooltipType : 'title',
+                tooltip: '{!$Label.previousRecord}',
+                handler:PreviuosBtnHandler,
+               
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcNext',
+				tooltipType : 'title',
+                 tooltip: '{!$Label.nextRecord}',
+                handler:NextBtnHandler,
+              
+            }
+            
+            ]
+        });
+        
+        urgencyId = '{!urgency.Id}';    
+        if(urgencyId == null ||urgencyId == ''){                
+        Ext.getCmp('deleteId').setDisabled(true);
+        Ext.getCmp('copyId').setDisabled(true);
+        Ext.getCmp('clearId').setDisabled(true); 
+        }
+                
+    });
+    
+    
+        function buttonValidator() {
+       
+       if((urgencyName != null && urgencyName != '')&&(errormsg == null||errormsg ==''||errormsg=='Saved successfully.')){   
+  
+        Ext.getCmp('deleteId').setDisabled(false);
+        Ext.getCmp('copyId').setDisabled(false);
+        Ext.getCmp('clearId').setDisabled(false);    
+       }  
+     }
+     
+     var UrgencyIdSet=window.parent.returnListOfId();
+        function previousUrgencyBtnHandler1(){
+        	var idSetString='';
+			var i=0;
+			while(UrgencyIdSet.length > i){
+				if(idSetString==''){
+					idSetString='\''+UrgencyIdSet[i]+'\'';
+				}else{
+					idSetString=idSetString+','+'\''+UrgencyIdSet[i]+'\'';
+				}
+				i++;
+			}
+			previousUrgencyBtnHandler(idSetString);
+        
+        }
+
+       function nextUrgencyBtnHandler1(){
+        	var idSetString='';
+			var i=0;
+			while(UrgencyIdSet.length > i){
+				if(idSetString==''){
+					idSetString='\''+UrgencyIdSet[i]+'\'';
+				}else{
+					idSetString=idSetString+','+'\''+UrgencyIdSet[i]+'\'';
+				}
+				i++;
+			}
+			nextUrgencyBtnHandler(idSetString);
+        
+        } 
+     
+    </script>
+   
+    
+    <apex:outputPanel id="panelId">
+        <script>
+        
+           urgencyName = '{!urgency.Name}';               
+           urgencyId = '{!urgency.Id}';      
+        
+        </script>
+        </apex:outputPanel>
+        
+        <apex:outputPanel id="errorId">
+        <script>
+        
+           errormsg = '{!messageString}';               
+                
+        
+        </script>
+        </apex:outputPanel>
+      <apex:outputPanel id="titlePanel">
+        	<script>
+	            function updateList(){
+	                window.parent.refreshList();
+	            }
+        
+        </script>
+    </apex:outputPanel>    
+    
+    <apex:outputPanel >
+    <apex:form id="Urgency">
+     <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+     <apex:actionFunction action="{!save}" name="save" reRender="validationComponent,panelId,errorId" oncomplete="showError();buttonValidator();updateList();"/>
+     <apex:actionFunction action="{!newUrgency}" name="newUrgency"/>
+      <apex:actionFunction action="{!reset}" name="resetUrgency"/>
+     <apex:actionFunction action="{!clear}" name="clearUrgency"/>
+     <apex:actionFunction action="{!deleteUrgency}" name="deleteUrgency" onComplete="closeWindow();"/>
+	<apex:actionFunction action="{!nextBtnHandler}" name="nextUrgencyBtnHandler" 
+            						rerender="tablePanel" >  
+            						<apex:param assignTo="{!tempString}" name="idSetString" value=""/>
+	 </apex:actionFunction>
+	 <apex:actionFunction action="{!previousBtnHandler}" name="previousUrgencyBtnHandler" 
+	           						rerender="tablePanel"> 
+	           						<apex:param assignTo="{!tempString}" name="idSetString" value=""/>
+	 </apex:actionFunction>
+     
+     
+     <div id="capsule" class="CapsuleDiv1">
+        <table class="clsMainTable" cellspacing="0" cellpadding="0">
+                <tr class="clsRowGreyBg">
+                    <td>
+                        <div id="btnToolbar"></div>
+                     </td>
+                 </tr>
+                 <tr>
+                  <td>
+                    <table class="clsTable" cellspacing="0" cellpadding="0">
+                    <apex:outputPanel id="tablePanel">
+                       <table class="clsTable" cellspacing="0" cellpadding="0">
+                            <tr>
+                                <td colspan="2"><div class="div15pxVspacing"/></td>
+                            </tr> 
+                            <tr>
+                                <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.Urgency_ID}"/><span class="clsRequiredBlack">*</span>
+                                </td>
+                                <td class="clsInputTextBoxTD">
+                                    <apex:inputField value="{!urgency.Name}" styleClass="clsInputTextBox"/>
+                                </td>
+                            </tr>
+                        </table>
+                       
+                          <table class="clsTable" cellspacing="0" cellpadding="0">
+                            <tr>
+                                <td class="clsInputBoldLabelTableFirstRowTD"><apex:outputLabel value="{!$Label.description}"/></td>
+                            </tr>
+                            <tr>
+                                <td class="clsInputTextAreaTD">
+                                    <apex:inputTextarea value="{!urgency.description__c}" styleClass="clsInputTextAreaPgWoSidePanel"/>
+                                </td>
+                            </tr>
+                         </table>
+                         <div class="div13pxVspacing"></div>
+                          <table class="clsTable" cellspacing="0" cellpadding="0">
+                            <tr>
+                                <td class="clsInputCheckBox">
+                                    <apex:inputfield value="{!urgency.inactive__c}" id="inactive"/> 
+                                    <apex:outputLabel styleClass="clsInputCheckBoxLabel" value="{!$Label.inactive}"/>
+                                </td>
+                            </tr>
+                        </table>
+                        </apex:outputPanel>
+                        </table>
+                      </td>
+                   </tr>
+                   <tr class="clsRowGreyBg" valign="middle" width="5%">
+                   <td valign="middle" style="width: 100%">
+                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                            <tr>
+                                <td>
+                                     
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>   
+         </div>                
+    </apex:form>                           
+    </apex:outputPanel>
+</apex:page>
+                            	

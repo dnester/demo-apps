@@ -1,0 +1,307 @@
+<apex:page showHeader="false" controller="IncidentHistoryController" >
+<c:CommonIncludes />
+
+<script>
+     
+     var IncidentHistoryAction;               
+     var IncidentHistoryId;
+     var errormsg;
+      var isLookup = "{!$CurrentPage.parameters.islookup}";  
+    
+     function closeWindow(){         
+        if(isLookup=="true" &&(errormsg==null||errormsg==''||errormsg=='Saved successfully.')){
+          window.parent.refreshDocs();  
+          window.parent.closePopup();
+       }
+     }
+     var disableTrue = true;
+        Ext.onReady(function(){
+    
+         Ext.QuickTips.init(); 
+         if(isLookup=="true"){
+          disableTrue = true;
+          }   else disableTrue = false;
+        var NewBtnhandler = function(button,event) { newIncident(); };
+        var SaveBtnHandler = function(button,event) {  save(); };
+        var CopyBtnHandler = function(button,event) {  /*alert('Copy!');*/ };
+        var DeleteBtnHandler = function(button,event) {  /*deleteIncident();*/ };
+        var ClearBtnHandler= function(button,event) {  /*deleteIncident();*/ };
+        var OpenBtnHandler= function(button,event) {  /*deleteIncident();*/ };
+        var NextBtnHandler = function (button,event) { };
+        var PreviuosBtnHandler = function (button,event) { };
+        
+          var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+        new SamplePanel({
+            title: '',
+            cls:'toolSpCls',
+            bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [ {
+                scale: 'medium',
+				tooltipType : 'title',
+                tooltip: '{!$Label.new}',
+                iconCls: 'bmcNew',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcNewOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcNew');          
+                     }
+                },                
+                handler:NewBtnhandler
+            } ,' ', {
+                scale: 'medium',
+				tooltipType : 'title',
+                tooltip: '{!$Label.save}',
+                iconCls: 'bmcSave',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                },                
+                handler:SaveBtnHandler
+            },' ', {
+                scale: 'medium',
+				tooltipType : 'title',
+                tooltip: '{!$Label.copy}',
+                id:'copyId',
+                iconCls: 'bmcCopy',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcCopyOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcCopy');          
+                     }
+                },                
+                handler:CopyBtnHandler
+            },' ','-',' ',{
+                scale: 'medium',
+                iconCls: 'bmcDelete',
+				tooltipType : 'title',
+                tooltip: '{!$Label.delete}',
+                id:'deleteId',
+                
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcDeleteOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcDelete');          
+                     }
+                },                
+                handler:DeleteBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcClear',
+				tooltipType : 'title',
+                tooltip: '{!$Label.clear}',
+                id:'deleteId',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcClearOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcClear');          
+                     }
+                },                
+                handler:SaveBtnHandler
+            },
+            new Ext.Toolbar.Fill(),
+            {
+                scale: 'medium',
+                iconCls: 'bmcPrevious',
+				tooltipType : 'title',
+                tooltip: '{!$Label.previousRecord}',
+                disabled: 'true',
+                handler:PreviuosBtnHandler,
+                
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcNext',
+				tooltipType : 'title',
+                tooltip: '{!$Label.nextRecord}',
+                disabled: 'true',
+                handler:NextBtnHandler,
+               
+            }]
+        });
+        
+        IncidentHistoryId = '{!IncidentHistory.Id}';    
+        if(IncidentHistoryId == null ||IncidentHistoryId == ''){                
+        Ext.getCmp('deleteId').setDisabled(true);
+        Ext.getCmp('copyId').setDisabled(true);
+         Ext.getCmp('clearId').setDisabled(true); 
+        }
+
+    });
+    
+    function buttonValidator() {
+       
+       if((IncidentHistoryAction != null && IncidentHistoryAction != '')&&(errormsg == null||errormsg ==''||errormsg=='Saved successfully.')){   
+  
+        Ext.getCmp('deleteId').setDisabled(false);
+        Ext.getCmp('copyId').setDisabled(false);
+        Ext.getCmp('clearId').setDisabled(false);    
+       }  
+     }
+     
+    </script>   
+     <apex:outputPanel title="Style classes">
+                             
+
+    <apex:outputPanel id="dummy"></apex:outputPanel>
+          
+    </apex:outputPanel>   
+    <apex:outputPanel id="panelId">
+        <script>
+        
+           IncidentHistoryAction = '{!IncidentHistory.actionId__c}';               
+           IncidentHistoryId = '{!IncidentHistory.Id}';      
+        
+        </script>
+        </apex:outputPanel>
+		<apex:outputPanel id="errorId">
+        <script>
+        
+           errormsg = '{!messageString}';               
+                
+        
+        </script>
+        </apex:outputPanel>
+         
+    <apex:outputPanel > <!-- Page body in this panel -->
+        <apex:messages />
+            <apex:form >
+            	<c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+            	
+                <apex:actionFunction action="{!incidentQuery}" name="setIncidentId" reRender="incident__c_id_name">
+                    <apex:param assignTo="{!incidentId}" value="" name="saveIncidentId "/>
+                </apex:actionFunction>
+                
+                <apex:actionFunction action="{!actionQuery}" name="setActionId" reRender="Action__c_id_name,Action__c_id_description">
+                    <apex:param assignTo="{!ActionId}" value="" name="saveActionId "/>
+                </apex:actionFunction>
+        
+                <apex:actionFunction action="{!userQuery}" name="setUserId" reRender="User_id_name">
+                    <apex:param assignTo="{!userId}" value="" name="saveUserId "/>
+                </apex:actionFunction>
+          
+                <apex:actionFunction action="{!save}" name="save" reRender="validationComponent,panelId,errorId" oncomplete="showError();closeWindow();buttonValidator();"/>
+          
+                <apex:actionFunction action="{!newIncident}" name="newIncident"/>
+          
+                <div id="capsule" class="CapsuleDiv1">
+                    <table cellpadding="0" cellspacing="0" class="clsMainTable">
+                        <tr class="clsRowGreyBg">
+                            <td>
+                                <div id="btnToolbar"></div>                                
+                            </td>
+                        </tr>  
+                         <tr>
+                            <td>
+                            <table cellpadding="0" cellspacing="0" class="clsTable">
+                            <tr>
+                                <td class="clsTopAlignment75">
+                                   <table cellpadding="0" cellspacing="0" class="clsTable">
+                                        <tr>
+                                            <td colspan="3"><div class="div15pxVspacing"/></td>
+                                        </tr>                                   
+                                         <tr>
+                                            <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.actionId}"/><span class="clsRequiredBlack">*</span></td>
+                                            <td class="clsInputTextBoxTD">
+                                           
+                                                <apex:inputField value="{!IncidentHistory.actionId__c}" id="Action__c_id_name" onblur="showalldata(event)" styleClass="clsInputTextBox" />
+                                            </td>
+                                            <td class="lookupIconTD">
+                                              <div class="lookUpIconDiv">
+                                                <apex:commandButton onclick="openPopup('SearchPage?popupId=Action&isLookup=true',setActionId);" rerender="dummy" styleClass="lookupIconOn" />
+                                                  </div>
+                                            </td>
+                                        </tr>                             
+                                        <tr>
+                                            <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.staffId}"/></td>
+                                            <td class="clsInputTextBoxTD">
+                                            <apex:inputField value="{!incidentHistory.userId__c}" id="User_id_name"  onblur="showalldata(event);" 
+                                                styleClass="clsInputTextBox" />
+                                            </td>
+                                            <td class="lookupIconTD">  
+                                             <div class="lookUpIconDiv">  
+                                                <apex:commandButton onclick="openPopup('SearchPage?popupId=Staff&isLookup=true',setUserId);" rerender="dummy" styleClass="lookupIconOn" />
+                                           </div>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.incident}"/> #</td>
+                                            <td>
+						    <apex:inputText disabled="true" value="{!incidentHistory.FKIncident__c}" id="incident__c_id_name" onblur="showalldata(event);"  styleClass="clsInputTextBox" />
+						</td>
+						<!--<td class="lookupIconTD">
+						 <apex:commandButton onclick="openIncidentLookup();" rerender="dummy" styleClass="lookupIconOn" />
+                                            </td>-->
+                                        </tr>
+                                       </table>
+                                        <table class="clsTable" cellspacing="0" cellpadding="0">
+                                        <tr>
+                                            <td class="clsInputBoldLabelTDI" ><apex:outputLabel value="{!$Label.description}"/></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="clsInputTextAreaTD" ><apex:inputField value="{!IncidentHistory.description__c}" id="Action__c_id_description" styleClass="clsInputTextAreaPgWoSidePanel" /></td>
+                                        </tr>
+                                         </table>
+                                      <div class="div13pxVspacing"/>
+                                          <table class="clsTable" cellspacing="0" cellpadding="0">
+                                        <tr>
+                                            <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.dateAndTime}"/></td>
+                                             <td class="clsInputTextBoxTD"><apex:inputField value="{!IncidentHistory.date__c}"  styleClass="clsInputTextBox" /></td>
+                                        </tr>    
+                                        <tr>
+                                            <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.duration}"/></td>
+                                            <td class="clsInputTextBoxTD"><apex:inputField value="{!IncidentHistory.duration__c}" styleClass="clsInputTextBox" /></td>
+                                        </tr>
+                                           </table>
+                                           <table class="clsTable" cellspacing="0" cellpadding="0">
+                                        <tr>
+                                            <td class="clsInputBoldLabelTD"><apex:outputLabel value="{!$Label.note}"/></td>
+                                            
+                                        </tr>
+                                        <tr>
+                                            <td class="clsInputTextAreaTD" colspan="3">
+                                                <apex:inputField value="{!IncidentHistory.note__c}" 
+                                                         styleClass="clsInputTextAreaPgWoSidePanel"  />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3"><div class="div13pxVspacing"/></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="clsPanelInputCheckboxTD"  >
+                                                  <apex:inputField value="{!incidentHistory.inactive__c}" id="inactive"/>
+                                                <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.inactive}"/>   
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                              </tr>
+                            </table>
+                            
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <c:tabOutComponent ></c:tabOutComponent>
+             </apex:form>
+    </apex:outputPanel>  
+</apex:page>
+                            	

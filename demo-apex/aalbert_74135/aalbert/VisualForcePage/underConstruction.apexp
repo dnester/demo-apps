@@ -1,0 +1,13 @@
+<apex:page showHeader="false">
+    <style>
+        .info-div {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+        }
+    </style>
+
+    <div class="info-div">Under construction.</div>
+    
+</apex:page>
+                            	

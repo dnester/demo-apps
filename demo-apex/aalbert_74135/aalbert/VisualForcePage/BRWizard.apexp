@@ -1,0 +1,229 @@
+<apex:page controller="BRWizardController" showHeader="true" >
+<apex:styleSheet value="http://yui.yahooapis.com/2.6.0/build/assets/skins/sam/skin.css" /> 
+<apex:includeScript value="http://yui.yahooapis.com/2.6.0/build/yahoo-dom-event/yahoo-dom-event.js" />
+<apex:includeScript value="http://yui.yahooapis.com/2.6.0/build/container/container-min.js" />
+<apex:includeScript value="http://yui.yahooapis.com/2.6.0/build/animation/animation-min.js" />
+
+
+<div id="hello" style="display: none" >
+  <div class="hd">
+    <apex:outputText value="Select Mapping" />
+  </div> 
+  <div class="bd">
+  <apex:form id="mappingForm" >
+  <apex:actionregion >
+  <apex:panelGrid columns="4">
+      <apex:selectList id="mappingList" value="{!mappingfields}" size="1" onchange="setVisibility();">
+        <apex:selectOptions value="{!actionFieldItems}"/> 
+        <apex:actionFunction name="setVisibility" rerender="widgetPanelGrp" action="{!changeVisibility}"/>
+      </apex:selectList>
+      <apex:panelGroup id="widgetPanelGrp">
+        <apex:inputText id="inputTxt" value="{!fieldValue}" rendered="{!inputTxtVisibility}"/>
+        <apex:inputTextarea id="inputTxtArea" value="{!fieldValue}" rendered="{!inputTxtAreaVisibility}"/>
+        <apex:selectRadio id="selectRd" value="{!fieldValue}" rendered="{!radioBtnVisibility}">
+            <apex:selectOptions value="{!booleanItems}" />
+        </apex:selectRadio>
+        <apex:selectList id="selectLst" value="{!fieldValue}" rendered="{!picklistVisibility}">
+            <apex:selectOptions value="{!listItems}"/>
+        </apex:selectList>
+      </apex:panelGroup>
+      <apex:commandButton action="{!addMapping}" value="Add" reRender="dataTableId"/>
+      <apex:commandButton action="{!removeMapping}" value="Remove" reRender="dataTableId"/>
+  </apex:panelgrid>
+  <apex:outputLabel value="Required fields: " style="color:red"/>
+  <apex:outputLabel value="{!requiredFields}" style="color:red"/>
+  <apex:dataTable value="{!lstMappingLabel}" var="listData" border="1" cellpadding="4" width="700" id="dataTableId">
+               <apex:column width="300">
+                           <apex:facet name="header" >Field Name</apex:facet>
+                           <apex:outputlabel value="{!listData.fieldLabel}"></apex:outputLabel>
+               </apex:column>
+               
+               <apex:column width="300">
+                           <apex:facet name="header" >Value</apex:facet>
+                           <apex:outputlabel value="{!listData.value}"></apex:outputLabel>
+               </apex:column>
+        </apex:dataTable>
+        
+
+     <apex:commandButton action="{!saveMapping}" value="Done" onclick="YAHOO.force.com.hideMe();" rerender="xyz"/>
+     </apex:actionregion>
+  </apex:form>
+  
+  </div>
+  </div>
+
+<script>
+  /*  function openMapping(k) {
+        window.showModalDialog("/apex/BRActionMapping?actionModule="+k, "Add Mapping","location:0;status:no;dialogHeight:600px;dialogWidth:700px;");
+    } */
+
+    // Create a namespace for our custom functions
+    YAHOO.namespace("force.com");
+
+    // Function called when we want to show the dialog
+    YAHOO.force.com.showMe = function(divid,wd) {
+        YAHOO.force.com.init(divid,wd); 
+        document.getElementById(divid).style.display = "block";
+        YAHOO.force.com.myDialog.show();
+    }
+   
+   // Function called when we want to hide the dialog
+    YAHOO.force.com.hideMe = function() {
+        YAHOO.force.com.myDialog.hide();
+    }
+
+    // Function called when the DOM is ready to create the dialog,
+    // render the dialog into the document body, add our dialog skin
+    // css to the body tag, and wire up the buttons on our dialog    
+    YAHOO.force.com.init = function(id1,wd) {
+        document.body.className = document.body.className + " yui-skin-sam";
+
+       
+        YAHOO.force.com.myDialog = new YAHOO.widget.Panel(
+            id1, // The id of our dialog container
+            { 
+                    width           :   wd,    // You can play with this until it's right
+                    visible         :   false,  // Should be invisible when rendered
+                    draggable       :   true,   // Make the dialog draggable
+                    close           :   true,  // Don't include a close title button
+                    modal           :   true,   // Make it modal
+                    fixedCenter     :   true,   // Keep centered if window is scrolled
+                    zindex          :   40,     // Make sure it's on top of everything
+                    
+                    // This line adds the appear/disapper fade effect
+                    effect          :   {effect:YAHOO.widget.ContainerEffect.FADE,duration:0.35} 
+            }
+         );
+        
+        // Render the dialog to the document.body level of the DOM
+        YAHOO.force.com.myDialog.render(document.body);
+
+
+    }
+    
+    // Add the init method to the window.load event
+    YAHOO.util.Event.addListener(window, "load", YAHOO.force.com.init);
+
+    function toggleExp1Visibility() {
+        alert("Inside toggleExp1Visibility");
+        elem = document.getElementById('{!$Component.brwizardId.BRTabPanel.Conditions.panelId.dataTableId.exp1Column.exp1Txt}'); 
+        elem.style.visibility = 'visible';
+        alert(elem.style.visibility);
+        document.getElementById('{!$Component.brwizardId.BRTabPanel.Conditions.panelId.dataTableId.exp1Column.exp1Txt}').style.visibility='visible';
+        
+    }
+</script>
+  <h1>Business Rules Wizard</h1>
+  <apex:form id="brwizardId" >
+  <apex:inputText id="myCon" style="visibility:hidden"/>
+   <!-- Define BR Tab panel .css styles -->
+    <style>
+    .activeTab {background-color: #236FBD; color:white; background-image:none}
+    .inactiveTab { background-color: lightgrey; color:black; background-image:none}
+    </style>
+            
+    <!-- Create BR Tab panel -->
+    <apex:tabPanel switchType="client" selectedTab="BR_Info" id="BRTabPanel"
+        tabClass="activeTab" inactiveTabClass="inactiveTab">
+        <apex:tab label="Information" name="BR_Info" id="Info">
+        <apex:panelGrid columns="2">
+            Business Rule: <apex:inputText value="{!ruleName}"/>
+            Enabled: <apex:inputCheckbox value="{!isEnabled}"/>
+            Description: <apex:inputTextarea value="{!description}"/>
+        </apex:panelGrid>
+
+        </apex:tab>
+        <apex:tab label="Conditions" name="BR_Conditions" id="Conditions">
+            
+ When... 
+<hr/>
+            <table>
+            <tr><td>a</td> 
+            <td><apex:selectList value="{!modules}" size="1">
+                <apex:selectOptions value="{!moduleItems}"/>
+                <apex:actionSupport event="onchange"                                 
+                                rerender="panelId" />
+                
+            </apex:selectList></td>
+            <td>
+            <apex:selectCheckboxes value="{!events}">
+                <apex:selectOptions value="{!eventItems}"/>
+            </apex:selectCheckboxes> </td><td>
+            occurs</td>
+            </tr>
+            </table>
+            <apex:outputPanel id="panelId">
+            <apex:dataTable value="{!dataListTemp}" var="listData" border="1" cellpadding="4" width="700" id="dataTableId">
+               <apex:column width="500" id="exp1Column">
+                           <apex:facet name="header" >Expression1</apex:facet>
+                           <apex:selectList id="exp1List" value="{!listData.Expression1__c}" size="1">
+                                   <apex:selectOptions value="{!fieldItems}"/>
+                           </apex:selectList>
+               </apex:column>
+               <apex:column width="500">
+                           <apex:facet name="header" >Comparison Operator</apex:facet>
+                           <apex:selectList value="{!listData.CompareOpr__c}" size="1">
+                                    <apex:selectOptions value="{!comparisonOpr}"/>
+                           </apex:selectList>
+               </apex:column>
+               <apex:column width="500">
+                           <apex:facet name="header" >Expression2</apex:facet>
+                           <apex:inputText id="exp2Txt" value="{!listData.Expression2__c}"/>
+               </apex:column>
+               <apex:column width="500">
+                           <apex:facet name="header" >Logical Operator</apex:facet>
+                           <apex:selectList value="{!listData.LogicalOpr__c}" size="1">
+                                    <apex:selectOptions value="{!logicalOpr}"/>
+                           </apex:selectList>
+               </apex:column>
+        </apex:dataTable>
+   
+        
+
+        <apex:commandButton action="{!add}" value="Add" reRender="dataTableId" />
+        <apex:commandButton action="{!del}" value="Delete" reRender="dataTableId"/>
+        </apex:outputPanel>       
+            
+        </apex:tab>
+        <apex:tab label="Actions" name="BR_Actions" id="Actions">
+         <apex:outputPanel id="actionpanelId">
+         
+ Then 
+<hr/>
+          <apex:dataTable value="{!actionListTemp}" var="listData" border="1" cellpadding="3" width="700" id="actionDataTblId">
+               <apex:column width="500">
+                           <apex:facet name="header" >Method</apex:facet>
+                           <apex:selectList value="{!listData.ActionMethod__c}" size="1">
+                                   <apex:selectOptions value="{!eventItems}"/>
+                           </apex:selectList>
+               </apex:column>
+               <apex:column width="500">
+                           <apex:facet name="header" >Module</apex:facet>
+                           <apex:selectList value="{!listData.ActionModuleName__c}" size="1">
+                                    <apex:selectOptions value="{!moduleItems}"/>
+                                     <apex:actionSupport event="onchange" reRender="openMappingBtn"/> 
+                           </apex:selectList>
+               </apex:column>
+               <apex:column width="500">
+                           <apex:facet name="header">Mapping</apex:facet>
+                           <apex:CommandLink id="openMappingBtn" rerender="mappingForm, mappingList" onclick="YAHOO.force.com.showMe('hello','400');" value="Select Mapping" action="{!open}" >
+                            <apex:param name="actionModule" value="{!listData.ActionModuleName__c}"/>
+                           </apex:CommandLink>
+               </apex:column>
+        </apex:dataTable>
+        
+
+        <apex:commandButton action="{!addAction}" value="Add" reRender="actionDataTblId" />
+        <apex:commandButton action="{!delAction}" value="Delete" reRender="actionDataTblId"/>
+        </apex:outputPanel>    
+        </apex:tab>
+        <apex:tab label="Schedule" name="BR_Schedule" id="Schedule">Business Rule Schedule</apex:tab>
+    </apex:tabPanel>
+
+  
+
+  <apex:commandButton action="{!save}" value="Save" id="saveBtn"/>
+  
+  </apex:form>
+</apex:page>
+                            	

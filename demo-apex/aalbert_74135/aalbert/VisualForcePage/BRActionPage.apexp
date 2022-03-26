@@ -1,0 +1,1209 @@
+<apex:page showHeader="false" controller="BRInformationController" >
+<c:CommonIncludes ></c:CommonIncludes>    
+
+<style>
+        .BRForm{
+            background-color: #EFF3F5;
+        }
+        .BRInfoTitle{
+            height: 25px; 
+            background: url({!$Resource.BMCStyle}/images/blue_bg.gif) repeat;
+            color: #FFFFFF;
+            font: bold 1em Tahoma, MS Sans Serif;
+            padding-left: 10px;
+            margin:0px;
+            border: solid 1px grey;
+            border-bottom:none;
+        }
+        .div10pxHspacing{
+            width: 10px;
+        }
+        
+        .clsBRStepInstr{
+            background-color: #dee0e0;
+        }
+        .clsMainTableBR{
+            background-color: #EFF3F5;
+            height:100%;
+            width: 100%;
+            border: solid 1px grey;
+            border-top:none;
+            align:center;
+            margin:0px;
+            
+        }
+        .clsBrTable{
+            border: solid 1px grey;
+            border-top: none;
+            height:auto;
+            background-color: white;
+            margin:0px;
+            width:100%;
+            
+        }
+        .clsInputTextAreaTD{
+            padding-right: 15px;
+        }
+        .clsInputTextAreaRivHstory{
+            height: 150px;
+            width: 700px;
+        }
+        .clsInputTextbox{
+            width: 400px;
+        }
+        .clsBrProgressBar{
+            height: 50px;
+            text-align: center;
+            margin:0px;
+            border: 0px;
+        }
+    
+        .topAlignTD{
+            vertical-align: top;
+            padding-top:0;
+        }
+        .clearMarginPadding{
+            margin: 0px;
+            border: 0px;
+            padding: 0px;
+        }
+        
+        .addCls{
+         background-image: url({!$Resource.BMCStyle}/images/b_add.png) !important; background-repeat: no-repeat;
+         margin-top:0px;
+         margin-bottom:0px;
+         padding-bottom:6px;
+        
+        }
+    .deleteCls{
+       background-image: url({!$Resource.BMCStyle}/images/b_minimize.png) !important; background-repeat: no-repeat;
+         margin-top:0px;
+         margin-bottom:0px;
+         padding-right:6px;
+         padding-bottom:6px;
+         margin-left:4px;
+    
+    }
+    .upCls {
+         background-image: url({!$Resource.BMCStyle}/images/b_control_up.png) !important; background-repeat: no-repeat;
+         margin-top:0px;
+         margin-bottom:0px;
+         padding-right:6px;
+         padding-bottom:6px;
+         margin-left:4px;
+    }
+    .downCls {
+         background-image: url({!$Resource.BMCStyle}/images/b_control_down.png) !important; background-repeat: no-repeat;
+         margin-top:0px;
+         margin-bottom:0px;
+         padding-right:6px;
+         padding-bottom:6px;
+         margin-left:4px;
+    }
+   .row-gray{
+        background: #dee0e0;
+    }
+    
+    .row-white {
+        background:white;
+        
+    }
+    .row-green{
+    
+        /*background: #79BAEC;*/
+        background: #D16587;
+    
+    }
+        
+    .x-btn-icon .x-btn-small .x-btn-text {
+        height:20px;
+        width:20px;
+    }
+    .groupCls {
+        background-image: url({!$Resource.BMCStyle}/images/b_control_group_disable.png) !important; background-repeat: no-repeat;
+         margin-top:0px;
+         margin-bottom:0px;
+         padding-right:0px;
+         padding-bottom:6px;
+         margin-left:4px;
+    }
+    
+    .unGroupCls {
+        background-image: url({!$Resource.BMCStyle}/images/b_control_ungroup_disable.png) !important; background-repeat: no-repeat;
+         margin-top:0px;
+         margin-bottom:0px;
+         padding-right:6px;
+         padding-bottom:6px;
+         margin-left:0px;
+    }
+    
+     .div15pxVSpacing{
+        height:15px;
+    }
+    
+    .div15pxHspacing{
+            width: 15px;
+    }
+    
+    .innerClsBrTable clsBrTable {
+        border:none; 
+        margin:0;
+        width: 100%;
+    }
+    
+    .clsBrTableTD{
+          width:100%;
+          vertical-align: top;
+    }
+    
+    .verAlignBottom {
+        vertical-align: bottom;
+    }
+    
+    .informationBarTD{
+        padding-left: 15px;
+        padding-top: 15px;
+        padding-bottom: 20px;
+        padding-right: 15px;
+    }
+    
+    .informationBar {
+        background-color:#dee0e0; 
+        border-style:solid; 
+        border-width:1px;
+        height:24px;
+        
+        padding-left: 10px;
+        padding-top: 5px;
+       
+    }
+    
+    .clsInputLabelTD {
+        font: #dee0e0;
+        padding-left: 15px;
+        padding-right: 15px;
+        padding-bottom: 0px;
+    }
+    
+     .clsInputCheckBoxLabelTD{
+        padding-left: 5px;
+    }
+    
+    .clsLabelConditionTD {
+        padding-top:0px; 
+        padding-left:15px; 
+        padding-bottom:5px; 
+        padding-right:15px;
+    } 
+    
+    .clsPadding15px {
+        padding:15px;
+        padding-top:0;
+    }
+    
+    .clsButtonBarTD {
+        background-color:#dee0e0;
+        height:35px; 
+        width:100%
+    }
+    
+    .clsNxtBtn {
+        width:50px;
+    }
+    
+    .clsPrvBtn {
+       width:70px;
+    }
+    
+    .clsErBtn {
+        width:110px; 
+        margin-right:10px;
+    }
+    
+    .clsIrBtn {
+        width:110px;
+    }
+    
+    .clsButtonStyle {
+        height:20px; 
+        margin-right:5px;
+    }
+    
+    .noBordercls{
+        border: none;
+    }
+    .x-grid3-hd-inner{
+        position: absolute;
+    }
+    
+    .clswin {
+        padding: 15px;
+    }
+    
+    .cls100Height {
+    	height:100%;
+    }
+    
+    .cls100Width {
+    	width:100%;
+    }
+	
+	.clsMapping {
+		height:20px; 
+		text-align: right;
+		font: bold 1em Tahoma, MS Sans Serif;;
+		padding:0;
+		margin: 0;
+	}    
+    .x-grid3-row-selected {
+        background-color: #E0EE70 !important;
+        background-image: none;
+        border-color: #a3bae9;
+    }
+}
+
+</style>
+<script>
+     
+    var fieldStoreDS; 
+    var comboStore;
+    var gridStore;
+    var comboStore2;
+    var grid;
+    var mainGridSelectedRowIndex;
+    var mappingGrid;
+    var mappingGridStore;
+    var mappingList;
+    var fieldList;
+    var value;
+    var modules;
+    var mod;
+    
+    Ext.onReady(function(){
+        Ext.QuickTips.init();
+        Ext.form.Field.prototype.msgTarget = 'side';
+        
+        /*var actionRecord = Ext.data.Record.create([
+                     {name: 'actionValue'},
+                     {name: 'value'}
+                ]);
+        
+        var record = new actionRecord( { });
+        alert('BRACtion page');
+        alert('{!actionsAndMappingsList}');
+        <apex:repeat value="{!actionsAndMappingsList}" var="actionsAndMappings">
+            record.data['actionValue'] = '{!actionsAndMappings.brAction.ActionMethod__c}';
+            record.data['value'] = '{!actionsAndMappings.brAction.ActionModuleName__c}';
+            alert(record.data['actionValue'] + '   ' + record.data['value']);
+            //gridStore.add(record);
+        </apex:repeat>*/
+        
+        mappingList = new Array();
+        var modulesData = new Array();
+        var i=0;
+        <apex:repeat value="{!moduleNameList}" var="moduleNameDataList">    
+            modulesData[i] = new Array(2)
+            modulesData[i++][0]='{!moduleNameDataList}';
+        </apex:repeat>
+    
+        var i=0;
+        <apex:repeat value="{!moduleLabelList}" var="moduleLabelDataList" >    
+            modulesData[i++][1]='{!moduleLabelDataList}';
+        </apex:repeat>
+    
+        var store = new Ext.data.SimpleStore({
+            fields: ['value', 'text'],
+            data : modulesData,
+            sortInfo: {
+                    field: 'text',
+                    direction: 'ASC'
+                }
+        });
+        
+        gridStore = new Ext.data.SimpleStore({
+            id: 'mainGrid',
+            data: [
+                //['','']  
+            ],
+            fields: ['action','module', 'moduleText']
+        });  
+            
+        var actionStore = new Ext.data.SimpleStore({
+            data: [
+                ['Create', 'Create'],
+                ['Update', 'Update'],
+                ['Delete', 'Delete'],
+                ['Send E-Mail Notification', 'Send E-Mail Notification']     
+            ],
+            fields: ['actionValue', 'actionName']
+        });
+        
+        var actions = new Ext.form.ComboBox({
+            store: actionStore,
+            mode: 'local',
+            triggerAction: 'all',
+            valueField: 'actionValue',
+            displayField: 'actionName',
+            selectOnFocus: true,
+            editable: false
+        });
+        
+        modules = new Ext.form.ComboBox({
+            fieldLabel: 'Data Source',
+            store: store,
+            displayField: 'text',
+            valueField: 'text',
+            typeAhead: true,
+            mode: 'local',
+            triggerAction: 'all',
+            emptyText: '',
+            selectOnFocus: true,
+            editable: false,
+            listeners:{
+                select: function(combo, record, index) {
+                	mappingList[mainGridSelectedRowIndex] = '';
+               }
+            }
+        });
+        
+        /*var buttonObject = new Ext.Button({applyTo:'button-div',text:'Simple Button'});
+        var queryCondition= new Ext.Panel({
+                layout: 'fit',
+                items: [buttonObject],
+                renderTo:'edit'
+        });*/   
+            
+        var colModel = new Ext.grid.ColumnModel({
+            
+            columns: [
+                {header: '', dataIndex: 'actionValue', sortable: true, editor: actions},
+                {header: '',dataIndex: 'moduleText', sortable: true, editor: modules},
+                {header: '', width: 85, sortable: false, renderer: function(val){ return '<input onClick="displayMapping();" class="clsMapping" type="button" value="..." id=btnID/>'; }, dataIndex: ''}
+               /*{header: 'Mapping', width: 85, sortable: false, renderer: function(val){ return '<input onClick="fucntion(){alert(\'vcvcvv\');}" style="height:25px; vertical-align:middle;" type="button" value="Mapping..." id=btnID/>'; }, dataIndex: ''}*/
+            ],
+        });
+   
+        
+        grid = new Ext.grid.EditorGridPanel({
+            id: 'gridStoreMain',
+            ds: gridStore,
+            layout:'fit',
+            width:900,
+            clicksToEdit: 2,
+            cm: colModel,
+            height:398,
+            selModel:new Ext.grid.RowSelectionModel({singleSelect:true}),
+            viewConfig:{
+                      forceFit:true 
+            },
+            tbar: [{
+                iconCls: 'addCls',
+               
+                handler : function(){
+                   var rowCount=gridStore.data.length;
+                   // access the Record constructor through the grid's store
+                   var NewQuery= grid.getStore().recordType;
+                    var newQuery= new NewQuery({
+                        chkBox:false,
+                        dName: 'Dispaly Value',
+                        type: 'text',
+                        comOpeValue: '=',
+                        value: '',
+                        logOpeValue:'OR'
+        
+                    });
+                    grid.stopEditing();
+                    gridStore.insert(rowCount,newQuery);
+                    grid.startEditing(0, 0);
+                    grid.getView().refresh()
+                    
+                    if (grid.getStore().data.length == 1) {
+                    	Ext.getCmp('up').disable();
+                    	Ext.getCmp('down').disable();
+                    }	
+                    else {
+                    	Ext.getCmp('up').enable();
+                    	Ext.getCmp('down').enable();
+                    }
+                }
+            },
+            {
+                iconCls: 'deleteCls',
+                handler : function(){
+                    
+                    var index=selectedRowIndex;
+                    if (!index) {
+                        return false;
+                    }
+                    var rec = grid.store.getAt(selectedRowIndex);          
+                    grid.store.remove(rec);
+                    mappingList[index]='';  
+                    if (grid.getStore().data.length == 1) {
+                    	Ext.getCmp('up').disable();
+                    	Ext.getCmp('down').disable();
+                    }	
+                    else {
+                    	Ext.getCmp('up').enable();
+                    	Ext.getCmp('down').enable();
+                    }
+                }
+    
+            },' ',' ',
+           {
+                iconCls: 'upCls',
+                id: 'up',
+                handler : function(){
+                  var index=selectedRowIndex;   
+                  var rec1 = grid.store.getAt(selectedRowIndex); 
+                  var rec2 = grid.store.getAt(selectedRowIndex-1);
+                  grid.stopEditing(); 
+                  gridStore.insert(selectedRowIndex-1,rec1);
+                  gridStore.insert(selectedRowIndex,rec2);
+                  grid.startEditing(0, 0);
+                  grid.getView().refresh();
+                  
+                  var mappingRec1 = mappingList[selectedRowIndex];
+                  mappingList[selectedRowIndex] = mappingList[selectedRowIndex - 1];
+                  mappingList[selectedRowIndex - 1] = mappingRec1;
+                  selectedRowIndex--;     
+                }
+    
+           },
+            {
+                iconCls: 'downCls',
+                id: 'down',
+                handler : function(){
+                  var index=selectedRowIndex;   
+                  var rec1 = grid.store.getAt(selectedRowIndex); 
+                  var rec2 = grid.store.getAt(selectedRowIndex+1); 
+                  grid.stopEditing();
+                  gridStore.insert(selectedRowIndex,rec2);
+                  gridStore.insert(selectedRowIndex+1,rec1);
+                  grid.startEditing(0, 0);
+                  grid.getView().refresh();
+                  
+                  var mappingRec1 = mappingList[selectedRowIndex];
+                  mappingList[selectedRowIndex] = mappingList[selectedRowIndex + 1];
+                  mappingList[selectedRowIndex + 1] = mappingRec1;
+                  
+                  selectedRowIndex++; 
+                  refresh();
+                }
+    
+            }],
+            listeners: {
+                rowclick:function(grid, r, e) {
+                    selectedRowIndex=r;
+                     rowIndex=r;
+                     mainGridSelectedRowIndex = r;
+                 },
+                 afteredit: function(e){
+                     refresh();
+                },
+                beforerender: function(thisGrid){
+                    var actionRecord = Ext.data.Record.create([
+                         {name: 'actionValue'},
+                         {name: 'module'},
+                         {name: 'moduleText'}
+                     ]);
+                     
+                     var store = modules.getStore();
+                     //alert('{!actionsAndMappingsList}');
+                    <apex:repeat value="{!actionsAndMappingsList}" var="actionsAndMappings" id="actionsAndMappingRepeat">
+                        var record = new actionRecord( { });
+                        record.data['actionValue'] = '{!actionsAndMappings.brAction.ActionMethod__c}';
+                        record.data['module'] = '{!actionsAndMappings.brAction.ActionModuleName__c}';
+                        for (var recNo = 0; recNo < store.data.length; recNo++) {
+                        	if (record.data['module'] == store.getAt(recNo).get('value')) {
+                        		record.data['moduleText'] = store.getAt(recNo).get('text');
+                        		break;
+                        	}
+                        }
+                        alert(record.data['moduleText'] + '   '  + record.data['actionValue'] + '   ' + record.data['module']);
+                        gridStore.add(record);
+                    </apex:repeat>
+                }
+            }
+        });
+        
+        
+        grid.getView().getRowClass = function(record, index){
+    
+            var rowClass;
+            if(index%2==0){
+                rowClass='row-white';
+            }else{
+                 rowClass ='row-gray';
+            }
+            
+            /*if (mainGridSelectedRowIndex == index) {
+                rowClass ='row-green';
+            }*/
+            return rowClass;
+        };
+    
+       function selectedRows(){
+          var rowCount=store.data.length;
+          var i=0;
+          var selectedRowList=[];
+          while(rowCount>i){
+               var record = grid.getStore().getAt(i);
+               var fieldName = grid.getColumnModel().getDataIndex(0);
+               var data = record.get(fieldName);
+               if(data==true){
+                   selectedRowList.push(i);
+               }     
+           i++;
+          }
+          return selectedRowList;
+        
+        }
+        
+        function refresh(){
+            var i=0;
+            var len = store.data.length;
+            if(store.data.length>0){
+            while(i < len){
+               var record = grid.getStore().getAt(i);
+               
+               
+               if(typeof record != 'undefined'){
+               var fieldName = grid.getColumnModel().getDataIndex(0);
+               //alert(fieldName+' ,' +record);
+               var data = record.get(fieldName);
+               var j=0;
+               while(typeEditor.store.data.length>j){
+               var rec= typeEditor.store.getAt(j).get('value');
+                if(rec==data){
+                    var rec1=typeEditor.store.getAt(j).get('name');
+                    record.set(fieldName ,rec1);
+                     
+                }
+                j++;
+               }
+                   
+                   var fieldName2 = grid.getColumnModel().getDataIndex(2);
+                   var data2 = record.get(fieldName2);
+                   var k=0;
+                   while(typeEditor2.store.data.length>k){
+                       var rec2= typeEditor2.store.getAt(k).get('value2');
+                        if(rec2==data2){
+                            var rec3=typeEditor2.store.getAt(k).get('name2');
+                            record.set(fieldName2,rec3);
+                        }
+                        k++;
+                   }
+               }
+               else{
+                    break;              
+               }
+               
+               i++;
+            }
+            }
+       
+        }
+        
+          var queryCondition= new Ext.Panel({
+                layout: 'fit',
+                items: [grid],
+                renderTo:'gridPanel'
+        }); 
+        
+        
+      
+    });
+
+    var booleanStore = new Ext.data.SimpleStore({
+            data: [
+                ['Yes', 'Yes'],
+                ['No', 'No']     
+            ],
+            fields: ['booleanValue', 'booleanName']
+        });
+    
+    function displayMapping(){
+        //wait(1000);
+        var window;
+        var value;
+        
+        //alert('click');
+        /*var record= Ext.getCmp('gridStoreMain').store;
+        var action = record.getAt(mainGridSelectedRowIndex).get('actionValue');
+        var mod = record.getAt(mainGridSelectedRowIndex).get('value');*/
+        
+        
+        //fieldList.clear();
+        var record= grid.getSelectionModel().getSelected();
+        //alert(record);
+        var action = record.get('actionValue');
+        //alert(action);
+        mod = record.get('moduleText');
+        //alert('Module Name ' + action + ' ' + mod + mainGridSelectedRowIndex);
+        if(mod != null && mod  != '' && action != null && action != ''){
+            var store = modules.getStore();
+            for (var recNo = 0; recNo < store.data.length; recNo++) {
+       			if (mod == store.getAt(recNo).get('text')) {
+       				mod = store.getAt(recNo).get('value');
+       				break;
+       			}
+       		}
+       		alert('call set Data');
+            setDataSourceName(mod);
+            //alert(fieldList[0][2]);
+        }
+        else{
+            alert('Please enter action and module name first.');
+        }
+    }
+    
+    function buildActions() {
+        var record= Ext.getCmp('gridStoreMain').store;
+        var totalRecords = record.data.length;
+        var actionString = '';
+        var store = modules.getStore();
+        for(var recordNo = 0; recordNo < totalRecords; recordNo++ ) {
+            var actionName = record.getAt(recordNo).get('actionValue'); 
+            var moduleText = record.getAt(recordNo).get('moduleText');
+            
+            //!!! Check for undefined
+            if (actionName != 'undefined' && moduleText != 'undefined')
+            {	
+            	var moduleName;
+            	//alert(moduleText);
+            	for (var recNo=0; recNo < store.data.length; recNo++) {
+            		if (moduleText == store.getAt(recNo).get('text')) {
+            			moduleName = store.getAt(recNo).get('value');
+            			break;
+            		}
+            	}
+                actionString = actionString + actionName + '->' + moduleName + '->' + mappingList[recordNo];
+                if (recordNo < totalRecords - 1)
+                    actionString = actionString + ';';
+            }
+        }
+        
+        //alert(actionString);
+        addActions(actionString);
+        //alert('Adding actions');
+    }
+
+    function afterPopUp(id) {
+        //alert('Idddddddd --- ' + id);
+        value.setValue(id);
+        closePopup();
+    }
+	
+	function setValue(val){
+    	alert(val);
+        value.setValue(val);
+    }
+    
+    function openWindow(){
+        var window;
+        var fText;
+        
+        value = new Ext.form.TextField({
+                            disabled: true
+        });
+        
+        /*var value = new Ext.Editor({});*/
+         
+        var lookup = new Ext.Button ({
+                    cls: 'btn lookupIconOn',
+                    disabled: true
+        })
+        
+        var fieldsStore = new Ext.data.SimpleStore({
+            fields: ['value', 'text', 'type'],
+            data : fieldList,
+            sortInfo: {
+                    field: 'text',
+                    direction: 'ASC'
+                }
+        });
+    
+        var fields = new Ext.form.ComboBox({
+            fieldLabel: 'Data Source',
+            store: fieldsStore,
+            displayField:'text',
+            valueField:'value',
+            typeAhead: true,
+            mode: 'local',
+            triggerAction: 'all',
+            emptyText:'--Select Field--',
+            selectOnFocus:true,
+            editable: false,
+            listeners:{
+                select: function(combo, record, index) {
+                	  //alert('select');
+                	  
+                     fText = record.get('text');
+                     //alert(fText);
+                     Ext.getCmp('toolBarId').remove(value, true);
+                     //alert('after value');
+                     Ext.getCmp('toolBarId').remove(lookup, true);
+                     //alert('after lookup');
+                    //window.remove(lookup, true);
+                    var type = record.get('type');
+                   // alert(type);
+                    if (type == 'date') {
+                        value = new Ext.form.DateField({
+                        id:'idValue'
+                        });
+                        //alert('date');
+                        disabled: false
+                    } 
+                    else if (type == 'combo') {
+                            value = new Ext.form.ComboBox({
+                            store: booleanStore,
+                            mode: 'local',
+                            triggerAction: 'all',
+                            valueField: 'booleanValue',
+                            displayField: 'booleanName',
+                            selectOnFocus: true,
+                            id:'idValue',
+                            editable: false 
+                        });
+                        //alert('combo');
+                    }
+                    else if (type == 'number') {
+                        value = new Ext.form.NumberField({
+                            disabled: false,
+                            id:'idValue'
+                        });
+                    }
+                    else if (type == 'reference') {
+                        lookup = new Ext.Button ({
+                            //text:'LookUp',
+                            cls: 'lookupIconOn btn',
+                            listeners: {
+                                click:function(button, e) {
+                                    //alert ('clicked');
+                                    var text = record.get('text');
+                                    var popupId =  Ext.util.Format.substr(text, 2, text.length-2);
+                                    //alert (popupId);
+                                    //openPopup('SearchPage?popupId=' + popupId + '&isLookup=true', popUpDone, 500, 400);
+                                    openPopup('SearchPage?popupId=' + popupId + '&isLookup=true', afterPopUp);
+                                    //openPopup('SearchPage?popupId=Action&isLookup=true');
+                                    //openLookup(popupId, popUpDone);
+                                }
+                            }
+                        });
+                        value = new Ext.form.TextField({
+                            id:'idValue'
+                            //disabled: true
+                        });
+                         Ext.getCmp('toolBarId').insert(1, lookup);
+                    } 
+                    else {
+                        value = new Ext.form.TextField({
+                            disabled: false,
+                            id:'idValue'
+                        });
+                        //alert('text');
+                    }
+                    
+                   /* value.addListener('dblclick', function(){
+                    		alert('you changed the text of this input field');
+                    		var expr = value.getValue();
+                    		alert(mod);
+                        	openPopup('ExprBuilderPage?moduleName=' + mod + '&isLookup=true&expr=' + expr, setValue);
+                    		
+					});*/
+					
+					Ext.getCmp('idValue').on('render', function(c){
+					  	c.getEl().on('dblclick', function(){
+					    	alert('double click test');
+					    	var expr = value.getValue();
+                    		alert(mod);
+                        	openPopup('ExprBuilderPage?moduleName=' + mod + '&isLookup=true&expr=' + expr, setValue);
+					  	});
+					});
+					
+                    Ext.getCmp('toolBarId').insert(1, value);
+                    //value.render();
+                    window.show();
+                    window.render();
+                 },
+                 blur: function(){
+                    
+                 }
+            }
+        
+        });
+        //alert('OW1');
+        var colModel = new Ext.grid.ColumnModel({
+        
+        columns: [
+            {header: '', editable: false, dataIndex: 'fieldText', sortable: true, editor: fieldListForGrid},
+            {header: '', editable: false , dataIndex: 'fieldvalue', sortable: true, editor: valueListForGrid}
+         ]
+        });
+        //alert('OW2');
+        mappingGridStore = new Ext.data.SimpleStore({
+            id: 'mappingGrid',
+         data: [
+                //['','']  
+            ],
+            fields: ['fieldText', 'field','fieldvalue']
+        });
+    
+        mappingGrid = new Ext.grid.EditorGridPanel({
+            id: 'mappingGridStore',
+            ds: mappingGridStore,
+            layout:'fit',
+            width:450,
+            clicksToEdit: 2,
+            cm: colModel,
+            height:398,
+            colspan:5,
+            cls: 'clswin',
+            selModel:new Ext.grid.RowSelectionModel({singleSelect:true}),
+            viewConfig:{
+                      forceFit:true 
+            },
+            listeners: {
+                rowclick:function(grid, r, e) {
+                    selectedRowIndex=r;
+                     rowIndex=r;
+                 },
+                 afteredit: function(e){
+                     refresh();
+                },
+                beforerender: function(thisGrid){
+                    var mappingRecord = Ext.data.Record.create([
+                          {name: 'fieldText'},
+                         {name: 'field'},
+                         {name: 'fieldvalue'}
+                     ]);
+                    
+                    if (mappingList[mainGridSelectedRowIndex] == null) {
+                        var count = 0;
+                        //setMainGridSelectedRowIndex(mainGridSelectedRowIndex);
+                        //alert('selectedrow ' + mainGridSelectedRowIndex);
+                        //alert('{!actionsAndMappingsList}');
+                        <apex:repeat value="{!actionsAndMappingsList}" var="actionsAndMappings">
+                            //setCount(count);
+                            if (count == mainGridSelectedRowIndex) {
+                                var store = fields.getStore();
+                                <apex:repeat value="{!actionsAndMappings.brMappings}" var="mapping">
+                                    var record = new mappingRecord( { });
+                                    record.data['field'] = '{!mapping.FieldName__c}';
+                                    record.data['fieldvalue'] = '{!mapping.Value__c}';
+                                    for (var recNo=0; recNo<store.data.length; recNo++) {
+                                    	if (store.getAt(recNo).get('value') == record.data['field']) {
+                                    		record.data['fieldText'] = store.getAt(recNo).get('text');
+                                    		break;
+                                    	}
+                                    }
+                                    alert(record.data['fieldText'] + '  ' + record.data['field'] + '   ' + record.data['fieldvalue']);
+                                    mappingGridStore.add(record);
+                                </apex:repeat>
+                            }
+                            count++;
+                        </apex:repeat>
+                    }
+                    else {
+                        var mappings = mappingList[mainGridSelectedRowIndex].split('&');
+                        //alert(mappings[0] + mappings.length);
+                        var index = 0
+                        while(index < mappings.length) {
+                            //alert(mappings[index]);
+                            var store = fields.getStore();
+                            var fieldValue = mappings[index].split('=');
+                            if (fieldValue[0] != '') {
+                            	var record = new mappingRecord( { });
+                            	record.data['field'] = fieldValue[0];
+                            	record.data['fieldvalue'] = fieldValue[1];
+                            	var recNo = 0;
+                            	while(recNo < store.data.length) {
+                            		if (store.getAt(recNo).get('value') == record.data['field']) {
+                                   		record.data['fieldText'] = store.getAt(recNo).get('text');
+                                   		break;
+                                   	}
+                            		recNo++;
+                            	}
+                            	mappingGridStore.add(record);
+                            }
+                            index++;
+                        }
+                    }
+                }
+            }
+        });
+        
+        var addBtn = new Ext.Button({
+            //text:'Add',
+            iconCls:'addCls',
+            listeners: {
+                click:function(button, e) {
+                    //alert('clicked');
+                   	var rowCount=mappingGrid.getStore().data.length;
+                   	//alert(rowCount);
+                   	// access the Record constructor through the grid's store
+                   	var NewQuery= mappingGrid.getStore().recordType;
+                   	var newQuery= new NewQuery({
+                       	chkBox: false,
+                       	dName: 'Dispaly Value',
+                       	field: fields.getValue(),
+                       	fieldText: fText,
+                       	fieldvalue: value.getValue()
+       
+                   	});
+                   	mappingGrid.stopEditing();
+                   	mappingGrid.getStore().insert(rowCount,newQuery);
+                   	mappingGrid.startEditing(0, 0);
+                   	mappingGrid.getView().refresh()
+                   
+                }
+            }
+        });
+        
+        var removeBtn = new Ext.Button({
+            //text:'Remove',
+            iconCls: 'deleteCls',
+            listeners: {
+                click:function(button, e) {
+                    var record = mappingGrid.getSelectionModel().getSelected();
+                    //alert(record);
+                    var field = record.get('field');
+                    //alert(field);
+                    mappingGrid.store.remove(record);
+                    mappingList[mainGridSelectedRowIndex] = '';
+                    /*var index=mappingGrid.selectedRowIndex;
+                    alert(index);
+                    if (!index) {
+                        return false;
+                    }
+                    var rec = mappingGrid.store.getAt(mappingGrid.selectedRowIndex);          
+                    mappingGrid.store.remove(rec);*/
+                    /*var rowCount=mappingGrid.getStore().data.length;
+                    alert(rowCount);
+                    var rec = mappingGrid.store.getAt(rowCount-1);
+                    mappingGrid.store.remove(rec);*/
+                }
+            }
+        });
+        
+        var fieldListForGrid = new Array();
+        var valueListForGrid = new Array();
+         var toolbar = new Ext.Toolbar({ 
+                id :'toolBarId',
+                items: [  
+                    fields,
+                    //value,
+                    //lookup,
+                    addBtn,
+                    removeBtn
+                 ]  
+         }); 
+          var winPanel= new Ext.Panel({ 
+                id :'winPanelId',
+                tbar :toolbar 
+         }); 
+        winPanel.add(mappingGrid);
+        window = new Ext.Window({
+            modal: false,
+            layout: 'vbox',
+            id :'winId',
+            title       : 'Select Mappings',
+            constrain   : false,
+            shadow :false,
+            width : 465,
+            height : 495,
+            resizable : true,
+            layout:'table',
+            resizable:false,
+            layoutConfig:{columns:5},
+            tbar: [{
+                scale: 'medium',
+                tooltipType : 'title',
+                tooltip: '{!$Label.ok}',
+                iconCls: 'bmcSave',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     },
+                     click: function(){
+                        //alert('fdsfsfffd');
+                        var record= Ext.getCmp('mappingGridStore').store;
+                        var totalRecords = record.data.length;
+                        var mappingString = '';
+                        for(var recordNo = 0; recordNo < totalRecords; recordNo++ ){
+                            mappingString = mappingString + record.getAt(recordNo).get('field') + '=' +record.getAt(recordNo).get('fieldvalue')
+                            if (recordNo < totalRecords -1 )
+                                mappingString = mappingString + '&';
+                      
+                        }
+                        if (mappingString != '')
+                            mappingList[mainGridSelectedRowIndex] = mappingString;
+                        alert(mappingString);
+                        window.close();
+                     }
+                }            
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcClear',
+                tooltipType : 'title',
+                tooltip: '{!$Label.clear}',
+                id:'clearId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcClearOn');    
+                     },
+                     mouseout: function(){
+                    	this.setIconClass('bmcClear');          
+                     },
+                     click: function(){
+                     	alert('clear');
+                     	mappingGrid.store.loadData(new Array());
+                    	mappingGrid.getView().refresh();
+                     }
+                },  
+            }]
+           
+            
+      });
+        window.add(winPanel);
+        
+        //window.items.add(lookup);
+        /*window.insert(0, fields);
+        window.insert(3, addBtn);
+        window.insert(4, removeBtn);
+        window.insert(5, mappingGrid);
+        window.insert(6, doneBtn);*/
+        window.show();
+    }
+</script>
+
+    <apex:outputpanel id="ModuleFieldsPanel">
+        <script>
+            fieldList = new Array();
+            var i=0; 
+            <apex:repeat value="{!fieldNameList}" var="fieldName" >    
+                fieldList[i] = new Array(3);
+                fieldList[i++][0]='{!fieldName}';
+            </apex:repeat>
+                
+            var i=0; 
+            <apex:repeat value="{!fieldLabelList}" var="fieldLabel" >
+                fieldList[i++][1]='{!fieldLabel}';
+            </apex:repeat>
+            
+            var i=0; 
+            <apex:repeat value="{!fieldTypeList}" var="fieldType" >
+                fieldList[i++][2]='{!fieldType}';
+            </apex:repeat>
+            
+            var tempStore = new Ext.data.SimpleStore({
+                fields: ['value', 'text','type'],
+                 data : fieldList
+            });
+            
+       </script>
+    </apex:outputpanel>
+    <apex:outputPanel > <!-- Page body in this panel -->
+        <apex:messages />
+            <apex:form id="brInforForm">
+                
+                <apex:actionFunction Name="setDataSourceName" action="{!getModuleFieldsForActionPage}" reRender="ModuleFieldsPanel" onComplete="openWindow();">
+                    <apex:param name="module" assignTo="{!moduleForActionPage}" value=""/>
+                </apex:actionFunction>
+                
+                <apex:actionFunction Name="addActions" action="{!addActions}" onComplete="">
+                    <apex:param name="actionStr" assignTo="{!actionStr}" value=""/> 
+                </apex:actionFunction>
+            
+                <!-- ><apex:actionFunction Name="setMainGridSelectedRowIndex" action="{!displaymainGridSelectedRowIndex}" onComplete="">
+                    <apex:param name="mainGridSelectedRowIndex" assignTo="{!mainGridSelectedRowIndex}" value=""/> 
+                </apex:actionFunction>
+                
+                <apex:actionFunction Name="setCount" action="{!displayCount}" onComplete="">
+                    <apex:param name="count" assignTo="{!count}" value=""/> 
+                </apex:actionFunction><-->
+            
+            
+                <apex:actionFunction Name="save" action="{!save}">
+                </apex:actionFunction>
+                
+                <div id="capsule" class="CapsuleDiv1" class="cls100Height">
+                  <table class="clsMainTableBR" cellpadding="0" cellspacing="0">    
+                    <tr>
+                        <td colspan="3">
+                            <div class="div15pxVSpacing"/>
+                        </td>
+                    </tr>
+                    <tr align="center">
+                        <td align="center" colspan="3">
+                            <img  src="/resource/JIcons/BR_progressBar_stage3.bmp"/>                                                       
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="div15pxVSpacing">
+                            </div>
+                        </td>
+                    </tr>
+                   <tr>
+                      <td class="clsPadding15px">
+                        <table class="clsBrTable" cellpadding="0" cellspacing="0">
+                          <tbody class="clearMarginPadding">    
+                                <tr>
+                                    <td class="BRInfoTitle">
+                                        <apex:outputLabel value="Edit - Actions"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                    <table class="innerClsBrTable" cellpadding="0" cellspacing="0" class="cls100Width">
+                                        <tr>
+                                            <td colspan="4" class="informationBarTD"> 
+                                                <div class="informationBar">
+                                                    <apex:outputLabel value="Specify the actions to perform when the Buisness Rule conditions apply."/>       
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr >
+                                            <td class="clsInputBoldLabelTableFirstRowTD clsLabelConditionTD" colspan="3" >
+                                                <apex:outputLabel value="Actions to Perform:" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="clsPadding15px">
+                                                <div id="gridPanel"></div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                        </tr>
+                                        <tr class="clsButtonBarTD"  >
+                                          <td colspan="3" align="right">
+                                            <table cellpadding="0" cellspacing="0">
+                                                <tr>
+                                                    <td>
+                                                        <apex:commandButton value="Import Rules..." action="{!importRule}" styleclass="clsButtonStyle clsIrBtn"/>
+                                                        <apex:commandButton value="Export Rules..." action="{!exportRule}" styleclass="clsButtonStyle clsErBtn"/>
+                                                        <apex:commandButton value="Previous" onmouseover="buildActions();" action="{!previousOfBrActionPage}" styleclass="clsButtonStyle clsPrvBtn"/>
+                                                        <apex:commandButton value="Next" onclick="buildActions();" styleclass="clsButtonStyle clsNxtBtn"/>
+                                                        <apex:commandButton value="Done" onmouseover="buildActions();" onclick="save();" styleclass="clsButtonStyle clsNxtBtn"/>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>     
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </tbody>
+                    </table>
+                    </td>
+                    </tr>
+                  </table>  
+                </div>    
+            </apex:form>
+    </apex:outputPanel>  
+</apex:page>
+                            	

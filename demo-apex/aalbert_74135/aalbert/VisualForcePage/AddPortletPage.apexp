@@ -1,0 +1,186 @@
+<apex:page showHeader="false" controller="AddPortletController">
+   <c:CommonIncludes />
+<!-- <script type="text/javascript" src="{!$Resource.ExtJS}/ext-all-debug.js"></script> -->
+    
+    <script>
+       
+        function closePage(){
+           if(errormsg == null || errormsg ==''|| errormsg =='Saved successfully.'){
+                window.parent.refreshPage(); 
+                
+           } else{
+               
+               showError();
+           }
+        }
+       
+        Ext.onReady(function(){
+        
+        Ext.QuickTips.init();   
+        // This function renders a block of buttons
+        var NewBtnHandler = function(button,event){ newAddPortlet(); };
+        var SaveBtnHandler = function(button,event) {  save(); };
+        
+        var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+         new SamplePanel({
+            title: '',
+            bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [{
+                scale: 'medium',
+                tooltipType : 'title',
+                tooltip: 'New',
+                iconCls: 'bmcNew',
+                disabled: true,
+                handler:NewBtnHandler
+            },' ',{
+                scale: 'medium',
+                tooltipType : 'title',
+                tooltip: 'Save',
+                iconCls: 'bmcSave',
+                handler:SaveBtnHandler
+           
+            }]
+
+        });
+    });
+    
+     
+    </script>
+        
+             
+             <apex:outputPanel id="error">
+             
+             <script>
+            var errormsg = '{!messageString}';
+               
+             </script>
+             </apex:outputPanel>
+             
+             <apex:outputPanel >
+                   <apex:form >
+                        <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent> 
+                          <apex:outputPanel id="dummy"></apex:outputPanel>
+                          <apex:actionFunction action="{!save}" name="save" reRender="validationComponent,error" oncomplete="closePage();"/>
+                           <apex:actionFunction action="{!newAddPortlet}" name="newAddPortlet" reRender="dummyoutputpanel,headerId"/>
+    
+                            <table class="clsMainTable" cellspacing="0" cellpadding="0">
+                                
+              
+                                    <tr class="clsRowGreyBg">
+                                        <td>
+                                            <div id="btnToolbar"></div>
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr>
+                                        <td >
+                                            <apex:outputPanel id="dummyoutputpanel">
+                                               <table class="clsTable" cellspacing="0" cellpadding="0">
+                                                <tr>
+                                                    <td><div class="div15pxVspacing"/></td><td></td>
+                                                </tr>                                                   
+                                                    
+                                                    <tr>
+                                                        <td class="clsInputBoldLabelTDAP">
+                                                            Add Portlet
+                                                        </td>
+                                                    </tr>
+                                                    
+                                                    <tr>
+                                                         <td class="clsInputLabelTD">Portlet Title<span class="clsRequired">*</span>
+                                                            
+                                                        </td>
+                                                        <td class="clsInputTextBoxTD">
+                                                            <apex:inputText value="{!portletTitle}" styleClass="clsInputTextBox"/>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                    <td><div class="div15pxVspacing"/></td><td></td>
+                                                    </tr>                                                                                                        
+                                                    <tr>
+                                                        <td class="clsInputLabelTD">Enter Portlet Order<span class="clsRequired">*</span>
+                                                            
+                                                        </td>
+                                                        <td class="clsInputTextBoxTD">
+                                                            <apex:inputText value="{!strOrder}" styleClass="clsInputTextBox"/>
+                                                            <apex:outputlabel value="[Between : 1-4]" styleClass="clsInputLabelTDAP"/>
+                                                        </td>
+                                                    </tr>
+                                                    
+                                                     <tr>
+                                                    <td><div class="div15pxVspacing"/></td><td></td>
+                                                   </tr>
+                                                    
+                                                    <tr>
+                                                        <td class="clsInputLabelTD" valign="top">Portlet ID<span class="clsRequired">*</span>
+                                                            
+                                                        </td>
+                                                        <td >
+                                                              
+                                                              <apex:selectList value="{!portletName}" size="1">
+                                                                <apex:selectoptions value="{!portlets}"/>
+                                                            </apex:selectList>
+                                                        </td>
+                                                       
+                                                    </tr>
+                                                   <tr>
+                                                    <td><div class="div15pxVspacing"/></td><td></td>
+                                                     </tr> 
+                                                    <tr>
+                                                        <td class="clsInputBoldLabelTDAP">
+                                                            Configure Timezones
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                       <td class="clsInputLabelTD">
+                                                            Select Timezone For Clock 1
+                                                        </td>
+                                                        <td valign="bottom">
+                                                            <apex:selectList value="{!timezone1}" size="1">
+                                                                <apex:selectoptions value="{!timezones}"/>
+                                                            </apex:selectList>
+                                                                
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                    <td><div class="div15pxVspacing"/></td><td></td>
+                                                     </tr>
+                                                    <tr>
+                                                        <td class="clsInputLabelTD">
+                                                            Select Timezone For Clock 2
+                                                        </td>
+                                                        <td >
+                                                             <apex:selectList value="{!timezone2}" size="1">
+                                                                <apex:selectoptions value="{!timezones}"/>
+                                                            </apex:selectList>
+                                                        </td>
+                                                    </tr>
+                                                     <tr>
+                                                    <td><div class="div15pxVspacing"/></td><td></td>
+                                                    </tr>
+                                                    <tr>
+                                                         <td class="clsInputLabelTD">
+                                                            Select Timezone For Clock 3
+                                                        </td>
+                                                        <td >
+                                                             <apex:selectList value="{!timezone3}" size="1">
+                                                                <apex:selectoptions value="{!timezones}"/>
+                                                            </apex:selectList> 
+                                                                
+                                                        </td>
+                                                    </tr>
+                                                    
+                                                </table>  
+                                             </apex:outputPanel>
+                                        </td>
+                                    </tr>            
+                        </table>  
+                        
+                 </apex:form>              
+          </apex:outputPanel>
+ </apex:page>
+                            	

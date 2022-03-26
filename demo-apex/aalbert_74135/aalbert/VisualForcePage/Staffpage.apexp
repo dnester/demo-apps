@@ -1,0 +1,274 @@
+<apex:page showHeader="false" Controller="StaffController" >
+<c:CommonIncludes />
+    <script>	
+     var staffName;               
+     var staffId;
+     var errormsg;
+	 function callCopyPage(){
+        window.parent.addTab("StaffPage?copyId=" + staffId,"Staff","Staff");
+	   }
+	        
+        Ext.onReady(function(){
+        Ext.QuickTips.init();   
+        // This function renders a block of buttons
+        var NewBtnhandler = function(button,event) { openPage("StaffPage","Staff","Staff"); };
+        var SaveBtnHandler = function(button,event) {  validateBeforeSave(save);};
+        var CopyBtnHandler = function(button,event) {  callCopyPage(); };
+        var ResetBtnHandler = function(button,event) { };
+        var DeleteBtnHandler = function(button,event) {   };
+        var SendNotificationBtnHandler= function(button,event) { };
+        var ClearBtnHandler= function(button,event) {  clearStaff(); };
+        var OpenBtnHandler= function(button,event) {  /*deleteIncident();*/ };
+        var NextBtnHandler = function (button,event) {/*nextStaffBtnHandler1();*/};
+        var PreviuosBtnHandler = function (button,event) { /*previousStaffBtnHandler1();*/};  
+        var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+		new SamplePanel({
+            title: '',
+            cls:'toolSpCls',
+             bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [{
+                scale: 'medium',
+                iconCls: 'bmcNew',
+				tooltipType : 'title',
+                tooltip: '{!$Label.new}',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcNewOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcNew');          
+                     }
+                },                
+                handler:NewBtnhandler
+            } ,' ', {
+                scale: 'medium',
+                iconCls: 'bmcSave',
+				tooltipType : 'title',
+                 tooltip:'{!$Label.save}',
+                 listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                },                 
+                handler:SaveBtnHandler
+            },' ',{
+                scale: 'medium',
+				tooltipType : 'title',
+                 tooltip: '{!$Label.copy}',
+                iconCls: 'bmcCopy',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcCopyOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcCopy');          
+                     }
+                },                
+                id:'copyId',
+                handler:CopyBtnHandler
+            },' ','-',' ',{
+                scale: 'medium',
+                iconCls: 'bmcDelete',
+				tooltipType : 'title',
+                 tooltip: '{!$Label.delete}',
+                 id:'deleteId',
+                 listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcDeleteOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcDelete');          
+                     }
+                },                 
+                handler:DeleteBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcClear',
+				tooltipType : 'title',
+                 tooltip: '{!$Label.clear}',
+                  id:'clearId',
+                  listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcClearOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcClear');          
+                     }
+                },                  
+                handler:ClearBtnHandler
+            },
+            new Ext.Toolbar.Fill(),
+            {
+                scale: 'medium',
+                iconCls: 'bmcPrevious',
+				tooltipType : 'title',
+                tooltip: '{!$Label.previousRecord}',
+                handler:PreviuosBtnHandler,
+                style:{
+                    align:'right'
+                }
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcNext',
+				tooltipType : 'title',
+                tooltip: '{!$Label.nextRecord}',
+                handler:NextBtnHandler,
+                style:{
+                    align:'left'
+                }
+            }
+            
+            ] 
+        });
+        
+        staffId = '{!staff.Id}';    
+        if(staffId == null ||staffId == ''){                
+        Ext.getCmp('deleteId').setDisabled(true);
+        Ext.getCmp('copyId').setDisabled(true);
+        Ext.getCmp('clearId').setDisabled(true); 
+        }
+           
+    });
+    
+    function buttonValidator() {       
+       if((staffName != null && staffName != '')&&(errormsg == null||errormsg ==''||errormsg=='Saved successfully.')){
+        Ext.getCmp('deleteId').setDisabled(true);
+        Ext.getCmp('copyId').setDisabled(false);
+        Ext.getCmp('clearId').setDisabled(false);    
+       }  
+     }
+     
+    </script>  
+    
+    <apex:outputPanel id="panelId">
+        <script>        
+           staffName = '{!staff.Username}';                    
+           staffId = '{!staff.Id}';   
+        </script>
+    </apex:outputPanel>        
+    <apex:outputPanel id="errorId">
+        <script>        
+           errormsg = '{!messageString}';
+        </script>
+        </apex:outputPanel>
+    <apex:outputPanel id="titlePanel">
+        <script>
+            function updateList(){            
+               window.parent.refreshList();
+            }
+        </script>
+    </apex:outputPanel> 
+   
+    <apex:outputPanel id="dummy"></apex:outputPanel>
+
+    <apex:outputPanel id="formOuputPanel">
+        <!-- Page body in this panel -->
+        <apex:messages />
+        <apex:form id="staffForm">      
+           	
+            <apex:actionFunction action="{!copyStaff}" name="copyStaff" />
+            <apex:actionFunction action="{!clearStaff}" name="clearStaff"/>            
+            <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+     		<apex:actionFunction action="{!save}" name="save" reRender="validationComponent,panelId,errorId" oncomplete="showError();buttonValidator();updateList();"/>
+                
+            <div id="capsule" class="CapsuleDiv1">
+            <table cellpadding="0" cellspacing="0" class="clsMainTable">
+
+                <tr class="clsRowGreyBg">
+                    <td>
+                    <div id="btnToolbar"></div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                    <table cellpadding="0" cellspacing="0" class="clsTable">
+                        <tr>
+                            <td class="clsTopAlignment75">
+                            <apex:outputPanel id="tablePanel">
+                                <table cellpadding="0" cellspacing="0" class="clsTable">
+                                    <tr>
+                                        <td colspan="3">
+                                        <div class="div15pxVspacing" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.staffId}"  /><span class="clsRequiredBlack">*</span></td>
+                                        <td class="clsInputTextBoxTD"><apex:inputField value="{!staff.Username}" styleClass="clsInputTextBox" id="User_id_username"/></td>
+                                       
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.firstName}" /></td>
+                                        <td class="clsInputTextBoxTD"><apex:inputField value="{!staff.FirstName}" styleClass="clsInputTextBox" /></td>
+                                       
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.lastName}"  /><span class="clsRequiredBlack">*</span></td>
+                                        <td class="clsInputTextBoxTD"><apex:inputField value="{!staff.LastName}" styleClass="clsInputTextBox" id="User_id_lastname"/></td>
+                                       
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.telephone}" /></td>
+                                        <td class="clsInputTextBoxTD"><apex:inputField value="{!staff.Phone}" styleClass="clsInputTextBox" /></td>
+                                       
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.ext}" /></td>
+                                        <td class="clsInputTextBoxTD"><apex:inputField value="{!staff.Extension}" styleClass="clsInputTextBox" /></td>
+                                       
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD" ><apex:outputLabel value="{!$Label.mobile}" /></td>
+                                        <td class="clsInputTextBoxTD"><apex:inputField value="{!staff.MobilePhone}" styleClass="clsInputTextBox" /></td>
+                                       
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.Pager}" /></td>
+                                        <td class="clsInputTextBoxTD"><apex:inputField value="{!staff.pager__c}" styleClass="clsInputTextBox" /></td>
+                                       
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.emailAdddress}" /><span class="clsRequiredBlack">*</span></td>
+                                        <td class="clsInputTextBoxTD"><apex:inputField value="{!staff.email}" styleClass="clsInputTextBox" id="User_id_email"/></td>
+                                       
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.workSchedule}" /></td>
+                                        <td class="clsInputTextBoxTD"><apex:inputField value="{!staff.workSchedule__c}" styleClass="clsInputTextBox" /></td>
+                                       
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD" valign="top"><apex:outputLabel value="{!$Label.timeZone}" /><span class="clsRequiredBlack">*</span></td>
+                                        <td class="clsInputTextBoxTD"><apex:inputField value="{!staff.TimeZoneSidKey}" styleClass="clspicklist" id="User_id_timezonesidkey"/></td>
+                                       
+                                    </tr>
+                                     <tr>
+                                        <td colspan="2"><div class="div9pxVspacing"/></td>
+                                     </tr>
+                                    
+                                    <tr>
+                                        <td class="clsPanelInputCheckboxTD">
+                                            <apex:inputField value="{!staff.IsActive}"  /> 
+                                            <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.inactive}" />
+                                        </td>
+                                    </tr>
+                                 </table>
+                            </apex:outputPanel></td>
+                      </tr>
+                    </table>
+                    </td>
+                </tr>
+            </table>
+            </div>
+       
+        </apex:form>
+    </apex:outputPanel>
+</apex:page>
+                            	

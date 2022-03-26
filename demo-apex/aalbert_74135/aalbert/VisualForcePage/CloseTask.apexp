@@ -1,0 +1,269 @@
+<apex:page showHeader="false" controller="CloseTaskController" >
+<c:CommonIncludes />
+
+
+    <script>
+        Ext.onReady(function(){
+        
+        Ext.QuickTips.init();
+    
+        var OkBtnHandler = function(button,event) {  closeTask(); };
+        var CancelBtnHandler = function(button,event) {  parent.window.closePopup(); };
+        
+          var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+        new SamplePanel({
+            title: '',
+            cls:'toolCloseCls',
+            bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [{
+                scale: 'medium',
+                tooltipType : 'title',
+                tooltip: '{!$Label.ok}',
+                iconCls: 'bmcSave',
+                handler:OkBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcDelete', 
+                tooltipType : 'title',
+                tooltip: '{!$Label.cancel}',
+                handler:CancelBtnHandler
+            }]
+        });
+    });
+    </script>
+  
+        
+    <apex:outputPanel > <!-- Page body in this panel -->
+    <apex:outputPanel id="errorPanel">
+         <script>
+             var error= '{!messageString}'; 
+         </script>
+     
+     </apex:outputPanel>
+        <apex:messages />
+            <apex:form onmouseover="diableCheckboxes();">
+            <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+                <c:tabOutComponent />
+                <script>
+              
+              window.onload = disableFDT;
+              
+              function disableFDT(){
+                var browser=navigator.appName;
+                var checkFollowUpDateTime = document.getElementById('{!$Component.followUpDateTime}'); 
+                if(checkFollowUpDateTime  != null && checkFollowUpDateTime  != ''){
+                    document.getElementById('{!$Component.followUpDateTime}').disabled = true;
+                    if(browser == "Microsoft Internet Explorer"){
+                                document.getElementById('{!$Component.followUpDateTime}').style.backgroundColor = "#CCCCCC";
+                    }
+                 }
+              }
+              
+              function diableCheckboxes(){
+                 
+                  if(document.getElementById('{!$Component.taskResolution}').value == '')
+                  {
+                      var checkboxRes = getElementsByValue("isStdResolution", "input");         
+                       checkboxRes[0].disabled = true;
+                   }
+                   if(document.getElementById('{!$Component.taskDescription__c}').value == ''){
+                       var checkboxDesc = getElementsByValue("isStdDescription", "input");         
+                       checkboxDesc[0].disabled = true;
+                   }
+                   
+              }
+              
+              function enableCheckboxes(){           
+                  var checkboxRes = getElementsByValue("isStdResolution", "input");         
+                       checkboxRes[0].disabled = false;
+              }
+              
+              function toggleFollowUpDateTime()
+              {  
+                  var browser=navigator.appName;
+                  if(document.getElementById('{!$Component.followUp}').checked == true)
+                  {
+                       document.getElementById('{!$Component.followUpDateTime}').disabled = false;
+                       if(browser == "Microsoft Internet Explorer"){
+                        document.getElementById('{!$Component.followUpDateTime}').style.backgroundColor = "#FFFFFF";
+                       }
+                  }
+                  else
+                  {
+                       document.getElementById('{!$Component.followUpDateTime}').value = "";
+                       document.getElementById('{!$Component.followUpDateTime}').disabled = true;
+                       if(browser == "Microsoft Internet Explorer"){
+                            document.getElementById('{!$Component.followUpDateTime}').style.backgroundColor = "#CCCCCC";
+                       }
+                   }
+                   
+                   
+              }
+              
+              function changeDescCheckboxStatus(){
+                 
+                  var checkboxDesc = getElementsByValue("isStdDescription", "input");
+                  var checkboxRes = getElementsByValue("isStdResolution", "input");
+
+                   
+                   if(checkboxRes[0].checked && !checkboxDesc[0].checked) 
+                           checkboxDesc[0].checked = true;
+                   /*if(!checkboxDesc[0].checked && checkboxRes[0].checked){
+                           checkboxDesc[0].checked = false; 
+                           checkboxRes[0].checked = false;
+                    }*/
+                           
+              }
+              function getElementsByValue(value, tag, node) {
+                    var values = new Array();
+                    if (tag == null)
+                            tag = "*";
+                    if (node == null)
+                            node = document;
+                    var search = node.getElementsByTagName(tag);
+                    var pat = new RegExp(value, "i");
+                    for (var i=0; i<search.length; i++) {
+                        if (pat.test(search[i].value))
+                            values.push(search[i]);
+                     }
+                    return values;
+                }
+              
+              function closeWindow(){
+                  closeTask();                   
+              }
+              function closeCurrentWindow(){
+                  
+                  if(error==''||error == null){  
+                  	  window.parent.setPopUpVar('done');
+                  	  window.parent.refreshParentList();
+                      parent.window.closePopup();
+                  }
+                  else
+                      showError(); 
+              
+              }
+          </script>
+                <apex:actionFunction id="closeTask" name="closeTask" action="{!save}" reRender="validationComponent,errorPanel" oncomplete="closeCurrentWindow();"/>
+                <apex:actionFunction name="setCategoryNext" action="{!setSelectedCategory}" reRender="Category__c_id_name,Category__c_id_categorydescription__c" onComplete="javascript:reRenderCategory();"> 
+                    <apex:param assignTo="{!categoryId}" name="selectedCatId" value=""/>
+                </apex:actionFunction>
+                <apex:actionFunction name="reRenderCategory"  reRender="Category__c_id_name" onComplete="javascript:reRenderCategoryDesc();"/>
+                <apex:actionFunction name="reRenderCategoryDesc"  reRender="Category__c_id_categorydescription__c"/>
+                <apex:actionFunction name="reRenderReqired"  reRender="Status__c_id_name"/> 
+                <apex:actionFunction name="setStatusNext" action="{!setSelectedStatus}" reRender="Status__c_id_name" onComplete="javascript:reRenderReqired();"> 
+                    <apex:param assignTo="{!statusId}" name="selectedStatusId" value=""/>
+                </apex:actionFunction>
+                
+                <apex:actionFunction name="setClosedByNext" action="{!setSelectedClosedBy}" reRender="User_id_name" onComplete="javascript:reRenderReqired();"> 
+                    <apex:param assignTo="{!closedById}" name="selectedClosedById" value=""/>
+                </apex:actionFunction>
+                
+                
+                <apex:outputPanel id="dummy"> 
+                </apex:outputPanel>
+                 
+               
+                                                 <div id="capsule">
+                                 <table class="clsMainTable2">
+                        
+                                       <tr class="clsRowGreyBg">
+                                           <td>
+                                <div id="btnToolbar"></div>
+                                <div >
+                                             <apex:commandButton value="Save" action="{!save}" rendered="Status__c_id_name" />
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                 <table class="clsTable" cellspacing="0" cellpadding="0" > 
+                                    <tr>
+                                        <td class="clsTD80">
+                                             <table class="clsTable" cellspacing="0" cellpadding="0"> 
+                                             <tr>
+                                                <td colspan="3">
+                                                    <div class="div13pxVspacing"></div>
+                                                </td>
+                                            </tr>
+                                                <tr>
+                                                    <td class="clsInputLabelTD">{!$Label.closeBy}<span class="clsRequiredBlack">*</span></td>
+                                                    <td class="clsInputTextBoxTDHistory ">
+                                                        <apex:inputField id="User_id_name" value="{!task.closedBy__c}" onblur="showalldata(event)" styleClass="clsInputTextBox" />
+                                                    </td>
+                                                    
+                                                   
+                                                    <td class="lookupIconTD">
+                                                     <div class="lookUpIconDiv">
+                                                        <apex:commandButton id="categoryIdLookup"  reRender="dummy" onclick="openPopup1('CategorySearchPage?isLookup=true',setCategoryNext);" styleClass="lookupIconOn"/>
+                                                     </div>
+                                                     </td>
+                                                     
+                                                </tr>
+                                                <tr>   
+                                                    <td class="clsInputLabelTD" >{!$Label.closeDate}</td>
+                                                   <td class="clsInputTextBoxTDHistory ">
+                                                        <apex:inputfield value="{!task.closeDateTime__c}" styleClass="clsInputTextBox"/>
+                                                    </td>
+                                                </tr>                                              
+                                                <tr>
+                                                    <td class="clsInputLabelTD">{!$Label.status}</td>
+                                                   <td class="clsInputTextBoxTDHistory">
+                                                        <apex:inputField id="Status__c_id_name" value="{!task.status__c}" onblur="showalldata(event)" styleClass="clsInputTextBox"/>
+                                                    </td>
+                                                    <td class="lookupIconTD">
+                                                    <div class="lookUpIconDiv">
+                                                        <apex:commandButton id="statusIdLookup"  reRender="dummy" onclick="openPopup1('SearchPage?popupId=Status&isLookup=true',setStatusNext);" styleClass="lookupIconOn"/>
+                                                    </div>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                                                                         
+                                            <table class="clsTable" cellspacing="0" cellpadding="0"> 
+                                                <tr>
+                                                    <td class="clsInputBoldLabelCloseTD"><apex:outputLabel value="{!$Label.resolution}"/></td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="clsInputTextAreaTD"><apex:inputTextarea id="taskResolution" onchange="enableCheckboxes();" value="{!task.taskResolution__c}" styleClass="clsInputTextAreaPgWoSidePanel"/>
+                                                                        <apex:inputhidden id="taskDescription__c" value="{!task.taskDescription__c}"/>
+                                                    </td>
+                                                </tr>
+                                      
+                                           <tr>
+                                                    <td colspan="2"></td>
+                                                </tr>
+                                                 <tr><td><div class="div9pxVspacing"></div></td></tr>
+                                                <tr>
+                                                    <td colspan="2" >
+                                                       <table  class="clsTable2">
+                                                             <tr>
+                                                              
+                                                              
+                                                                 <td   class="clsInputCheckBoxTD" colspan="2">
+                                                                    <apex:selectCheckboxes value="{!updateDescRes}" onclick="changeDescCheckboxStatus();" id="stdDescResChecks" layout="pageDirection" >
+                                                                        <apex:selectOptions value="{!updateList}" />
+                                                                    </apex:selectCheckboxes>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                </td>
+                                <td class="clsTD20">
+                                 
+                                </td>
+                            </tr>
+                            </table>
+                            </td>
+                        </tr>
+                    </table>
+                </div>    
+            </apex:form>
+    </apex:outputPanel>  
+</apex:page>
+                            	

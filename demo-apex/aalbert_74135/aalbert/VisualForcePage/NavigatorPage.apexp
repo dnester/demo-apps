@@ -1,0 +1,505 @@
+<apex:page showHeader="false">
+	<c:CommonIncludes />
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/NavigatorStyleSheet.css"/>   
+  
+  <apex:outputPanel >
+        <script type="text/javascript">
+
+
+        var indexArray = new Array();
+        var titleArray = new Array();
+        var linkArray = new Array();   //[link] = index
+        var reverseLinkArray = new Array();  //[index] = link
+        var tempIndexWin;        
+        var counter = 0;
+        var index = 1;
+        var windowIndex = 0;
+        var tabIndex = 0;
+        var splitIndex = 0;
+        var win2; 
+        var tb;    
+        var skyWindow;
+        var splitButton;
+        var resTokens;                   
+        var idSet;      
+        var tabToolTipText; 
+        function refreshList(){
+            var listLink = "{!$CurrentPage.parameters.target}";
+            //alert('target : '+listLink);
+            var win = Ext.getCmp('winId1');
+            if(win != null){
+                Ext.get(win.body.id).update('<iframe src =\"\/apex\/'+listLink +'\" style=\"width:100%;height:100%;border:none\"/>');
+            }
+            //alert('END REFRESH');
+        }
+        
+        function refreshPage(wid){
+            var win = Ext.getCmp('winId'+wid);
+            if(win != null){
+                var link = reverseLinkArray[wid];
+                if(link.match(/\?/)){
+                    link = link + '&wid='+wid;
+                }else{
+                    link = link + '?wid='+wid;
+                }
+                Ext.get(win.body.id).update('<iframe src =\"\/apex\/'+ link  +'\" style=\"width:100%;height:100%;border:none\"/>');
+            }
+        }
+           
+		function listOfId(listId){
+        	idSet=listId;
+        }
+         function returnListOfId(){
+          	return idSet;
+        }
+   
+        function getTitleText(title){
+            var titleText = '';
+            if(title!=null && title!=''){
+                if(title.length > 15){
+                    titleText = title.substring(0,15) + '...';
+                }else{
+                    titleText = title;
+                }
+            }
+            return titleText;
+        }  
+        
+        
+        function closeTab(wid){
+        	//alert('closing window'+wid);
+        	//alert('reverseLinkArray[wid] : '+reverseLinkArray[wid]);
+            linkArray[reverseLinkArray[wid]] = -1;
+            
+            Ext.getCmp('tbId').remove('tabId' + wid, true);
+            Ext.getCmp('splitButtonId').menu.remove( 'splitId' + wid,true);
+            Ext.getCmp('tbId').remove('spacerId' + wid, true);
+            skyWindow.remove('winId' + wid, true); 
+            //alert('closing window end');
+        }
+        
+        
+        function changeTitle(wid, newTitle){
+        
+            Ext.getCmp('tabId' + wid).setTooltip(newTitle);
+            var changedTitle=getTitleText(newTitle);
+            Ext.getCmp('tabId' + wid).setText(changedTitle);
+            Ext.getCmp('splitId' + wid).setText(changedTitle) ;
+            skyWindow.findById('winId' + wid).setTitle(newTitle);
+        }
+        
+         function getHeaderTitleText(title,width){
+
+            var titleText = '';
+            if(title!=null && title!=''){
+                chars = (width - 95)/7;
+                if(title.length > chars){
+                    titleText = title.substring(0,chars-3) + '...';
+                }else{
+                    titleText = title;
+                }
+            }
+            return titleText;
+        }   
+        
+        function test1(){
+            addTab("{!$CurrentPage.parameters.target}");
+        }
+          
+        function highlightWindow(wid){
+            skyWindow.findById('winId' + wid).show();
+        }
+        
+                
+        function addTab(pageTarget,tabHeader,windowHeader) {
+            tabToolTipText=tabHeader;
+            var wid = linkArray[pageTarget];
+            if(typeof(wid)!='undefined' && wid!= -1 && ( pageTarget.match(/\?id/)!=null || pageTarget.match(/\&id/)!=null )){
+                highlightWindow(wid);
+            }else{
+            	//alert('Index : '+index);
+                linkArray[pageTarget] = index;
+                reverseLinkArray[index] = pageTarget;
+                indexArray[tabHeader] = index;
+                titleArray[index] = tabHeader;
+                tabHeader = getTitleText(tabHeader);
+                var link = pageTarget;
+                if(link.match(/\?/)){
+                    link = link + '&wid='+index;
+                }else{
+                    link = link + '?wid='+index;
+                }
+                counter++;
+                tempIndexTab = index++;
+                tb.add( {
+                    id :'tabId' + tempIndexTab,
+					tooltipType : 'title',
+                    tooltip: tabToolTipText,
+                    text : tabHeader,
+                    width : 100,
+                    cls :  'bgBlue', 
+                       
+                    listeners: {
+                        click :onItemToggle
+                    },
+                    pressed :true
+               } );
+               tb.add({
+                    id:'spacerId'+tempIndexTab,
+                    xtype: 'spacer',
+                    width:8
+                   
+                });
+               windowIndex = index;
+               splitIndex = tempIndexTab;
+               splitButton.menu.add( {
+                   id :'splitId' + splitIndex,
+                   text :tabHeader ,
+                   checked : false,
+                   group :'sBtnItemGroup',
+                  
+                   handler:onItemCheck
+                    
+                   
+               } );
+               tb.doLayout();
+               openPanel(link,windowHeader);
+           }
+       }
+
+       
+       function openPanel(pageTarget2,windowHeader) {
+                            tempIndexWin = windowIndex-1;
+                            splitIndex = tempIndexWin;
+                         
+                            
+                            win2 = new Ext.Window({
+
+                                id :'winId' + tempIndexWin,
+                                //title :'window ' + tempIndexWin,
+                                title       : windowHeader,
+                                renderTo    : skyWindow.body,
+                                constrain   : true,
+                                width : 300,
+                                height : 200,
+                                maximizable : true,
+                                minimizable : true,
+                                resizable : true,
+                                frame:false,
+                                border : true,
+                                closable : true,    
+                                cls :'headerDefault',
+                                tools:[
+                                     
+                                      {
+                                          id: 'help',
+                                          qtip: 'Help ',
+                                          handler: function() {
+                                          }
+
+                                       }
+                                       
+                                 ],
+                                defaultButton : 'tabId'+tempIndexWin,
+                                html :'<iframe src =\"\/apex\/'+pageTarget2+'\" style=\"width:100%;height:100%;border:none\"/>',
+                                listeners : {
+                                           
+                                            close : function() {
+                                                counter--;
+                                                var str = this.id;
+                                                var resTokens = str.split("winId");
+                                                Ext.getCmp('tbId').remove('tabId' + resTokens[1], true);
+                                                Ext.getCmp('tbId').remove('spacerId' + resTokens[1], true);
+                                                linkArray[reverseLinkArray[resTokens[1]]] = -1;
+                                                Ext.getCmp('splitButtonId').menu.remove( 'splitId' + resTokens[1],true);
+                                               // index--;
+                                               
+                                              
+                                            },
+                                            minimize : function(){
+                                               /* this.hide();
+                                                var tempId = this.id;
+                                                var resTokens = tempId.split("winId");*/
+                                                this.setAnimateTarget(this.defaultButton);
+                                                this.hide();
+                                             
+                                             },
+                                             maximize: function(){ 
+                                                   this.focus();
+                                                   db=this.defaultButton;
+                                                   Ext.getCmp(db);            
+                                                   this.setAnimateTarget(Ext.getCmp(db));
+                                            },
+                                            restore: function(){ 
+                                                this.focus();
+                                               // this.setSize(300,200);
+                                                
+                                                
+                                            },
+                                            resize: function(){ 
+                                                var str = this.id;
+                                                var resTokens = str.split("winId");
+                                                var orignalTitle = titleArray[resTokens[1]];
+                                            
+                                               var winTitle = getHeaderTitleText(orignalTitle ,this.getWidth());
+                                               this.setTitle(winTitle) ;
+                                            }
+
+                                            
+                                }
+
+                            });
+                            skyWindow.add(win2 );
+                            win2.on('activate', function(){
+                                var str = this.id;
+                                var resTokens = str.split("winId");
+                                colorChange(resTokens[1]);
+                                  this.focus();
+                            } );
+                            
+                            if(tempIndexWin == 1){
+                               win2.tools.close.disabled = true;
+							   win2.addClass('closeBtnDisabledCls'); 
+                            }
+
+
+                            win2.show();
+                            win2.maximize();
+                            
+       }
+       
+       function onItemToggle(item, pressed) {
+                    var str2 = item.id;
+                    resTokens = str2.split("tabId");
+                    Ext.getCmp('winId' + resTokens[1]).show();
+                    colorChange(resTokens[1]);
+                    
+       }
+       
+       function onItemCheck(item, checked) {
+           
+           var str2 = item.id;
+           resTokens = str2.split("splitId");
+            
+         // Ext.getCmp('winId' + resTokens[1]).show();
+         //Ext.getCmp('winId' + resTokens[1]).maximize();
+        
+           if(item.id== 'splitCascadeId' ) {
+              var x=20;
+              var y=20;
+              for ( var i = 1; i <=index; i++) {
+                       
+                        if(Ext.getCmp('winId'+i)!=null) {
+                                if(Ext.getCmp('winId'+i).maximized==true)
+                                    Ext.getCmp('winId' + i).restore();
+                                Ext.getCmp('winId'+i).setPosition(x, y);  
+                                Ext.getCmp('winId' + i).show();
+                                x=x+40;
+                                y=y+50;
+                        }
+              }
+            }
+            if(item.id== 'splitTileId' ) {
+              var totalHeight=skyWindow.getHeight();
+              var tiledHeight=0;
+              var   tiledWidth=skyWindow.getWidth()/2;
+              
+               if(counter==2) {
+                  tiledHeight=totalHeight;
+               }else{
+                   
+                   if((counter%2)==0){
+                      tiledHeight=(totalHeight/counter)*2;
+                   }else{
+                       tiledHeight=(totalHeight/(counter+1))*2;
+                   }
+               
+               }
+              
+              var x=0;
+              var y=0;
+              var cFlag=0;
+              for ( var i = 1; i <=index; i++) {
+                         // Ext.getCmp('winId'+i).restore();
+                        if(Ext.getCmp('winId'+i)!=null) {
+                                if(Ext.getCmp('winId'+i).maximized==true)
+                                    Ext.getCmp('winId' + i).restore();
+                                Ext.getCmp('winId'+i).setPosition(x, y);  
+                              
+                                Ext.getCmp('winId'+i).setHeight(tiledHeight);
+                               
+                                Ext.getCmp('winId'+i).setWidth(tiledWidth);
+                                Ext.getCmp('winId' + i).show();
+                                cFlag++;
+                                x=x+400;
+                                if((cFlag%2)==0) {
+                                    x=0;
+                                    y=y+tiledHeight;
+                              }
+                        }
+                     
+              }
+            }
+             if(item.id!= 'splitTileId' && item.id != 'splitCascadeId') {
+             
+                 Ext.getCmp('winId' + resTokens[1]).show();
+             
+             }
+           
+           
+             
+             
+          }
+      
+      function colorChange(idIndex) {
+            
+           for ( var i = 1; i <=index; i++) {
+           
+                        if(Ext.getCmp('winId'+i)!=null) {
+                           if(i== idIndex){
+                            
+                               Ext.getCmp('winId' + i).removeClass("headerDefault");
+                               Ext.getCmp('winId' + i).removeClass("headerLightBlue");
+                               Ext.getCmp('winId' + i).removeClass("headerBlue");
+                               Ext.getCmp('winId' + i).addClass("headerBlue");
+                           }else {
+                               Ext.getCmp('winId' + i).removeClass("headerDefault");
+                               Ext.getCmp('winId' + i).removeClass("headerBlue");
+                               Ext.getCmp('winId' + i).removeClass("headerLightBlue ");
+                               Ext.getCmp('winId' + i).addClass("headerLightBlue");            
+                           }
+                       }
+                       if(Ext.getCmp('tabId'+i)!=null) {
+                        
+                           if(i== idIndex){
+                            
+                               Ext.getCmp('tabId' + i).removeClass("bgGrey");
+                               Ext.getCmp('tabId' + i).removeClass("bgBlue");
+                   
+                               Ext.getCmp('tabId' + i).addClass("bgBlue");
+                           }else {
+                               Ext.getCmp('tabId' + i).removeClass("bgBlue");
+                               Ext.getCmp('tabId' + i).removeClass("bgGrey");
+                               Ext.getCmp('tabId' + i).addClass("bgGrey");            
+                           }
+                       }
+                      if(Ext.getCmp('splitId'+i)!=null) {
+                           
+                           if(i==idIndex){
+                                   Ext.getCmp('splitId'+i).setChecked(true);
+                           }
+                              
+                       } 
+                     
+                 
+                  } 
+                  
+       }               
+              
+                
+       Ext.onReady( function() {
+                       
+                       //For disabling close button on ListView page
+                       Ext.override(Ext.Panel, {
+                           createToolHandler : function(t, tc, overCls, panel){
+                             return function(e){
+                                 t.removeClass(overCls);
+                                 e.stopEvent();
+                                 if(!t.disabled && tc.handler){
+                                       tc.handler.call(tc.scope || t, e, t, panel);
+                                 }
+                             };
+                          }
+                        });
+
+                        tb = new Ext.Toolbar( {
+                            id :'tbId',
+                            width :'auto',
+                            height :'42',
+                            renderTo :'menubar',
+                            cls :'tBarCls'
+                        });
+
+                        skyWindow = new Ext.Window({
+                            renderTo    : 'skyWind',
+                            baseCls : 'sky',
+                            width       : '98%',
+                            shadow :false,
+                            resizable : false,
+                            closable : false,
+                          
+                            bodyStyle: Ext.isIE7 ? {"height":"715px","background-color":"#FFFFFF"} : (Ext.isIE ? {"height":"670px","background-color":"#FFFFFF"} : {"height":"670px","background-color":"#FFFFFF"})
+
+                         
+
+                        });
+                        
+                        //skyWindow.height = Ext.isIE ? 800:900;
+                        
+                        splitButton = new Ext.SplitButton( {
+
+                            id :'splitButtonId',
+                            text :' ',
+							iconAlign : 'top',                       
+                            iconCls :'blist',
+                            width:50,
+                            scale :'medium',
+                            enableToggle:true,
+                            menu : {
+                                items : [{
+                                            id :'splitCascadeId',
+                                            text :'Cascade',
+                                            checked : false,
+                                             
+                                             group :'sBtnItemGroup',
+                                             handler:onItemCheck
+                                       },
+                                       {
+                                            id :'splitTileId',
+                                            text :'Tile',
+                                            checked : false,
+                                             group :'sBtnItemGroup',
+                                             handler:onItemCheck
+                                       }]
+                            }
+                        });
+
+                        tb.add(splitButton);
+                        tb.add(' ');
+                        tb.add(' ');
+                        tb.add('-');
+                        tb.add(' ');
+                        tb.add(' ');
+                        tb.add(' ');
+                        tb.add(' ');
+                        tb.add(' ');
+                      
+                     
+
+          tb.doLayout();
+        
+          var skyDiv = document.getElementById('skyWind');
+          if(skyDiv ){
+            if(Ext.isIE7){
+                skyDiv.style.marginTop = "372px";
+            }else if(Ext.isIE){
+                skyDiv.style.marginTop = "320px";
+            }else{
+                skyDiv.style.marginTop = "320px";
+            }
+          }
+          
+          skyWindow.show();
+          //addTab("{!$CurrentPage.parameters.target}","{!$CurrentPage.parameters.title}","Search");
+          addTab("{!$CurrentPage.parameters.target}","{!$CurrentPage.parameters.title}"+" List","{!$CurrentPage.parameters.title}"+" List");
+          Ext.QuickTips.init();
+ });
+
+  </script>  
+        
+    <div id="menubar" ></div>
+
+    <div id="skyWind"></div>
+</apex:outputPanel>
+</apex:page>
+                            	

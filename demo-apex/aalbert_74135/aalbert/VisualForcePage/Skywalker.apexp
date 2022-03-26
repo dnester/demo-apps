@@ -1,0 +1,432 @@
+<apex:page showHeader="false" controller="NavigatorController">
+<c:CommonIncludes />
+<apex:form >
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJs2}/ex/ux/css/Portal.css" />
+    <apex:includeScript value="{!$Resource.ExtJs2}/ex/ux/Portal.js" />
+    <apex:includeScript value="{!$Resource.ExtJs2}/ex/ux/PortalColumn.js" />
+    <apex:includeScript value="{!$Resource.ExtJs2}/ex/ux/Portlet.js" />
+    <link rel="stylesheet" type="text/css" href="{!$Resource.BMCStyle}/SkywalkerStyleSheet.css"/> 
+    
+   
+               
+<apex:outputPanel rendered="true">
+
+    </apex:outputPanel>
+    
+  
+    
+    <apex:outputPanel title="Tabpanel Body">
+        <style>
+            
+        </style>
+           </apex:outputPanel>
+    
+    <apex:outputPanel >
+        <script>
+            function addNewTab(idVal, titleVal, pageRef){
+            
+               if((linkArray[pageRef]) == null){
+                           Ext.getCmp('navview').findById('tabs').add({
+                    title: '    '+titleVal,
+                    width:'auto',
+                    id: idVal,
+                    html: '<div class=\"sky-iframe\"><iframe src =\"\/apex\/'+pageRef+'\" class=\"tab-iframe\" style=\"width:100%;height:100%;border:none;background:white\"/></div>',
+                        closable : true,
+                        listeners : {
+                               close : function() {
+                                      linkArray[indexArray[this.id]] =null;
+               
+                                }
+                       }
+                }).show();
+                      linkArray[pageRef] = idVal;
+                      indexArray[linkArray[pageRef]] = pageRef;
+                     
+                }else{
+                     var cmp = Ext.getCmp(linkArray[pageRef]+'');
+                     if(cmp) cmp.show(); 
+               }
+                
+                
+            }
+        </script>
+    </apex:outputPanel>
+    
+    <apex:outputPanel >
+        <script>
+     var linkArray = new Array();
+     var indexArray = new Array();
+       Ext.ux.TabScrollerMenu =  Ext.extend(Object, {
+    pageSize       : 10,
+    maxText        : 15,
+    menuPrefixText : 'Items',
+    constructor    : function(config) {
+        config = config || {};
+        Ext.apply(this, config);
+    },
+    init : function(tabPanel) {
+        Ext.apply(tabPanel, this.tabPanelMethods);
+        
+        tabPanel.tabScrollerMenu = this;
+        var thisRef = this;
+        
+        tabPanel.on({
+            render : {
+                scope  : tabPanel,
+                single : true,
+                fn     : function() { 
+                    var newFn = tabPanel.createScrollers.createSequence(thisRef.createPanelsMenu, this);
+                    tabPanel.createScrollers = newFn;
+                }
+            }
+        });
+    },
+    // private && sequeneced
+    createPanelsMenu : function() {
+        var h = this.stripWrap.dom.offsetHeight;
+        
+        //move the right menu item to the left 18px
+        var rtScrBtn = this.header.dom.firstChild;
+        Ext.fly(rtScrBtn).applyStyles({
+            right : '18px'
+        });
+        
+        var stripWrap = Ext.get(this.strip.dom.parentNode);
+        stripWrap.applyStyles({
+             'margin-right' : '36px'
+        });
+        
+        // Add the new righthand menu
+        var scrollMenu = this.header.insertFirst({
+            cls:'x-tab-tabmenu-right'
+        });
+        scrollMenu.setHeight(h);
+        scrollMenu.addClassOnOver('x-tab-tabmenu-over');
+        scrollMenu.on('click', this.showTabsMenu, this);    
+        
+        this.scrollLeft.show = this.scrollLeft.show.createSequence(function() {
+            scrollMenu.show();                                                                       
+        });
+        
+        this.scrollLeft.hide = this.scrollLeft.hide.createSequence(function() {
+            scrollMenu.hide();                              
+        });
+        
+    },
+    // public
+    getPageSize : function() {
+        return this.pageSize;
+    },
+    // public
+    setPageSize : function(pageSize) {
+        this.pageSize = pageSize;
+    },
+    // public
+    getMaxText : function() {
+        return this.maxText;
+    },
+    // public
+    setMaxText : function(t) {
+        this.maxText = t;
+    },
+    getMenuPrefixText : function() {
+        return this.menuPrefixText;
+    },
+    setMenuPrefixText : function(t) {
+        this.menuPrefixText = t;
+    },
+    // private && applied to the tab panel itself.
+    tabPanelMethods : {
+        // all execute within the scope of the tab panel
+        // private  
+        showTabsMenu : function(e) {        
+            if (! this.tabsMenu) {
+                this.tabsMenu =  new Ext.menu.Menu();
+                this.on('beforedestroy', this.tabsMenu.destroy, this.tabsMenu);
+            }
+            
+            this.tabsMenu.removeAll();
+            
+            this.generateTabMenuItems();
+            
+            var target = Ext.get(e.getTarget());
+            var xy     = target.getXY();
+            
+            //Y param + 24 pixels
+            xy[1] += 24;
+            
+            this.tabsMenu.showAt(xy);
+        },
+        // private  
+        generateTabMenuItems : function() {
+            var curActive  = this.getActiveTab();
+            var totalItems = this.items.getCount();
+            var pageSize   = this.tabScrollerMenu.getPageSize();
+            var i=0; 
+            while(totalItems>i){
+                var item = this.items.get(i);   
+                this.tabsMenu.add(this.autoGenMenuItem(item));
+                i++;
+            }
+   
+        },
+        // private
+        autoGenMenuItem : function(item) {
+            var maxText = this.tabScrollerMenu.getMaxText();
+            var text    = Ext.util.Format.ellipsis(item.title, maxText);
+            
+            return {
+                text      : text,
+                handler   : this.showTabFromMenu,
+                scope     : this,
+                disabled  : item.disabled,
+                tabToShow : item,
+                iconCls   : item.iconCls
+            }
+        
+        },
+        // private
+        showTabFromMenu : function(menuItem) {
+            this.setActiveTab(menuItem.tabToShow);
+        }   
+    }   
+});       
+
+           //Start By Avadhut K. // Functions moved from within viewport code to here
+           initFunction = function(p) {
+                if (p.collapsible) {
+                    var r = p.region;
+                    var textClass = 'x-collapsed-header-text';
+                 if ((r == 'east') || (r == 'west')) textClass += '-rotated';
+                    p.on('render', function() {
+                        var ct = p.ownerCt;
+                       ct.on('afterlayout', function() {
+                           p.collapsedTitleEl = ct.layout[r].getCollapsedEl().createChild({
+                                tag: 'div',
+                                cls: textClass,
+                                html: '<img src="{!$Resource.uipack}/Icons/icon_workspaces_bar_closed.gif" style="padding-left:8px;height:25px;width:25px;"/><div class="sky-title" style="color:white">'+p.title+'</div>'
+                            });
+                            p.setTitle = Ext.Panel.prototype.setTitle.createSequence(function(t) {
+                                p.collapsedTitleEl.dom.innerHTML = t;
+                            });
+                        }, false, {single:true});
+                    });
+                }
+            };
+            clickFunction = function(n) {
+               if(n.leaf){
+                     if((linkArray[n.attributes.pageRef]) == null ){    
+                         Ext.getCmp('navview').findById('tabs').add({
+                         title: '    '+n.text,
+                           id: n.id,
+                            html: '<div class=\"iframe-enclave\"><iframe src =\"\/apex\/'+n.attributes.pageRef+'\" class=\"tab-iframe\"/></div>',
+                            closable : true,
+                            listeners : {
+                                close : function() {
+                                   linkArray[indexArray[this.id]] =null;    
+                                 }
+                            }
+                        }).show();
+                        linkArray[n.attributes.pageRef] = n.id;
+                        indexArray[n.id]=n.attributes.pageRef;
+    
+    
+                    }else{
+                         var cmp = Ext.getCmp(linkArray[n.attributes.pageRef]+'');
+                         if(cmp) cmp.show();
+                    }
+                }else{
+                    if(n.expanded){
+                        n.collapse();
+                    }else{
+                        n.expand();
+                    }
+                }
+            };
+            //End By Avadhut K
+
+                                                                                                  
+            Ext.onReady(function() {
+            // Create our instance of tabScrollerMenu
+            var scrollerMenu = new Ext.ux.TabScrollerMenu({
+                maxText  : 15,
+                pageSize : 5
+            });              
+              var btn1=new Ext.Toolbar({
+                           renderTo: document.body,
+                           
+                                      items:[
+                                              new Ext.Button( {cls:'Add',tooltipType: 'title', tooltip:'Add Portlet',handler :openPopUp}) 
+                                              //new Ext.Button( {cls:'pre',tooltipType: 'title', tooltip:'Previous Portlet',handler :prePortel}),   
+                                              //new Ext.Button( {cls:'next',tooltipType: 'title', tooltip:'Next Portlet',handler :nextPortel})
+                                             ]});           
+    
+              
+                new Ext.Viewport({
+                    layout: 'border',
+                    id: 'navview',
+                    items: [
+                    {
+                        region: 'north',
+                        html: '<div  class="header-div"><table width="100%"><tr><td aligh="left"><a class="clsHeader" target="BMC" href=\"http://www.bmc.com\"><img src="{!$Resource.uipack}/Icons/app_title_SDE_Force.gif" alt="BMC Service Desk Express on Force"></a></td><td align="right" class="homeStyle">Welcome, {!$User.FirstName} {!$User.LastName}   <a class="homeStyle" href=\"/home/home.jsp\">Home</a> <a class="homeStyle" href="/secur/logout.jsp">Logout</a></td></tr></table></div>',
+                        autoHeight: true,
+                        border: false,
+                        margins: '0 0 5 0'
+                    },{
+                        region: 'west', 
+                        collapsible: true,
+                        collapseMode: 'mini',
+                        width: 200,
+                        margins: '0 10 0 0',
+                        autoScroll: true,
+                        id: 'navbar',
+                        useArrows: true,
+                        split: true,
+                        margins: '0 5 0 0',
+                        cmargins: '0 5 0 0',
+                        layout: 'accordion',
+                        titleCollapse: false,
+                        activeItem: 0,                        
+                        //collapseFirst: true,
+                        items: [{
+                            title: 'Workspaces', 
+                            id: 'workspaces',
+                            titleCollapse:true,
+                            hideCollapseTool: true,
+                            margins: '0 10 0 0',
+                            autoScroll: true,
+                            iconCls: 'bmcWorkspace', scale: 'medium',
+                            useArrows: true,
+                            margins: '0 5 0 0',
+                            cmargins: '0 5 0 0',
+                            xtype: 'treepanel',
+                            loader: new Ext.tree.TreeLoader(),
+                            root: new Ext.tree.AsyncTreeNode({
+                                expanded: true,
+                                children: <apex:outputText escape="false" value="{!navigatorJsonFeed}"/>
+                            }),rootVisible: false,
+                            plugins: {
+                                init: clickFunction
+                            },    
+                            listeners: {
+                                click: clickFunction
+                            }                        
+                        },{                        
+                            title: 'Catalog',
+                            collapsible: true,
+                            titleCollapse:true,
+                            hideCollapseTool: true,
+                            margins: '0 10 0 0',
+                            autoScroll: true,
+                            iconCls: 'bmcCatalog', scale: 'medium',
+                            useArrows: true,
+                            margins: '0 5 0 0',
+                            cmargins: '0 5 0 0',                         
+                            xtype: 'treepanel'                                                    
+                        },{                        
+                            title: 'Configuration',
+                            collapsible: false,                        
+                            titleCollapse: true, 
+                            hideCollapseTool: true,
+                            margins: '0 10 0 0',
+                            autoScroll: true,
+                            iconCls: 'bmcConfiguration', scale: 'medium',
+                            useArrows: false,
+                            margins: '0 5 0 0',
+                            cmargins: '0 5 0 0',
+                            xtype: 'treepanel'
+                        }]
+                    }, {
+                        region: 'center',
+                        xtype: 'tabpanel',
+                        id: 'tabs',
+                        width:500,
+                        autoScroll:true,
+                        tabPosition:'top',
+                        enableTabScroll : true,
+                        plugins : [ scrollerMenu ],
+                        items:[
+                            {id:'mydashboard', title:'   My Dashboard', html:'<div class=\"iframe-enclave\"><iframe src =\"\/apex\/DashboardPage\" class=\"tab-iframe\"\/><\/div>'}
+                        ]
+                
+                    },{
+                        region: 'east',
+                        xtype:'portal',
+                        width:250,
+                        id:'rightbar',
+                        baseCls:'sky-widgetpanel-base',
+                       // constrain:true,
+                       // margins:'35 5 5 0',
+                       margins:'2 0 2 2',
+                        items:[{
+                               // btn1,
+                                columnWidth:.99,
+                               // style:'padding:10px 0 10px 10px',
+                               
+                                items:[btn1,<apex:outputText escape="false" value="{!jsonString}"/>]
+                              }]
+                      }
+                 
+                    
+                ]
+                });
+               
+                
+                function prePortel(){
+                
+                  backPortlet();
+                
+                }
+                
+                function nextPortel(){
+                
+                  nextPortlet();
+                
+                }
+                
+                
+                
+                  function openPopUp() {
+                 
+                 var popUp = new Ext.Window({
+                 
+                      title       :'Add Portlets',
+                      width       : 500,
+                      height      : 500,
+                      html :'<iframe src =\"\/apex\/AddPortletPage" style=\"width:100%;height:100%;border:none\"/>'
+                 });
+                   popUp.show();
+                 }
+                 
+                Ext.getCmp('navview').findById('tabs').findById('mydashboard').show();
+                
+                Ext.QuickTips.init();
+            });
+            
+        </script>
+        
+         <!--  <div id="side-Search" class="x-hidden" style="background:#FFFFFF">
+             <table border="0" style="width:100%" cellpadding="5" cellspacing="2" >
+               <tr>
+                  <td>
+                     <input maxlength="40" name="keywords" style="width:97%"/>
+                  </td>
+                  <td>
+                     <input name="sideSearchImage" type="image" src="http://media.cms.bmc.com/designimages/header_search.gif" alt="search" /> 
+                 </td>
+              </tr>
+          </table>
+      </div>  --> 
+        
+        
+        
+        
+    </apex:outputPanel>
+    <apex:actionFunction name="nextPortlet" action="{!nextPortlet}"/>  
+    <apex:actionFunction name="backPortlet" action="{!backPortlet}"/>
+    <apex:actionFunction name="refreshPage" action="{!refreshPage}"/>
+
+    </apex:form>
+    
+</apex:page>
+                            	

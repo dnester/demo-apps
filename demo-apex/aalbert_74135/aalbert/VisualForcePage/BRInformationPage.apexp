@@ -1,0 +1,178 @@
+<apex:page showHeader="false" controller="BRInformationController" >
+<c:CommonIncludes ></c:CommonIncludes>  
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/brInformation.css" />
+    <style>
+    	.clsRHTextAreaTD {
+    		padding-right: 25px;
+    	}
+    </style>       
+    <apex:outputPanel > <!-- Page body in this panel -->
+        <apex:messages />
+            <apex:form id="brInforForm">
+                <div id="capsule" class="clsMainDiv">
+                  <table class="clsMainTableBR" cellpadding="0" cellspacing="0">
+                    <tBody>
+                        <tr>
+                            <td colspan="3">
+                                <div class="div15pxVSpacing"/>
+                            </td>
+                        </tr>
+                        <!--
+                        <tr align="center">
+                            <td align="center" colspan="3">
+                                <img  src="/resource/JIcons/BR_progressBar_stage1.bmp"/>                                                       
+                            </td>
+                        </tr>
+                        -->
+                        <tr >
+                        <td colspan="3" class="clsBRcenterAlign">
+                        <!-- Progress bar image -->
+                             <table class="clsBrProgressBar" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td class="clsBRwidth25pc"></td>
+                                    <td class="clsBRwidth45px"></td>
+                                    <td class="BRStage" style="align:left; width:0px">
+                                        <img src="/resource/JIcons/Stage_Current.gif"/>
+                                    </td>
+                                    <td class="BRStage"></td>
+                                    <td class="BRStage"></td>
+                                    <td class="BRStage" >
+                                        <img src="/resource/JIcons/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="BRStage"></td>
+                                    <td class="BRStage"></td>
+                                    <td class="BRStage">
+                                        <img src="/resource/JIcons/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="BRStage" ></td>
+                                    <td class="BRStage" ></td>
+                                    <td class="BRStage" style="align:right; width:0px">
+                                        <img src="/resource/JIcons/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="clsBRwidth45px"></td>
+                                    <td class="clsBRwidth25pc"></td>
+                                </tr>
+                                <tr>
+                                    <td height="10px" colspan="17"></td>
+                                </tr>
+                                <tr>
+                                    <td class="clsBRwidth25pc"></td>
+                                    <td colspan="3" class="currentStatusTxt" align="center">General</td>
+                                    <td colspan="3" class="statusTxt" align="center">Conditions</td>
+                                    <td colspan="3" class="statusTxt" align="center" >Actions</td>
+                                    <td colspan="3" class="statusTxt" align="center">Scheduling</td>
+                                    <td class="clsBRwidth25pc"></td>
+                                </tr>
+                            </table>                                                           
+                        </td>
+                      </tr>
+
+                        <tr>
+                            <td>
+                                <div class="div15pxVSpacing">
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="verAlignBottom">
+                             <td >
+                                  <div class="div15pxHSpacing"/>
+                             </td>
+                            <td class="clsBrTableTD">   
+                                <table class="clsBrTable" cellpadding="0" cellspacing="0">
+                                    <tbody>   
+                                        <tr>
+                                            <td class="BRInfoTitle">
+                                              <!-- div class="BRInfoTitle">  -->
+                                                <apex:outputLabel value="{!$Label.editGeneral}"/>                                                     
+                                              <!-- /div> -->      
+                                             </td> 
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <table class="innerClsBrTable" cellpadding="0" cellspacing="0">
+                                                    <tr>
+                                                      <td colspan="4" class="informationBarTD"> 
+                                                        <div class="informationBar">
+                                                            <apex:outputLabel value="{!$Label.provideNameOptDescForBR}"/>       
+                                                        </div>
+                                                      </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="clsInputLabelTD">
+                                                            <apex:outputLabel value="{!$Label.brName}"/>*      
+                                                        </td>
+                                                        <td class="clsInputTextBoxTD">
+                                                            <!--><apex:inputField value="{!brInfo.Name__c}" styleClass="clsInputTextbox"/><-->
+                                                            <apex:inputText value="{!ruleName}" styleClass="clsInputTextbox"/>
+                                                            <!-- apex:outputLabel value="{!error}" styleClass="clsError"/-->
+                                                        </td>
+                                                        <td class="clsInputCheckBox">
+                                                            <apex:inputField value="{!brInfo.IsActive__c}" id="idInactive"/> 
+                                                            <apex:outputLabel styleClass="clsBRCheckboxlabel" value="{!$Label.enabled}" />
+                                                        </td>
+                                                      </tr>
+                                                       
+                                                    <tr>
+                                                            <td class="clsInputBoldLabelTableFirstRowTD clsLabelDescriptionTD" colspan="3" >
+                                                            <apex:outputLabel value="{!$Label.description}"/></td>
+                                                    </tr>
+                                                    <tr>
+                                                    <td class="clsInputTextAreaTD clsDscTextAreaTD" colspan="3" >
+                                                             <apex:inputTextarea id="descriptionId" value="{!brInfo.Description__c}" styleClass="clsInputTextArea" />
+                                                        </td>
+                                                     </tr>
+                                                     
+                                                       <tr>
+                                                        <td>
+                                                            <div class="div10pxVSpacing">
+                                    
+                                                            </div>  
+                                                        </td>
+                                                    </tr>
+                                    
+                                                     <tr>
+                                                         <td class="BRclsInputBoldLabelTD clsRHLabelTD" colspan="3">
+                                                         <apex:outputLabel value="{!$Label.revisionHistory}"/>
+                                                         </td> 
+                                                     </tr>
+                                                     <tr>
+                                                         <td class="clsInputTextAreaTD clsRHTextAreaTD" colspan="2">
+                                                              
+                                                                 <apex:inputTextarea value="{!revisionHistory}" styleClass="clsInputTextAreaRivHstory" />
+                                                                  
+                                                         </td>
+                                                         <td>
+                                                         </td>
+                                                     </tr>
+                                                    </table>
+                                                 </td>
+                                            </tr>
+                                            <tr class="clsButtonBarTD" >
+                                                <td colspan="4" align="right">
+                                                    <table cellpadding="0" cellspacing="0">
+                                                        <tr>
+                                                            <td>
+                                                                <apex:commandButton value="Import Rule..." action="{!importRule}" styleclass="clsButtonStyle clsIrBtn"/>
+                                                                <apex:commandButton value="Export Rule..." action="{!exportRule}" styleclass="clsButtonStyle clsErBtn"/>
+                                                                <apex:commandButton value="Previous" action="{!previousOfBrInformationPage}" styleclass="clsButtonStyle clsPrvBtn" />
+                                                                <apex:commandButton value="Next" action="{!nextOfBrInformationPage}" styleclass="clsButtonStyle clsNxtBtn"/>
+                                                             </td>
+                                                        </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                </tbody>  
+                        </table>
+                      </td>
+                      <td>
+                        <div class="div15pxHSpacing"/>
+                      </td>
+                    </tr>
+                  </tBody>
+               </table>  
+             </div>    
+          </apex:form>
+    </apex:outputPanel>  
+</apex:page>
+                            	

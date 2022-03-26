@@ -1,0 +1,210 @@
+<apex:page showHeader="false" Controller="BlackOutController" >
+   <c:CommonIncludes />
+
+   <!-- <script type="text/javascript"
+        src="{!$Resource.ExtJS}/ext-all-debug.js"></script> -->
+<script>
+        var blackOutName;               
+        var blackOutId ;
+        var errormsg;
+        
+
+        function callNewPage(){
+            window.parent.addTab("BlackOutPage","BlackOut","BlackOut");
+        }
+        Ext.onReady(function(){
+        
+        Ext.QuickTips.init();
+        var CopyBtnHandler = function(button,event) {  copy(); };
+        var DeleteBtnHandler = function(button,event) { 
+        												
+        												Ext.MessageBox.confirm('Delete', 'Are you sure ?', function(btn){
+														   if(btn === 'yes'){
+														        deleteBlackOut();
+														   }});
+        												 };
+        var NewBtnHandler = function(button,event) {  callNewPage(); };
+        var SaveBtnHandler = function(button,event) {  save(); };
+        var ResetBtnHandler = function(button,event) {  reset(); };
+        var NextBtnHandler = function (button,event) { };
+        var PreviuosBtnHandler = function (button,event) { };  
+
+        var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'padding:0px;margin:0px;zoom:0px;'}
+        });
+      
+     new SamplePanel({
+            title: '',
+            bodyStyle:'padding:0px;margin:0px;zoom:0px;',
+            tbar: [{
+                scale: 'medium',
+                iconCls: 'bmcNew',
+				tooltipType : 'title',
+               tooltip: '{!$Label.new}',
+                handler:NewBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcSave',
+				tooltipType : 'title',
+                tooltip:'{!$Label.save}',
+                handler:SaveBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcCopy',
+                id:'copyId',
+				tooltipType : 'title',
+                tooltip: '{!$Label.copy}',
+                handler:CopyBtnHandler
+            },' ','-',' ',{
+                scale: 'medium',
+                iconCls: 'bmcDelete',
+                id:'deleteId',
+				tooltipType : 'title',
+                tooltip: '{!$Label.delete}',
+                handler:DeleteBtnHandler
+            },' ',{     
+                scale: 'medium',
+                iconCls: 'bmcClear',
+				tooltipType : 'title',
+                tooltip: '{!$Label.clear}',
+                id:'clearId',
+                handler:ResetBtnHandler
+            },
+            new Ext.Toolbar.Fill(),
+            {
+                scale: 'medium',
+                iconCls: 'bmcPrevious',
+				tooltipType : 'title',
+                tooltip: '{!$Label.previousRecord}',
+                handler:PreviuosBtnHandler,
+                style:{
+                    align:'right'
+                }
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcNext',
+				tooltipType : 'title',
+                tooltip: '{!$Label.nextRecord}',
+                handler:NextBtnHandler,
+                style:{
+                    align:'left'
+                }
+            }]
+        });
+            blackOutId = '{!blackout.Id}';  
+            if(blackOutId == null || blackOutId == ''){                
+            Ext.getCmp('deleteId').setDisabled(true);
+            Ext.getCmp('copyId').setDisabled(true);
+            Ext.getCmp('clearId').setDisabled(true); 
+        }
+
+    });
+
+     function buttonValidator() {
+         if((blackOutName != null && blackOutName != '')&&(errormsg==null || errormsg==''|| errormsg=='Saved successfully.')){  
+         Ext.getCmp('deleteId').setDisabled(false);
+         Ext.getCmp('copyId').setDisabled(false);
+         Ext.getCmp('clearId').setDisabled(false);    
+       }  
+     }
+     
+</script>
+
+
+<apex:outputPanel id="panelId">
+        <script>
+           blackOutName = '{!blackout.name__c}';
+           blackOutId = '{!blackout.Id}';      
+        </script>
+</apex:outputPanel>
+
+<apex:outputPanel id="errorId">
+        <script>
+           errormsg = '{!messageString}';               
+        </script>
+</apex:outputPanel>
+
+<apex:outputPanel > <!-- Page body in this panel -->
+<apex:form >
+                <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+ 
+                <apex:actionFunction name="deleteBlackOut" action="{!deleteBlackOut}"/>
+                <apex:actionFunction name="save" action="{!save}" reRender="validationComponent,errorId,panelId" oncomplete="showError();buttonValidator();"/>
+
+                <apex:actionFunction name="copy" action="{!copy}"/>
+                <apex:actionFunction name="newBlackOut" action="{!newBlackOut}"/>
+                <apex:actionFunction name="reset" action="{!resetBlackOut}"/>
+ 
+                <div id="capsule" class="CapsuleDiv1">
+                    <table class="clsMainTable" cellspacing="0" cellpadding="0">
+                        <tr class="clsRowGreyBg">
+                            <td>
+                                <div id="btnToolbar"></div>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                    <td>
+                        <table class="clsTable" cellspacing="0" cellpadding="0">
+                            <tr>
+                                <td class="clsTopAlignment75">
+                                    <apex:outputPanel id="tablePanel">                                
+                                        <table class="clsTable" cellspacing="0" cellpadding="0">
+  
+                                            <tr>
+                                               <td><div class="div15pxVspacing"/></td><td></td>
+                                            </tr>
+                                            
+                                       
+                                            
+                                    <tr>
+                                        <td class="clsInputLabelTD" ><apex:outputLabel value="{!$Label.name}"/>
+                                        <span class="clsRequiredBlack">*</span></td>
+                                         <td class="clsInputTextBoxTD">
+                                            <apex:inputtext value="{!blackout.name__c}" id="brdName" styleClass="clsInputTextBox"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.startDate}"/><span class="clsRequiredBlack">*</span></td>
+                                        <td class="clsInputTextBoxTD">
+                                            <apex:inputField value="{!blackout.startDate__c}"  styleClass="clsInputTextBox"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.endDate}"/><span class="clsRequiredBlack">*</span></td>
+                                        <td class="clsInputTextBoxTD">
+                                            <apex:inputField value="{!blackout.endDate__c}" styleClass="clsInputTextBox"/>
+                                        </td>
+                                    </tr>                                   
+                                    </table> 
+                                    
+                                   <table class="cls60"> 
+                                    
+                                     <tr>
+                                        <td   class="clsInputBoldLabelTD" ><apex:outputLabel value="{!$Label.description}"/></td>
+                                    </tr>
+                                     <tr>
+                                        <td  class="cls50" >
+                                            <apex:inputTextarea value="{!blackout.description__c}" rows="4" styleClass="clsInputTextArea"   />
+                                        </td>
+                                    </tr>
+                                    <tr><tr>
+                                    </tr></tr>
+                                   
+                                 <tr>
+                                               <td class="clsInputCheckBox">
+                                                    
+                                                    <apex:inputField value="{!blackout.restrict__c}" id="idRestrict"/>
+                                                    <label for="idRestrict" class="clsInputCheckBoxLabel" value="{!$Label.inactiveBlackOut}"/>
+                                                </td>
+                                                
+                                            </tr>
+                                   </table> 
+  
+</apex:outputPanel> 
+</apex:form>
+</apex:outputPanel> 
+
+</apex:page>
+                            	

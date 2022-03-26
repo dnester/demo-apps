@@ -1,0 +1,62 @@
+<apex:page Controller="InboxWidgetController"  showheader="false" sidebar="false"> 
+<style>
+.portletTdFont{
+font-size:12px;
+}
+</style>
+    <apex:includeScript value="{!$Resource.ExtJS}/ext-all.js" id="ext-all-js"/>
+    <apex:stylesheet value="{!$Resource.ExtJS}/resources/css/ext-all.css" id="ext-all-css"/>
+    <apex:includeScript value="{!$Resource.ExtJS}/adapter/ext/ext-base.js" id="ext-base-js"/>
+    <link rel="stylesheet" type="text/css" href="{!$Resource.ExtJs2}/ex/ux/css/Portal.css" />
+    <div id="brdContents">
+        <apex:form id="theForm">  
+            <apex:dataTable var="a" value="{!incidentsPageList}"  styleclass="clsDataTable2">
+            <apex:column ></apex:column>
+            <apex:column >
+                <apex:panelGrid columns="4" styleclass="clsPanelGrid">    
+                    <img src="{!$Resource.BMCStyle}/images/Incident.png" class="class1"/>
+                    <apex:outputLabel value="{!a.name}"   styleClass="portletInboxTdFont"/>
+                    <apex:outputLabel ></apex:outputLabel>
+                    <apex:outputLabel value="{!a.openDateTime__c}" styleClass="portletInboxTdFont" />
+                </apex:panelGrid>   
+
+                <apex:panelGrid columns="2" styleclass="clsPanelGrid">
+                    <apex:outputLabel ></apex:outputLabel>    
+                    <apex:outputLabel value="{!a.incidentDescription__c}" styleClass="portletInboxTdFont"/>                     
+                </apex:panelGrid>   
+                
+               
+            </apex:column>                              
+            </apex:dataTable>
+            <div id="tableDiv" class="class2">
+            <table class="clsTable100" align="center">
+           <tr class="classAlignCeter">
+            <td class="classAlignCeter">
+                <apex:commandbutton action="{!previous}" styleClass="clsPrevSidebarPanel"/>
+                <apex:commandbutton styleClass="clsBlankBgCmdBtn"/>
+                <apex:commandbutton action="{!next}" styleClass="clsNextSidebarPanel"/>
+            </td>
+            </tr>
+            </table>
+            </div>
+      </apex:form> 
+                    
+    </div>  
+    
+        <script>
+            var viewport = new Ext.Viewport({
+              layout: 'border',
+              renderTo: Ext.getBody(),
+              items: [{
+                region: 'north',
+                xtype: 'panel',
+                split: true,
+                width: 240,
+                height:240,
+                contentEl:'brdContents'
+              }]
+            });
+    </script>
+
+</apex:page>
+                            	

@@ -1,0 +1,716 @@
+<apex:page showHeader="false" controller="BRInformationController" >
+<c:CommonIncludes ></c:CommonIncludes>    
+<link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/brInformation.css" />
+
+<style>
+	.clsLabelConditionTD{
+		padding-left: 5px;
+		padding-top: 3px;
+	}
+	.innerClsBrTable{
+		width: 100%;
+	}
+</style>
+
+<script>
+     
+    var fieldStoreDS; 
+    var comboStore ;
+    var gridStore;
+    var comboStore2;
+    var combo;
+    var exp1editor;
+    var exp2editor;
+    var expression;
+    var popUpIndex;
+    var grid;
+    var module;
+    var moduleRecord;
+    Ext.onReady(function(){
+    
+        Ext.QuickTips.init();
+        Ext.form.Field.prototype.msgTarget = 'side';
+
+        var gridData = new Array();
+        var i=0;
+
+        <apex:repeat value="{!brConditionRecords}" var="conditionRecord">
+          gridData[i] = new Array(4);
+          var j=0;
+          <apex:repeat value="{!conditionRecord}" var="conditionField">
+                gridData[i][j++] = "{!conditionField}";
+          </apex:repeat>
+          i++;
+        </apex:repeat>
+            
+        var modulesData = new Array();
+        var i=0;
+        
+        <apex:repeat value="{!moduleNameList}" var="moduleNameDataList">    
+            modulesData[i] = new Array(2)
+            modulesData[i++][0]='{!moduleNameDataList}';
+        </apex:repeat>
+    
+        var i=0;
+        
+        <apex:repeat value="{!moduleLabelList}" var="moduleLabelDataList" >    
+            modulesData[i++][1]='{!moduleLabelDataList}';
+        </apex:repeat>
+    
+        var store = new Ext.data.SimpleStore({
+            fields: ['value', 'text'],
+            data : modulesData,
+            sortInfo: {
+                    field: 'text',
+                    direction: 'ASC'
+                }
+        });
+        
+        combo = new Ext.form.ComboBox({
+            id: 'modulesCombo',
+            fieldLabel: 'Data Source',
+            store: store,
+            displayField:'text',
+            valueField:'value',
+            typeAhead: true,
+            mode: 'local',
+            triggerAction: 'all',
+            emptyText:'',
+            selectOnFocus:true,
+            renderTo: 'itemselector',
+            editable: false,
+            value:'{!module}',
+            listeners:{
+                select: function(combo, record, index) {
+
+                 var text = record.get(combo.displayField);
+                 module = record.get(combo.valueField);
+                 moduleRecord = record;
+                 
+                    if(module != null){
+                        setDataSourceName(module);
+                    }
+                    
+                    grid.store.loadData(new Array());
+                    grid.getView().refresh();
+                                        
+                 },
+                 beforerender:function(){
+                       
+                       var i=0;
+                       var modulesCombo = Ext.getCmp('modulesCombo').store;
+                 },
+                 blur: function(){
+                    
+                 }
+                 
+            }
+    
+        });
+     
+        
+        gridStore = new Ext.data.ArrayStore({
+            id: 'mainGrid',
+            data: gridData,
+            fields: ['expr1','comOpeValue','expr2','logOpeValue']
+        });
+    
+        
+        var comOpeStore = new Ext.data.SimpleStore({
+            data: [
+                ['=', '='],
+                ['!=', '!='],
+                ['>', '>'], 
+                ['<', '<'],
+                ['<=', '<='],
+                ['>=', '>='],
+                ['IN','IN'],
+                ['NOT IN','NOT IN'],
+                ['LIKE','LIKE'],
+            ],
+            fields: ['comOpeValue', 'comOpeName']
+       });
+       
+       var comparisonOperator= new Ext.form.ComboBox({
+            store: comOpeStore,
+            mode: 'local',
+            triggerAction: 'all',
+            valueField: 'comOpeValue',
+            displayField: 'comOpeName',
+            selectOnFocus: true,
+            editable: false,
+            typeAhead: true,
+            value:'' 
+        });
+        
+        var logOpeStore = new Ext.data.SimpleStore({
+        
+            data: [
+                ['NONE', 'NONE'],
+                ['AND', 'AND'],
+                ['OR', 'OR']
+            ],  
+            fields: ['logOpeValue', 'logOpeName']
+        });
+        
+        var logicalOperator= new Ext.form.ComboBox({
+            store: logOpeStore,
+            mode: 'local',
+            triggerAction: 'all',
+            valueField: 'logOpeValue',
+            displayField: 'logOpeName',
+            selectOnFocus: true,
+            editable: false,
+            typeAhead: true,
+            value:'' 
+        });
+    
+        
+        exp1editor = new Ext.form.TextField({
+            id:'exp1editor',
+            listeners:{
+                focus: function(){
+                    var moduleSelected = Ext.getCmp('modulesCombo').getValue();
+                    if(moduleSelected != ''){
+                        popUpIndex=selectedRowIndex;
+                        var expr = Ext.getCmp('exp1editor').getValue();
+                        openPopup('ExprBuilderPage?moduleName=' + module + '&isLookup=true&expr=' + expr, setExpression1);
+                    }
+                    else{
+                        Ext.MessageBox.show({
+                           title: '',
+                           msg: 'Please Select Module ',
+                           width:300,
+                       });      
+                    }   
+                }
+               
+            }
+        });
+        
+        exp2editor = new Ext.form.TextField({
+            id:'exp2editor',
+            listeners:{
+                focus: function(){
+                    var moduleSelected = Ext.getCmp('modulesCombo').getValue();
+                    if(moduleSelected != ''){
+                        popUpIndex=selectedRowIndex;
+                        var expr = Ext.getCmp('exp2editor').getValue();
+                        openPopup('ExprBuilderPage?moduleName=' + module + '&isLookup=true&expr=' + expr, setExpression2);
+                    }
+                    else{
+                        Ext.MessageBox.show({
+                           title: '',
+                           msg: 'Please Select Module ',
+                           width:300,
+                       });      
+                    }
+                }
+            }
+        });
+        
+        var colModel = new Ext.grid.ColumnModel({
+            columns: [
+                {header: '',dataIndex: 'expr1',editor: exp1editor, id:'expr1', resizable: true},
+                {header: '',dataIndex: 'comOpeValue', width:50, sortable: true,editor: comparisonOperator},
+                {header: '',dataIndex: 'expr2', editor: exp2editor,id:'expr2', resizable: true},
+                {header: '', dataIndex: 'logOpeValue', width:50,sortable: true,editor:logicalOperator}
+            ]
+       
+        });
+   
+        grid = new Ext.grid.EditorGridPanel({
+            id: 'gridStoreMain',
+            store: gridStore,
+            layout:'fit',
+            width:700,
+            clicksToEdit: 2,
+            cm: colModel,
+            height:398,
+            stripeRows: true,
+            selModel: new Ext.grid.RowSelectionModel({singleSelect:true}),
+            viewConfig:{
+                      forceFit:true 
+            },
+            tbar: [{
+                iconCls: 'addCls',
+               
+                handler : function(){
+                   
+                       var rowCount=gridStore.data.length;
+                       var NewQuery= grid.getStore().recordType;
+                        var newQuery= new NewQuery({
+                            chkBox:false,
+                            dName: 'Dispaly Value',
+                            type: 'text',
+                            comOpeValue: '=',
+                            value: '',
+                            logOpeValue:'OR'
+            
+                        });
+                        grid.stopEditing();
+                        gridStore.insert(rowCount,newQuery);
+                        grid.getView().refresh()
+                  }  
+            },
+            {
+                iconCls: 'deleteCls',
+                handler : function(){
+                    
+                    var index=selectedRowIndex;
+                    if (!index) {
+                        return false;
+                    }
+                    var rec = grid.store.getAt(selectedRowIndex);          
+                    grid.store.remove(rec);
+                       
+                }
+    
+            },' ',' ',
+            {
+                iconCls: 'groupCls',
+                handler : function(){
+                
+                }
+            },
+            {
+                iconCls: 'unGroupCls',
+                handler : function(){
+                }
+            },' ',' ',
+            {
+                iconCls: 'upCls',
+                handler : function(){
+                  var index=selectedRowIndex;   
+                  var rec1 = grid.store.getAt(selectedRowIndex); 
+                  var rec2 = grid.store.getAt(selectedRowIndex-1);
+                  grid.stopEditing(); 
+                  gridStore.insert(selectedRowIndex-1,rec1);
+                  gridStore.insert(selectedRowIndex,rec2);
+                  grid.getView().refresh(); 
+                  selectedRowIndex--;     
+                }
+    
+           },
+            {
+                iconCls: 'downCls',
+                handler : function(){
+                  var index=selectedRowIndex;   
+                  var rec1 = grid.store.getAt(selectedRowIndex); 
+                  var rec2 = grid.store.getAt(selectedRowIndex+1); 
+                  grid.stopEditing();
+                  gridStore.insert(selectedRowIndex,rec2);
+                  gridStore.insert(selectedRowIndex+1,rec1);
+                  grid.getView().refresh();
+                  selectedRowIndex++; 
+                  refresh();
+                }
+    
+            }],
+            listeners: {
+                rowclick:function(grid, r, e) {
+                    selectedRowIndex=r;
+                     rowIndex=r;
+                    
+                 },
+                 afteredit: function(e){
+                     refresh();
+                },
+                beforerender: function(thisGrid){
+                    gridStore.loadData(gridData);
+                }
+            }
+        });
+        
+        
+        grid.getView().getRowClass = function(record, index){
+    
+            var rowClass;
+            if(index%2==0){
+                rowClass='red-row';
+            }else{
+                 rowClass ='row-green';
+            }
+            return rowClass;
+        };
+    
+       function selectedRows(){
+          var rowCount=store.data.length;
+          var i=0;
+          var selectedRowList=[];
+          while(rowCount>i){
+               var record = grid.getStore().getAt(i);
+               var fieldName = grid.getColumnModel().getDataIndex(0);
+               var data = record.get(fieldName);
+               if(data==true){
+                   selectedRowList.push(i);
+               }     
+           i++;
+          }
+          return selectedRowList;
+        
+        }
+        
+        function refresh(){
+            var i=0;
+            var len = store.data.length;
+            if(store.data.length>0){
+            while(i < len){
+               var record = grid.getStore().getAt(i);
+               
+               
+               if(typeof record != 'undefined'){
+               var fieldName = grid.getColumnModel().getDataIndex(0);
+               var data = record.get(fieldName);
+               var j=0;
+               while(typeEditor.store.data.length>j){
+               var rec= typeEditor.store.getAt(j).get('value');
+                if(rec==data){
+                    var rec1=typeEditor.store.getAt(j).get('name');
+                    record.set(fieldName ,rec1);
+                     
+                }
+                j++;
+               }
+                   
+                   var fieldName2 = grid.getColumnModel().getDataIndex(2);
+                   var data2 = record.get(fieldName2);
+                   var k=0;
+                   while(typeEditor2.store.data.length>k){
+                       var rec2= typeEditor2.store.getAt(k).get('value2');
+                        if(rec2==data2){
+                            var rec3=typeEditor2.store.getAt(k).get('name2');
+                            record.set(fieldName2,rec3);
+                        }
+                        k++;
+                   }
+               }
+               else{
+                    break;              
+               }
+               
+               i++;
+            }
+            }
+       
+        }
+        
+        
+        var fieldSelector= new Ext.Panel({
+                items: [combo],
+                renderTo:'itemselector',
+                border:false
+                
+                           
+            });
+        
+        var queryCondition= new Ext.Panel({
+                layout: 'fit',
+                items: [grid],
+                renderTo:'gridPanel'
+        });
+    
+        
+    });
+
+
+    function  isValidate(index){
+
+          var rec = grid.store.getAt(index); 
+          var exp1=rec.get('expr1');
+          var comOp=rec.get('comOpeValue');
+          var exp2=rec.get('expr2');
+          var logOp=rec.get('logOpeValue');
+
+         if( exp1 != null && exp2 != null && comOp != null && logOp != null)        
+           return true;
+         else
+            return false;
+    
+    }
+    
+    
+    function setData(){
+            fieldStoreDS.loadData(fieldList);
+            comboStore.loadData(fieldList);
+            comboStore2.loadData(fieldList);
+            
+    }
+    function setExpression(){
+        exp1editor.setValue(expression);
+    }
+    function buildConditions(){
+       
+        var record= Ext.getCmp('gridStoreMain').store;
+        j = record.data.length;
+        var conditionStr = '';
+        
+        for(var i = 0; i < j; i++ ){
+            var exp1 = record.getAt(i).get('expr1'); 
+            var compOp = record.getAt(i).get('comOpeValue');
+            var exp2 = record.getAt(i).get('expr2');
+            var logOp = record.getAt(i).get('logOpeValue');
+            conditionStr  = conditionStr + exp1 + ':' + compOp + ':' + exp2 + ':' + logOp + ';';
+        }
+        
+        addConditions(conditionStr);
+        
+
+        
+    }
+   function pause(numberMillis) 
+    {
+        var now = new Date();
+        var exitTime = now.getTime() + numberMillis;
+        while (true) 
+        {
+            now = new Date();
+            if (now.getTime() > exitTime)
+                return;
+        }
+    }   
+
+    function dummyFunction(expr){
+        
+    }
+    function setExpression1(expr1){
+    
+        Ext.getCmp('exp1editor').setValue(expr1);
+        var record = grid.store.getAt(popUpIndex);
+        record.set('expr1' , Ext.getCmp('exp1editor').getValue());
+    
+    }
+    function setExpression2(expr2){
+       Ext.getCmp('exp2editor').setValue(expr2);
+       var record = grid.store.getAt(popUpIndex);
+       record.set('expr2' , Ext.getCmp('exp2editor').getValue());
+    }
+    function nextOfBrConditionPage(){
+        navigateToBrActionPage();
+    }
+</script>
+
+    <apex:outputpanel id="ModuleFieldsPanel">
+        <script>
+            fieldList = new Array();
+            var i=0; 
+            <apex:repeat value="{!fieldNameList}" var="fieldName" >    
+                fieldList[i] = new Array(3);
+                fieldList[i++][0]='{!fieldName}';
+            </apex:repeat>
+                
+            var i=0; 
+            <apex:repeat value="{!fieldLabelList}" var="fieldLabel" >
+                fieldList[i++][1]='{!fieldLabel}';
+            </apex:repeat>
+            
+            var i=0; 
+            <apex:repeat value="{!fieldTypeList}" var="fieldType" >
+                fieldList[i++][2]='{!fieldType}';
+            </apex:repeat>
+            
+            var tempStore = new Ext.data.SimpleStore({
+                fields: ['value', 'text','type'],
+                 data : fieldList
+            });
+            
+       </script>
+    </apex:outputpanel>
+    <apex:outputpanel id="dummyPanel">
+        
+    </apex:outputpanel>
+    <apex:outputPanel > <!-- Page body in this panel -->
+        <apex:messages />
+            <apex:form id="brInforForm">
+                <apex:actionFunction name="setDataSourceName" action="{!setSelectedModule}" reRender="ModuleFieldsPanel" onComplete="setData();">
+                      <apex:param name="Module" assignTo="{!module}" value=""/>
+                </apex:actionFunction>
+                
+                <apex:actionFunction name="addConditions" action="{!addConditions}" onComplete="">
+                    <apex:param name="conditionStr" assignTo="{!conditionStr}" value=""/> 
+                </apex:actionFunction>
+            
+                <apex:actionFunction name="navigateToBrActionPage" action="{!nextOfBrConditionPage}" onComplete="">
+                </apex:actionFunction>
+            
+                <div id="capsule" class="CapsuleDiv1" >
+                  <table class="clsMainTableBR" cellpadding="0" cellspacing="0">    
+                    <tr>
+                        <td colspan="3">
+                            <div class="div15pxVSpacing"/>
+                        </td>
+                    </tr>
+                    <!-- <tr align="center">
+                        <td align="center" colspan="3">
+                            <img  src="/resource/JIcons/BR_progressBar_stage2.bmp"/>                                                       
+                        </td>
+                    </tr>
+                     -->
+                    <tr >
+                        <td colspan="3" class="clsBRcenterAlign">
+                        <!-- Progress bar image -->
+                             <table class="clsBrProgressBar" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td class="clsBRwidth25pc"></td>
+                                    <td class="clsBRwidth45px"></td>
+                                    <td class="BRStage" style="align:left; width:0px">
+                                        <img src="/resource/JIcons/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="BRStage"></td>
+                                    <td class="BRStage"></td>
+                                    <td class="BRStage" >
+                                        <img src="/resource/JIcons/Stage_Current.gif"/>
+                                    </td>
+                                    <td class="BRStage"></td>
+                                    <td class="BRStage"></td>
+                                    <td class="BRStage">
+                                        <img src="/resource/JIcons/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="BRStage" ></td>
+                                    <td class="BRStage" ></td>
+                                    <td class="BRStage" style="align:right; width:0px">
+                                        <img src="/resource/JIcons/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="clsBRwidth45px"></td>
+                                    <td class="clsBRwidth25pc"></td>
+                                </tr>
+                                <tr>
+                                    <td height="10px" colspan="17"></td>
+                                </tr>
+                                <tr>
+                                    <td class="clsBRwidth25pc"></td>
+                                    <td colspan="3" class="statusTxt" align="center">General</td>
+                                    <td colspan="3" class="currentStatusTxt" align="center">Conditions</td>
+                                    <td colspan="3" class="statusTxt" align="center" >Actions</td>
+                                    <td colspan="3" class="statusTxt" align="center">Scheduling</td>
+                                    <td class="clsBRwidth25pc"></td>
+                                </tr>
+                            </table>                                                           
+                        </td>
+                      </tr>  
+                    <tr>
+                        <td>
+                            <div class="div15pxVSpacing">
+                            </div>
+                        </td>
+                    </tr>
+                   <tr>
+                      <td class="clsPadding15px">
+                        <table class="clsBrTable" cellpadding="0" cellspacing="0">
+                          <tbody class="clearMarginPadding">    
+                            <tr>
+                                <td class="BRInfoTitle">
+                                    <apex:outputLabel value="Edit - Conditions"/>                                                       
+                                            
+                                </td>
+                            </tr>
+                            <tr>
+                            <td>
+                                <table class="innerClsBrTable" cellpadding="0" cellspacing="0">
+                                 <tr>
+                                   <td colspan="4" class="informationBarTD"> 
+                                     <div class="informationBar">
+                                         <apex:outputLabel value="{!$Label.specifyEventsBr}"/>       
+                                     </div>
+                                   </td>
+                                 </tr>  
+                            
+                                <tr>
+                                <td>
+                                <table cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td class="clsInputLabelTD"> 
+                                            <apex:outputLabel value="{!$Label.triggerRuleOn}"/>
+                                        </td>
+                                        <td>
+                                            <div id="itemselector">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td >
+                                        </td>
+                                        <td>
+                                            <table cellpadding="0" cellspacing="0">
+                                                <tr>
+                                                    <td class="div10pxVSpacing"/>
+                                                </tr>
+                                                <tr>
+                                                    <td >
+                                                        <apex:inputCheckbox value="{!isCondOnCreate}"/> 
+                                                        <apex:outputLabel value="{!$Label.creationEvent}" styleClass="clsInputLabelTD clsInputCheckBoxLabelTD"/> 
+                                                        
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="div10pxVSpacing"/>
+                                                </tr>
+                                                
+                                                <tr>
+                                                    <td >
+                                                        <apex:inputCheckbox value="{!isCondOnUpdate}"/> 
+                                                        <apex:outputLabel value="{!$Label.updateEvent}" styleClass="clsInputLabelTD clsInputCheckBoxLabelTD"/>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="div10pxVSpacing"/>
+                                                </tr>
+                                                
+                                                <tr>
+                                                    <td >
+                                                        <apex:inputCheckbox value="{!isCondOnDelete}"/> 
+                                                        <apex:outputLabel value="{!$Label.deletionEvent}" styleClass="clsInputLabelTD clsInputCheckBoxLabelTD" />
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>                                           
+                                </table>
+                                </td>
+                            </tr>
+                            
+                            <tr >
+                              <td class="clsInputBoldLabelTableFirstRowTD " colspan="3" >
+                                    <apex:outputLabel styleClass="clsLabelConditionTD" value="{!$Label.brConditionsForPerformingAction}" />
+                              </td>
+                             </tr>
+                             
+                             
+                             <tr>
+                              <td class="clsPadding15px">
+                                <div id="gridPanel"></div>
+                              </td>
+                            </tr>
+                            <tr class="clsButtonBarTD"  >
+                              <td colspan="3" align="right">
+                                <table cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td>
+                                          
+                                            <apex:commandButton value="Import Rule..." action="{!importRule}" styleclass="clsButtonStyle clsIrBtn"/>
+                                            <apex:commandButton value="Export Rule..." action="{!exportRule}" styleclass="clsButtonStyle clsErBtn"/>
+                                            <apex:commandButton value="Previous" action="{!previousOfBrConditonPage}" styleclass="clsButtonStyle clsPrvBtn"/>
+                                            <apex:commandButton value="Next" onmouseover="buildConditions();" action="{!nextOfBrConditionPage}" styleclass="clsButtonStyle clsNxtBtn"/>
+                                        </td>
+                                    </tr>
+                                </table>
+                               </td> 
+                                              
+                            </tr>
+                            
+                            </table>
+                            </td>
+                            </tr>
+                            </tbody>  
+                        </table>
+                        </td>
+                      
+                    </tr>
+                    
+                  </table>  
+                </div>    
+               
+            </apex:form>
+    </apex:outputPanel>  
+</apex:page>
+                            	

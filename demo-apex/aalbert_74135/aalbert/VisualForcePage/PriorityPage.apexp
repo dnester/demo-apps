@@ -1,0 +1,547 @@
+<apex:page showHeader="false" controller="PriorityController">
+  <c:CommonIncludes />
+  <script>
+  
+     var priorityName;               
+     var priorityId;
+     var errormsg;
+     
+  
+    
+     function callCopyPage(){
+        window.parent.addTab("PriorityPage?copyId=" +priorityId,"Priority","Priority");
+    }
+    
+    var wid = '{!$CurrentPage.parameters.wid}';
+        function closeWindow(){
+                window.parent.refreshList();
+                window.parent.closeTab(wid);
+        }
+
+  /*function openUrgencyLookup(){ 
+
+                   var urgencyId = window.showModalDialog("/apex/SearchPage?popupId=Urgency","searchpage","dialogWidth=600px; dialogHeight=600px; resizable=yes");
+
+} */    
+
+ 
+
+ 
+
+ 
+
+    function openUrgencyLookup(){ 
+
+           var urgency = window.showModalDialog("/apex/SearchPage?popupId=Urgency","searchpage","dialogWidth=600px; dialogHeight=600px; resizable=yes");
+
+           if(urgency != null && urgency != ''){           
+
+                setUrgency(urgency);
+
+            }
+
+}  
+    function buttonValidator() {
+       
+       if((priorityName != null && priorityName != '')&&(errormsg == null||errormsg ==''||errormsg=='Saved successfully.')){   
+  
+        Ext.getCmp('deleteId').setDisabled(false);
+        Ext.getCmp('copyId').setDisabled(false);
+        Ext.getCmp('clearId').setDisabled(false);    
+       }  
+     }
+ 
+
+  </script>
+
+  
+
+    <script>
+
+    Ext.onReady(function(){
+
+    
+
+        Ext.QuickTips.init();
+
+        
+
+        // This function renders a block of buttons
+
+        var NewBtnhandler = function(button,event) {  openPage("PriorityPage","Priority","Priority"); };
+
+        var SaveBtnHandler = function(button,event) {  save(); };
+
+        var CopyBtnHandler = function(button,event) { callCopyPage(); };
+
+        var ResetBtnHandler = function(button,event) { resetPriority(); };
+
+        var DeleteBtnHandler = function(button,event) { 
+        												  Ext.MessageBox.confirm('Delete', 'Are you sure ?', function(btn){
+														   if(btn === 'yes'){
+														           deletePriority();
+														   }});
+        												 };
+
+        var SendNotificationBtnHandler= function(button,event) {  /*deleteIncident();*/ };
+
+        var ClearBtnHandler= function(button,event) { clearPriority(); };
+
+        var OpenBtnHandler= function(button,event) {  /*deleteIncident();*/ };
+        
+        var NextBtnHandler = function (button,event) { nextPriorityBtnHandler1();};
+        var PreviuosBtnHandler = function (button,event) { previousPriorityBtnHandler1();};
+        
+
+          var SamplePanel = Ext.extend(Ext.Panel, {
+
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+       });
+
+        new SamplePanel({
+
+            title: '',
+            bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [ {
+
+                scale: 'medium',
+
+                iconCls: 'bmcNew',
+				tooltipType : 'title',
+                tooltip: '{!$Label.new}',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcNewOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcNew');          
+                     }
+                },          
+
+                handler:NewBtnhandler
+
+            } ,' ', {
+
+                scale: 'medium',
+
+                iconCls: 'bmcSave',
+				tooltipType : 'title',
+                 tooltip: '{!$Label.save}',
+                 listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                },
+                handler:SaveBtnHandler
+
+            },' ',{
+
+                scale: 'medium',
+
+                iconCls: 'bmcCopy',
+				tooltipType : 'title',
+                tooltip: '{!$Label.copy}',
+
+                id:'copyId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcCopyOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcCopy');          
+                     }
+                },
+                handler:CopyBtnHandler
+
+            },' ','-',' ',{
+
+                scale: 'medium',
+
+                iconCls: 'bmcDelete',
+				tooltipType : 'title',
+                tooltip: '{!$Label.delete}',
+
+                id:'deleteId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcDeleteOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcDelete');          
+                     }
+                },         
+
+                handler:DeleteBtnHandler
+
+            },' ',{
+
+                scale: 'medium',
+
+                iconCls: 'bmcClear',
+				tooltipType : 'title',
+                tooltip: '{!$Label.clear}',
+
+                id:'clearId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcClearOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcClear');          
+                     }
+                },    
+
+                handler:ClearBtnHandler                 
+
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcReset',
+				tooltipType : 'title',
+                tooltip: '{!$Label.Reset}',
+                id:'resetId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcResetOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcReset');          
+                     }
+                },    
+                handler:ResetBtnHandler                 
+            },
+            new Ext.Toolbar.Fill(),
+            {
+                scale: 'medium',
+                iconCls: 'bmcPrevious',
+				tooltipType : 'title',
+                tooltip: '{!$Label.previousRecord}',
+                handler:PreviuosBtnHandler,
+                
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcNext',
+				tooltipType : 'title',
+                tooltip: '{!$Label.nextRecord}',
+                handler:NextBtnHandler,
+                
+            }
+            ]
+        });
+        
+        priorityId = '{!priority.Id}';    
+        if(priorityId == null ||priorityId == ''){                
+        Ext.getCmp('deleteId').setDisabled(true);
+        Ext.getCmp('copyId').setDisabled(true);
+        Ext.getCmp('clearId').setDisabled(true); 
+        }
+        
+    });
+    
+    var priorityIdSet=window.parent.returnListOfId();
+        function previousPriorityBtnHandler1(){
+        	var idSetString='';
+			var i=0;
+			while(priorityIdSet.length > i){
+				if(idSetString==''){
+					idSetString='\''+priorityIdSet[i]+'\'';
+				}else{
+					idSetString=idSetString+','+'\''+priorityIdSet[i]+'\'';
+				}
+				i++;
+			}
+			previousPriorityBtnHandler(idSetString);
+        
+        }
+
+       function nextPriorityBtnHandler1(){
+        	var idSetString='';
+			var i=0;
+			while(priorityIdSet.length > i){
+				if(idSetString==''){
+					idSetString='\''+priorityIdSet[i]+'\'';
+				}else{
+					idSetString=idSetString+','+'\''+priorityIdSet[i]+'\'';
+				}
+				i++;
+			}
+			nextPriorityBtnHandler(idSetString);
+        
+        } 
+    
+   </script>
+
+    
+     <apex:outputPanel id="titlePanel">
+        <script>
+            function updateList(){
+               
+                window.parent.refreshList();
+            }
+        
+        </script>
+    </apex:outputPanel>  
+     <apex:outputPanel ID="dummy"></apex:outputPanel>
+     
+     <apex:outputPanel id="panelId">
+        <script>
+        
+           priorityName = '{!priority.Name}';               
+           priorityId = '{!priority.Id}';      
+        
+        </script>
+        </apex:outputPanel>   
+        
+        <apex:outputPanel id="errorId">
+        <script>
+        
+           errormsg = '{!messageString}';               
+                
+        
+        </script>
+        </apex:outputPanel>
+ <div class="CapsuleDiv1" id="capsule">
+    <apex:outputPanel >
+
+    <apex:form >
+
+    <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+     <apex:actionFunction action="{!save}" name="save" reRender="validationComponent,panelId,errorId" oncomplete="showError();updateList();buttonValidator();"/>
+<apex:actionFunction action="{!nextBtnHandler}" name="nextPriorityBtnHandler" 
+            						rerender="dataPanel" > 
+            						<apex:param assignTo="{!tempString}" name="idSetString" value=""/> 
+	 </apex:actionFunction>
+	 <apex:actionFunction action="{!previousBtnHandler}" name="previousPriorityBtnHandler" 
+	            						rerender="dataPanel" > 
+	            						<apex:param assignTo="{!tempString}" name="idSetString" value=""/>
+	 </apex:actionFunction>
+
+      <apex:actionFunction action="{!deletePriority}" name="deletePriority"  onComplete="closeWindow();"/>
+       <apex:actionFunction action="{!newPriority}" name="newPriority" />
+       <apex:actionFunction action="{!clear}" name="clearPriority" />
+       <apex:actionFunction action="{!reset}" name="resetPriority" />
+
+        <apex:actionFunction action="{!urgencyQuery}" name="setUrgency" reRender="Urgency__c_id_name,Urgency__c_id_description__c">
+
+                    <apex:param assignTo="{!urgencyId}" value="" name="saveUrgency "/>
+
+                    </apex:actionFunction>
+
+         <apex:actionFunction action="{!impactQuery}" name="setImpact" reRender="Impact__c_id_name,Impact__c_id_description__c">
+
+                    <apex:param assignTo="{!impactId}" value="" name="saveImpact "/>
+
+                    </apex:actionFunction>
+ 
+   <table class="clsMainTable" cellspacing="0" cellpadding="0">
+                        <tr class="clsRowGreyBg">
+                               <td>
+                               <div id="btnToolbar"></div>
+                              
+                            </td>
+                        </tr>    
+                                             
+                         
+                            <tr>                           
+                                 <td>
+                                   <apex:outputPanel id="dataPanel">
+                                       <table class="clsTable" cellspacing="0" cellpadding="0">
+                                         <tr>
+                                                <td>
+                                                    <div class="div15pxVspacing"></div>
+                                                </td>
+                                            </tr>                   
+                                       <tr>
+                                          <td class="clsInputLabelTD">
+                                          <apex:outputLabel value="{!$Label.priorityId}"></apex:outputLabel>
+                                          <span class="clsRequiredBlack">*</span></td>
+                                          <td class="clsInputTextBoxTD">
+                                            <apex:inputField value="{!priority.Name}" styleClass="clsInputTextBox"/>
+                                        </td>
+                                    </tr>                         
+
+                                
+                                    <tr>
+                                        <td class="clsInputBoldLabelTableFirstRowTD">
+                                          <apex:outputLabel value="{!$Label.description}"></apex:outputLabel>
+                                           <span class="clsRequiredBlack">*</span></td>
+                                    </tr>                                
+
+                                     <tr>
+                                        <td class="clsInputTextAreaTD" colspan="2">
+                                       <apex:inputtextarea value="{!priority.description__c}" styleClass="clsInputTextAreaPgWoSidePanel"/>
+                                        </td>
+                                    </tr>
+
+                              
+
+                                    <tr>
+                                                <td>
+                                                    <div class="div12pxVspacing"></div>
+                                                </td>
+                                            </tr>    
+                                   
+                               
+                                     <table>
+                                        <tr>
+                                            <td class="clsInputLabelTDP1">
+                                              <apex:outputLabel value="{!$Label.scheduleName}"></apex:outputLabel>
+                                              </td>
+                                              <td class="clsInputTextBoxTDP1">
+                                                
+                                                <apex:inputText disabled="true" value="{!tbd}" id="sname" styleClass="clsInputTextBoxReadOnly"/>
+                                                </td><td class="lookupIconTDP">
+                                                 <div class="lookUpIconDiv">                                      
+                                                <apex:commandButton onclick="" styleClass="lookupIconOn"/>
+                                                </div></td>
+                                            
+                                           </tr>
+
+                                        <tr>
+                                            <td class="clsInputLabelTDP2">
+                                              <apex:outputLabel value="{!$Label.timeZone}"></apex:outputLabel>
+                                              </td>
+                                            <td class="clsInputTextBoxTDP2">
+                                            <apex:inputText disabled="true" value="{!tbd}" id="tname" styleClass="clsInputTextBoxReadOnly"/>                                          
+                                            </td><td class="lookupIconTDP">
+                                            <div class="lookUpIconDiv"><apex:commandButton onclick="" styleClass="lookupIconOn"/>
+                                            </div></td>
+                                            </tr>
+
+                                        <tr>
+                                            <td class="clsInputLabelTDP3" >
+                                              <apex:outputLabel value="{!$Label.impactID}"></apex:outputLabel>
+                                              <span class="clsRequiredBlack">*</span></td>
+
+                                            <td class="clsInputTextBoxTDP3">
+                                                <apex:inputText id="Impact__c_id_name" value="{!priority.impactId__c}" onblur="showalldata(event)" styleClass="clsInputTextBox"/>                                         
+                                                  </td>
+                                                  <td class="lookupIconTDP">
+                                                 <div class="lookUpIconDiv"><apex:commandButton onclick="openPopup('SearchPage?popupId=Impact&isLookup=true',setImpact);" rerender="dummy" styleClass="lookupIconOn"/>
+                                            </div></td>
+                                        </tr>
+                                                                   
+                                       </table>
+                                       
+                                       <table class="clsTable" cellspacing="0" cellpadding="0">
+                                  
+                                          <tr>
+                                            <td class="clsInputBoldLabelTDP">
+                                              <apex:outputLabel value="{!$Label.description}"></apex:outputLabel>
+                                              </td>
+                                          </tr>
+
+                                        <tr>
+                                           <td class="clsInputTextAreaTD" colspan="2">
+                                         <apex:inputtextarea disabled="true" value="{!impact.description__c}" styleClass="clsInputTextAreaPgWoSidePanelReadOnly" id="Impact__c_id_description__c"/>
+                                        </td>
+                                        </tr>                            
+                                       
+                                         <tr>
+                                                <td>
+                                                    <div class="div10pxVspacing"></div>
+                                                </td>
+                                            </tr> 
+                               
+                         </table>
+                                   
+                         <table>
+
+                                    <tr>
+                                        <td class="clsInputLabelTDP4">
+                                          <apex:outputLabel value="{!$Label.Urgency_ID}"></apex:outputLabel>
+                                          <span class="clsRequiredBlack">*</span></td>
+                                        <td class="clsInputTextBoxTDP4">
+                                       <apex:inputText id="Urgency__c_id_name" value="{!priority.urgencyId__c}" styleClass="clsInputTextBox" onblur="showalldata(event)"/>                                      
+                                        </td>
+                                        <td class="lookupIconTDPP">
+                                        <div class="lookUpIconDiv"><apex:commandButton onclick="openPopup('SearchPage?popupId=Urgency&isLookup=true',setUrgency);" rerender="dummy" styleClass="lookupIconOn"/>                                        
+                                       </div></td>
+                                    </tr>
+                               
+                                    </table>
+                                   
+                                  <table class="clsTable" cellspacing="0" cellpadding="0">
+                                  
+                                       <tr>
+                                            <td class="clsInputBoldLabelTD">
+                                              <apex:outputLabel value="{!$Label.description}"></apex:outputLabel>
+                                              </td>
+                                       </tr>
+
+                                      <tr>
+                                               <td class="clsInputTextAreaTD" colspan="2">
+                                                <apex:inputtextarea disabled="true" value="{!urgency.description__c}"  styleClass="clsInputTextAreaPgWoSidePanelReadOnly" id="Urgency__c_id_description__c"/>
+                                            </td>
+                                      </tr>
+                                      
+                                      <tr>
+                                            <td>
+                                               <div class="div12pxVspacing"></div>
+                                            </td>
+                                      </tr>
+
+                         
+                                   </table>
+                                   
+                                   <table>                      
+
+                                        <tr>
+                                            <td class="clsInputLabelTDP5">  
+                                            <apex:outputLabel value="{!$Label.duration}"></apex:outputLabel>
+                                            </td>
+                                            <td class="clsInputTextBoxTDP5">
+                                                <apex:inputField value="{!priority.priorityDuration__c}" styleClass="clsInputTextBox"/>
+                                            </td>
+                                        </tr>                               
+                                  
+                                  </table>
+                                    <tr><td><div class="div5pxVspacing"/></td></tr>
+                                         
+                                                                          
+                                           
+                                        <tr>
+                                                  <td class="clsInputCheckBox" colspan="3">
+                                                  <apex:inputCheckbox id="radFCR3"/>
+                                                 <label for="radFCR3" class="clsInputCheckBoxLabel">
+                                                   {!$Label.AdjustDueDateBasedOnTheAssignedStaffMembersSchedule}
+                                                 </label>
+                                            </td>
+                                       </tr>
+
+                                         <tr>
+                                                 <td class="clsInputCheckBox">
+                                                    <apex:inputfield value="{!priority.inactive__c}" id="radFCR2"/>
+                                                     <label for="radFCR2" class="clsInputCheckBoxLabel">                                                    
+                                                      {!$Label.inactive}
+                                                      </label>                                                      
+                                             </td>
+                                          </tr>
+
+                                    <tr><td><div class="div5pxVspacing"/></td></tr>
+                                 
+                                   </table>
+                                   </apex:outputPanel> 
+                                   </td>
+                                  
+                                    </tr>
+
+                                    <tr class="clsRowGreyBg" valign="middle">
+                                      <td valign="top" style="padding-top: 10px;">                    
+                                      </td>  
+                    				</tr>
+                    				<tr class="clsRowGreyBg" valign="middle">
+					                    <td valign="top" style="padding-top: 10px;">
+					                           <c:detailSectionComponent objectName="Priority__c" fKeyValue="{!priorityId}"/>
+					                    </td>
+					                </tr>
+               </table>                            
+             <c:tabOutComponent ></c:tabOutComponent>
+          </apex:form>
+          </apex:outputPanel>
+          </div>
+          </apex:page>
+                            	

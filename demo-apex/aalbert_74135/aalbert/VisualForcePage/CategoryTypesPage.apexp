@@ -1,0 +1,347 @@
+<apex:page showHeader="false" controller="CategoryTypesController">
+<c:CommonIncludes />
+    
+    <script>
+    
+    var categoryTypesName;               
+    var categoryTypesId;
+    var errormsg;
+    
+     var isLookup = "{!$CurrentPage.parameters.islookup}";  
+       
+        function getCATTYPid(catId){
+            if(isLookup){
+              window.parent.refreshDocs();  
+              window.parent.closePopup();
+           }else{
+               setId(catId);  
+           }
+        }
+    
+    function callNewPage(){
+        window.parent.addTab("CategoryTypesPage","CategoryTypes","CategoryTypes");
+    }
+    
+    function callCopyPage(){
+    	categoryTypesId  = '{!$CurrentPage.parameters.id}';
+        window.parent.addTab("CategoryTypesPage?copyId=" + categoryTypesId,"Category Type","Category Type");
+    }
+
+        Ext.onReady(function(){
+    
+        Ext.QuickTips.init();
+        // This function renders a block of buttons
+        var NewBtnHandler = function(button,event) {  openPage('CategoryTypesPage','Category Type','Category Type');};
+        var SaveBtnHandler = function(button,event) {  save(); };
+        var CopyBtnHandler = function(button,event) { callCopyPage(); };
+        var DeleteBtnHandler = function(button,event) {  
+        												deleteCategoryTypes();
+        												 Ext.MessageBox.confirm('Delete', 'Are you sure ?', function(btn){
+														   if(btn === 'yes'){
+														         deleteCategoryTypes();
+														   }});
+        												 };
+        var ClearBtnHandler = function(button,event) {  clearCategoryTypes(); };
+        var ResetBtnHandler = function(button,event) {  resetCategoryTypes(); };       
+        var NextBtnHandler = function (button,event) { nextCategoryTypeBtnHandler1();};
+        var PreviuosBtnHandler = function (button,event) { previousCategoryTypeBtnHandler1();}; 
+   
+          var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+        new SamplePanel({
+            title: '',
+            cls:'toolSpCls',
+             bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [{
+                scale: 'medium',
+                iconCls: 'bmcNew',
+				tooltipType : 'title',
+                tooltip: '{!$Label.new}',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcNewOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcNew');          
+                     }
+                },                
+                handler: NewBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcSave',
+				tooltipType : 'title',
+                tooltip: '{!$Label.save}',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                },
+                
+                handler:SaveBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcCopy',
+				tooltipType : 'title',
+                tooltip: '{!$Label.copy}',
+                id:'copyId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcCopyOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcCopy');          
+                     }
+                },
+                
+                handler:CopyBtnHandler
+            },' ','-',' ',{
+                scale: 'medium',
+                iconCls: 'bmcDelete',
+				tooltipType : 'title',
+                tooltip: '{!$Label.delete}',
+                id:'deleteId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcDeleteOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcDelete');          
+                     }
+                },    
+                
+                handler:DeleteBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcClear',
+				tooltipType : 'title',
+                 tooltip: '{!$Label.clear}',
+                 id:'clearId',
+                 listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcClearOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcClear');          
+                     }
+                },                 
+                handler:ClearBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcReset',
+				tooltipType : 'title',
+                 tooltip: '{!$Label.Reset}',
+                 id:'resetId',
+                 listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcResetOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcReset');          
+                     }
+                },                 
+                handler:ResetBtnHandler
+            },' ',new Ext.Toolbar.Fill(),' ',{
+                scale: 'medium',
+                iconCls: 'bmcPrevious',
+				tooltipType : 'title',
+                tooltip: '{!$Label.previousRecord}',
+                handler:PreviuosBtnHandler,
+               
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcNext',
+				tooltipType : 'title',
+                tooltip: '{!$Label.nextRecord}',
+                handler:NextBtnHandler,
+                
+            }
+            
+            ] 
+        });
+        
+        categoryTypesId = '{!categoryTypes.Id}';            
+        if(categoryTypesId == null || categoryTypesId == ''){                
+        Ext.getCmp('deleteId').setDisabled(true);
+        Ext.getCmp('copyId').setDisabled(true);
+         Ext.getCmp('clearId').setDisabled(true); 
+        }
+    });
+       
+ var CtypeIdSet=window.parent.returnListOfId();
+        function previousCategoryTypeBtnHandler1(){
+        	var idSetString='';
+			var i=0;
+			while(CtypeIdSet.length > i){
+				if(idSetString==''){
+					idSetString='\''+CtypeIdSet[i]+'\'';
+				}else{
+					idSetString=idSetString+','+'\''+CtypeIdSet[i]+'\'';
+				}
+				i++;
+			}
+			previousCategoryTypeBtnHandler(idSetString);
+        
+        }
+
+       function nextCategoryTypeBtnHandler1(){
+        	var idSetString='';
+			var i=0;
+			while(CtypeIdSet.length > i){
+				if(idSetString==''){
+					idSetString='\''+CtypeIdSet[i]+'\'';
+				}else{
+					idSetString=idSetString+','+'\''+CtypeIdSet[i]+'\'';
+				}
+				i++;
+			}
+			nextCategoryTypeBtnHandler(idSetString);
+        }
+        
+    function copyCategoryTypes(){
+    
+    //    copyCategoryTypesNext();
+    }
+    
+    function buttonValidator() {
+       
+       if((categoryTypesName != null && categoryTypesName != '')&&(errormsg == null||errormsg ==''||errormsg=='Saved successfully.')){   
+        
+        Ext.getCmp('deleteId').setDisabled(false);
+        Ext.getCmp('copyId').setDisabled(false);
+        Ext.getCmp('clearId').setDisabled(false);    
+       }  
+     }
+    
+    var wid = '{!$CurrentPage.parameters.wid}';
+        function closeWindow(){
+                window.parent.refreshList();
+                window.parent.closeTab(wid);
+        }
+    
+    </script>
+
+    <apex:outputPanel id="titlePanel">
+        <script>
+        
+            function updateList(){
+            	var newId = '{!categoryTypes.Id}'; 
+                getCATTYPid(newId)
+                window.parent.refreshList();
+            }
+        
+        </script>
+    </apex:outputPanel>
+    
+    <apex:outputPanel id="panelId">
+        <script>
+        
+           categoryTypesName = '{!categoryTypes.Name}';               
+           categoryTypesId = '{!categoryTypes.Id}';      
+        
+        </script>
+        </apex:outputPanel>
+        
+         <apex:outputPanel id="errorId">
+        <script>
+        
+           errormsg = '{!messageString}';               
+                
+        
+        </script>
+        </apex:outputPanel>
+       
+        
+    
+<div id="capsule" class="CapsuleDiv1">
+    <apex:outputPanel id="categoryTypesPanel">
+        <apex:form >
+        	<c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+            <apex:actionFunction action="{!save}" name="save" reRender="titlePanel,validationComponent,panelId,errorId" oncomplete="showError();updateList();buttonValidator();"/>
+            <apex:actionFunction action="{!newCategoryTypes}" name="newCategoryTypes" />
+            <apex:actionFunction action="{!clear}" name="clearCategoryTypes" />
+            <apex:actionFunction action="{!reset}" name="resetCategoryTypes" />
+             <apex:actionFunction action="{!deleteCategoryTypes}" name="deleteCategoryTypes" oncomplete="updateList();closeWindow();"/>
+             <!-- apex:actionFunction action="{!copyCategoryTypes}" name="copyCategoryTypesNext" rerender="categoryTypesPanel"/--> 
+             
+             <apex:actionFunction action="{!nextBtnHandler}" name="nextCategoryTypeBtnHandler" 
+            						rerender="tablePanel, cTypePanelBar" >  
+            						<apex:param assignTo="{!tempString}" name="idSetString" value=""/> 
+	        </apex:actionFunction>
+	        <apex:actionFunction action="{!previousBtnHandler}" name="previousCategoryTypeBtnHandler" 
+	            						rerender="tablePanel, cTypePanelBar" > 
+	            						<apex:param assignTo="{!tempString}" name="idSetString" value=""/> 
+	        </apex:actionFunction>
+             
+
+              <table class="clsMainTable" cellspacing="0" cellpadding="0">
+
+                <tr class="clsRowGreyBg">
+                    <td>
+                    <div id="btnToolbar"></div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td >
+						<apex:outputPanel id="tablePanel"> 
+                        <table class="clsTable" cellspacing="0" cellpadding="0">
+                            <tr>
+                            <td colspan="2"><div class="div15pxVspacing"/></td>
+                            </tr>                             <td></td>
+                            <tr>
+                            <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.Category_Type_ID}" /><span class="clsRequiredBlack">*</span></td>
+                            <td class="clsInputTextBoxTD">
+                                <apex:inputField value="{!categoryTypes.Name}" styleClass="clsInputTextBox"/>
+                            </td>
+                            </tr>
+                        </table>
+                        
+                        <table class="clsTable" cellspacing="0" cellpadding="0">                        
+                        <tr>
+                            <td class="clsInputBoldLabelTableFirstRowTD"><apex:outputLabel value="{!$Label.description}" /></td>
+                        </tr>
+
+                        <tr>
+                            <td class="clsInputTextAreaTD">
+                            <div class="clsRelativePosition"> 
+	                            <apex:inputTextarea value="{!categoryTypes.description__c}" styleClass="clsInputTextAreaPgWoSidePanel" />
+	                        </div>    
+                            </td>
+                        </tr>
+                        </table>
+                        <table class="clsTable" cellspacing="0" cellpadding="0">
+                            <tr>
+                                <td>
+                                     <div class="div13pxVspacing"></div>
+                                 </td>
+                            </tr>                        
+                            <tr>
+                                <td class="clsInputCheckBox">
+                                    <apex:inputfield value="{!categoryTypes.inactive__c}" id="inactive"/> 
+                                    <apex:outputLabel styleClass="clsInputCheckBoxLabel" value="{!$Label.inactive}"/>
+                                </td>
+                            </tr>
+                        </table>                    
+            </apex:outputPanel> 
+             </td>
+           </tr>
+               
+                <tr class="clsRowGreyBg" valign="middle">
+                    <td valign="top" style="padding-top: 10px;">
+                            <c:detailSectionComponent objectName="CategoryTypes__c" fKeyValue="{!categoryTypeId}"/>  
+                    </td>
+                </tr>
+
+            </table>
+			
+        </apex:form>
+    </apex:outputPanel>
+    </div>
+</apex:page>
+                            	

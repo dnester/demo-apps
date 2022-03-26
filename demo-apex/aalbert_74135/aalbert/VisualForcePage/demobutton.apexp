@@ -1,0 +1,35 @@
+<apex:page >
+
+<link rel="Stylesheet" type="text/css" href="{!$Resource.ExtJs}/resources/css/ext-all.css" />
+<script type="text/javascript" src="{!$Resource.ExtJs}/adapter/ext/ext-base.js"></script>
+<script type="text/javascript" src="{!$Resource.ExtJs}/ext-all-debug.js"></script>
+<apex:includeScript value="{!$Resource.JSResource}/JSCommon.js"/>
+<!-- Begin Default Content REMOVE THIS -->
+
+<h1>Congratulations</h1>
+
+This is your new Page
+
+<script type="text/javascript">
+
+Ext.onReady(function(){
+
+buttons: {
+
+yes: true,
+
+no: true,
+
+cancel: true
+
+}
+
+});
+
+
+
+</script>
+<div id = 'button'></div>
+
+</apex:page>
+                            	

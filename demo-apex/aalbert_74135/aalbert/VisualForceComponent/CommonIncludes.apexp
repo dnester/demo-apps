@@ -1,0 +1,8 @@
+<apex:component >
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/resources/css/ext-all.css" id="ext-all-css"/>
+    <apex:includeScript value="{!$Resource.SDEFExtJS}/adapter/ext/ext-base.js" id="ext-base-js"/>
+    <apex:includeScript value="{!$Resource.SDEFExtJS}/ext-all.js" id="ext-all-js"/>
+    <link rel="Stylesheet" type="text/css" href="{!$Resource.SDEFStyles}/BMCStyleSheet.css" />
+    <apex:includeScript value="{!$Resource.SDEFCommonJS}/JSCommon.js" id="JSCommon-js"/>
+</apex:component>
+                             	

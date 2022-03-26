@@ -1,0 +1,160 @@
+<apex:page controller="QuickViewController" showHeader="false" sidebar="false">
+<c:CommonIncludes />
+<style>
+.x-grid3-hd-row td {
+     font-family: Tahoma,Verdana,Arial,Geneva, Helvetica, sans-serif, MS Sans Serif;
+     font-weight: bold;
+     font-size: 13pt;
+     color: #000000;
+     border-bottom :solid 1px  #013B66;
+     border-right:solid 1px #013B66;
+     border-bottom :solid 1px #7CC0EA;
+     border-right:solid 1px #7CC0EA;     
+}
+.x-grid3-hd-inner {
+     background-color: #2E7DB3;
+     font-family: Tahoma,Verdana,Arial,Geneva, Helvetica, sans-serif, MS Sans Serif;
+     font-weight: bold;
+     font-size: 8pt;
+     color: #FFFFFF;
+     border-bottom: solid 1px  #013B66;
+     border-right: solid 1px #013B66;
+     border-bottom: solid 1px #7CC0EA;
+     border-right: solid 1px #7CC0EA;     
+}
+td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-asc .x-grid3-hd-inner, td.x-grid3-hd-menu-open .x-grid3-hd-inner {
+    background-color: #2E7DB3;
+    background-image: none;        
+}
+.x-grid3-row-selected {
+    background-color: #E0EE70 !important;
+    background-image: none;
+    border-color: #a3bae9;
+}
+.x-grid3-cell-text{
+    white-space: normal;
+}
+.x-grid3-cell{  
+    white-space: normal;
+    
+}
+/*.x-grid3-row-over {background-color: #E0EE70 !important;background-image: none;}*/
+/*.x-toolbar{border-color: #DEE0E0; background-color:#DEE0E0; background-image: none;}*/
+.x-toolbar-left { background-color: #DEE0E0;}
+</style>
+<body id="docBody">
+
+<script>
+    function addLink(data, metadata, record, rowIndex, columnIndex, store){
+        return '<a onclick="showRecord(\''+record.get(idFld)+'\', \''+record.get(page)+'\')">'+data+'</a>';        
+    }
+    
+    function showRecord(id, page) {
+        //Use addNewTab here
+        window.parent.parent.addNewTab(page, page, page+"?id="+id);
+    }
+</script>
+<apex:form >
+<apex:outputPanel id="wholePage" rendered="true">
+    <script>
+    var resultSet= new Array({!resultSet.size});   
+    var colsSize = 0;
+    var noName = false;    
+    var j=0, k=0;</script>
+    <apex:repeat value="{!resultSet}" var="obj">
+        <script>k=0;colsSize={!obj.fields.size}; resultSet[j] = new Array(colsSize); </script>
+        <apex:repeat value="{!obj.fields}" var="objflds">
+            <script>resultSet[j][k]='{!objflds.value}';k++;</script>
+        </apex:repeat><script>j++;</script>
+    </apex:repeat>
+
+    <script>var idFld='fld0', nameFld=idFld; var colsHdrs = new Array(colsSize);j=0;/*Set columnn headers*/</script>
+    <apex:repeat value="{!labelList}" var="hdr">
+        <script>colsHdrs[j++]="{!hdr}";</script>
+    </apex:repeat>
+    <script>var page = 'fld'+j;</script>
+    <script>var cols = new Array(colsSize);j=0;/*Set columnn names*/</script>
+    <apex:repeat value="{!labelList}" var="col">
+        <script>cols[j++]="{!col}";if(cols[j-1].toLowerCase()=="name"){nameFld="fld"+(j-1);}</script>
+    </apex:repeat>
+    
+    <script>var colsWidth = new Array(colsSize);j=0;/*Set columnn names*/</script>
+    <apex:repeat value="{!colsWidthList}" var="colWidth">
+        <script>colsWidth[j++]="{!colWidth}"; </script>
+    </apex:repeat>
+    
+    
+<script>
+    var flds = new Array(colsHdrs.length);
+    for(i=0;i<colsHdrs.length;i++){flds[i]='fld'+i;}
+    
+    var arrCols = new Array(colsSize);
+    for(j=0;j<colsHdrs.length;j++){
+        
+        var colWidth = parseInt(colsWidth[j]);  
+        
+        if(j==0)            
+            arrCols[j] = {id:flds[j], header: colsHdrs[j], width: colWidth, dataIndex: flds[j], hideable: false, hidden: true};
+        else if(j==1)
+            arrCols[j] = {id:flds[j], header: colsHdrs[j], width: 100, sortable: true, dataIndex: flds[j], renderer: addLink};
+        else if(j==colsHdrs.length-1)
+            arrCols[j] = {id:flds[j], header: colsHdrs[j], width: colWidth, dataIndex: flds[j], hideable: false, hidden: true};
+        else
+            arrCols[j] = {header: colsHdrs[j], width: 100, sortable: true, dataIndex: flds[j]};
+        
+    }
+
+    function renderGrid(){        
+
+        // create the data store
+        var store = new Ext.data.ArrayStore({
+            fields: flds
+        });
+        store.loadData(resultSet);        
+        // create the Grid
+        grid = new Ext.grid.GridPanel({
+            store: store,
+            columns: arrCols, stripeRows: true,
+            height: 850,
+            border: false,
+            //autoFill: true,
+           
+              viewConfig: {
+                forceFit: true
+              
+             },
+
+       
+            selModel: new Ext.grid.RowSelectionModel({singleSelect : true})
+        });        
+       grid.render('grid');        
+    }   
+                                 
+
+function extInit(){        
+    renderGrid();
+}
+var grid;
+var viewport;
+Ext.onReady( function() {
+    if(resultSet.length==0) Ext.MessageBox.show({ msg: 'No records found', buttons: Ext.MessageBox.OK});
+    renderGrid();
+    viewport = new Ext.Viewport({
+            layout:'fit',
+           
+            renderTo: 'grid',
+            items:[
+            {region:'center',  layout:'fit', items:[ grid ]}]
+        });
+ });
+</script>
+
+<!--div id="mnu" style="position: relative" width="100%"></div-->
+<div id="grid" style="position: relative"></div>
+
+</apex:outputPanel>
+</apex:form>
+</body>
+<!--pre>{!log}</pre-->
+</apex:page>
+                            	

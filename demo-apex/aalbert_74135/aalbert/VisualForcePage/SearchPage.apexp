@@ -1,0 +1,525 @@
+<apex:page controller="SearchController" showHeader="false" sidebar="false" cache="false" contentType="text/html">
+<c:CommonIncludes />
+<style>
+.x-grid3-hd-row td {
+    font-family: Tahoma,Verdana,Arial,Geneva, Helvetica, sans-serif, MS Sans Serif;
+    font-weight: bold;
+    font-size: 13pt;
+    color: #000000;
+    border-bottom :solid 1px  #013B66;
+    border-right:solid 1px #013B66;
+    border-bottom :solid 1px #7CC0EA;
+    border-right:solid 1px #7CC0EA;     
+}
+.x-grid3-hd-inner {
+    background-color: #2E7DB3;
+    font-family: Tahoma,Verdana,Arial,Geneva, Helvetica, sans-serif, MS Sans Serif;
+    font-weight: bold;
+    font-size: 8pt;
+    color: #FFFFFF;
+    border-bottom: solid 1px  #013B66;
+    border-right: solid 1px #013B66;
+    border-bottom: solid 1px #7CC0EA;
+    border-right: solid 1px #7CC0EA;     
+}
+td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-asc .x-grid3-hd-inner, td.x-grid3-hd-menu-open .x-grid3-hd-inner {
+    background-color: #2E7DB3;
+    background-image: none;        
+}
+
+.x-grid3-row-selected {
+    background-color: #E0EE70 !important;
+    background-image: none;
+    border-color: #a3bae9;
+}
+
+.x-grid3-cell-text{
+    white-space: normal;
+}
+.x-grid3-cell{  
+    white-space: normal;
+    width: 100%;
+}
+a{ text-decoration: underline; }
+/*.x-grid3-row-over {background-color: #E0EE70 !important;background-image: none;}*/
+/*.x-toolbar{border-color: #DEE0E0; background-color:#DEE0E0; background-image: none;}*/
+.x-toolbar-left { background-color: #DEE0E0;}
+</style>
+<body id="docBody">
+<script>
+var grid, viewport;
+function msgbox(msg, title, icon, clickHandler){
+	var msgIcon = Ext.MessageBox.INFO;//Default
+	if(title==null) title=""; 
+	if(icon==3){
+    	msgIcon = Ext.MessageBox.QUESTION;
+    	if(title=="") title="Question"	
+    }else if(icon==2){
+    	msgIcon = Ext.MessageBox.WARNING;
+    	if(title=="") title="Warning"
+    }else if(icon==1){	
+    	msgIcon = Ext.MessageBox.ERROR;
+    	if(title=="") title="Error"
+	}
+	if(title=="") title="Information"
+    Ext.MessageBox.show({
+       title: title,
+       msg: msg,
+       buttons: Ext.MessageBox.OK,
+       fn: clkHandler,
+       icon: msgIcon
+   });
+}function clkHandler(btn){};
+function getPopupDetails(popUpId, returnId){
+    var pageName = '', tabHeader = '', windowHeader = '';
+    if(popUpId == 'Incident'){
+        pageName = 'IncidentPage';
+        tabHeader = 'Incident';
+        windowHeader = 'Incident';
+    }else if(popUpId == 'Client'){
+        pageName = 'ClientPage';
+        tabHeader = 'Client';
+        windowHeader = 'Client';                                
+    }if(popUpId == 'Category'){
+        pageName = 'CategoryPage';
+        tabHeader = 'Category';
+        windowHeader = 'Category';                                
+    }if(popUpId == 'CategoryType'){
+        pageName = 'CategoryTypesPage';
+        tabHeader = 'Category Type';
+        windowHeader = 'Category Type';                                
+    }if(popUpId == 'Organization'){
+        pageName = 'OrganizationPage';
+        tabHeader = 'Organization';
+        windowHeader = 'Organization';                                
+    }if(popUpId == 'Impact'){
+        pageName = 'ImpactPage';
+        tabHeader = 'Impact';
+        windowHeader = 'Impact';                                
+    }if(popUpId == 'Urgency'){
+        pageName = 'UrgencyPage';
+        tabHeader = 'Urgency';
+        windowHeader = 'Urgency';                                
+    }if(popUpId == 'Broadcast'){
+        pageName = 'BroadcastsPage';
+        tabHeader = 'Broadcast';
+        windowHeader = 'Broadcast';                                
+    }if(popUpId == 'Status'){
+        pageName = 'StatusPage';
+        tabHeader = 'Status';
+        windowHeader = 'Status';                                
+    }if(popUpId == 'Priority'){
+        pageName = 'PriorityPage';
+        tabHeader = 'Priority';
+        windowHeader = 'Priority';                                
+    }if(popUpId == 'Action'){
+        pageName = 'ActionPage';
+        tabHeader = 'Action';
+        windowHeader = 'Action';                                
+    }if(popUpId == 'Staff'){
+        pageName = 'UserPage';
+        tabHeader = 'User';
+        windowHeader = 'User';                                
+    }if(popUpId == 'IncidentHistory'){
+        pageName = 'IncidentHistoryPage';
+        tabHeader = 'Incident History';
+        windowHeader = 'Incident History';                                
+    }if(popUpId == 'BroadcastHistory'){
+        pageName = 'BroadcastHistoryPage';
+        tabHeader = 'Broadcast History';
+        windowHeader = 'Broadcast History';                                
+    }if(popUpId == 'TaskHistory'){
+        pageName = 'TaskHistoryPage';
+        tabHeader = 'Task History';
+        windowHeader = 'Task History';                                
+    }if(popUpId == 'Task'){
+        pageName = 'TaskPage';
+        tabHeader = 'Task';
+        windowHeader = 'Task';                                
+    }if(popUpId == 'StandardDescription'){
+        pageName = 'StandardDescriptionPage';
+        tabHeader = 'Standard Description';
+        windowHeader = 'Standard Description';                                
+    }if(popUpId == 'Quickview'){
+        pageName = 'DashboardPage';
+        tabHeader = 'SYSQuickView';
+        windowHeader = 'Standard Description';                                
+    }if(popUpId == 'BlackOut'){
+        pageName = 'BlackOutPage';
+        tabHeader = 'BlackOut';
+        windowHeader = 'BlackOut';                                
+    }if(popUpId == 'Staff'){
+        pageName = 'StaffPage';
+        tabHeader = 'Staff';
+        windowHeader = 'Staff';                                
+    }if(popUpId == 'Template'){
+        pageName = 'TemplatePage';
+        tabHeader = 'Template';
+        windowHeader = 'Template';                                
+    }
+    if(returnId==3)
+        return windowHeader;
+    else if(returnId==2)
+        return tabHeader;
+    else    
+        return pageName;                
+}
+</script>
+<apex:outputPanel id="wholePage" rendered="true">
+<apex:form id="frmSearch">
+<script>
+    var isLookup = "{!$CurrentPage.parameters.islookup}";
+	var mnuBar;
+    var columnField='Name';
+    var direction='ASC';    
+    function wrapText(data, metadata, record, rowIndex, columnIndex, store){        
+        //while(data.indexOf('<br')!=-1) data=data.replace('
+', ' ').replace('
+', ' ');      
+        return data.length>25 ? '<div class="tipstring" title="' + data +'">' + data.substr(0,20) + '.....</div>' : data;
+    }
+    function copyObject(){
+        cpId=document.getElementById("selectedSOId").value;
+        var pageName = getPopupDetails("{!popupId}", 1);
+        var tabHeader = getPopupDetails("{!popupId}", 2);
+        var windowHeader = getPopupDetails("{!popupId}", 3);
+        window.parent.addTab(pageName+"?copyId="+cpId+"&title="+encodeURIComponent(windowHeader),windowHeader,windowHeader);
+    }
+    function setObjId(objId, nameVal){    
+        //if(window.parent.opener==null) msgbox(objId+":"+nameVal);        
+        var popUpId = "{!popupId}";
+        var view = "{!view}";
+        var pageName;
+        var tabHeader = "Search";
+        var windowHeader = "Search";        
+        
+        if((view == '') || (view == null)){
+            window.parent.setPopUpVar(objId);
+            window.parent.closePopup();
+            //window.returnValue = objId;
+            //window.parent.close();
+            //document.window.parent.close();                    
+        }else{
+            var pageName = getPopupDetails(popUpId, 1);
+            var tabHeader = getPopupDetails(popUpId, 2);
+            var windowHeader = getPopupDetails(popUpId, 3);             
+            if(objId == ''){
+                    window.parent.addTab(pageName+'?title='+encodeURIComponent(windowHeader),windowHeader,windowHeader);
+            }else{
+                if( (popUpId == 'Incident') || (popUpId == 'Task') || ( popUpId == 'Broadcast') ){
+                    window.parent.addTab(pageName+'?id='+objId+'&title='+encodeURIComponent(windowHeader+" #"+nameVal)+'&columnField='+columnField+'&direction='+direction,windowHeader+" #"+nameVal,windowHeader+" #"+nameVal);
+                }else{
+                    window.parent.addTab(pageName+'?id='+objId+'&title='+encodeURIComponent(windowHeader)+'&columnField='+columnField+'&direction='+direction,windowHeader,windowHeader);
+                }
+            }
+        }
+    }
+    function addLink(data, metadata, record, rowIndex, columnIndex, store){
+        return '<a onclick="setObjId(\''+record.get(idFld)+'\', \''+record.get(nameFld)+'\')">'+data+'</a>';        
+    }
+    function shState(data, metadata, record, rowIndex, columnIndex, store){
+        return ""+data=="true" ? "Opened" : "Closed";        
+    }
+
+    var saveArg=null;
+    function linkUnlink(item){
+        document.getElementById("linkIds").value="";
+        if(document.getElementById("selectedSOId").value==""){msgbox("Please select data to link / unlink!", "", 2); return;}
+        //var retVal = window.showModalDialog("/apex/SearchPage?popupId={!popId}", "searchpage","dialogWidth=600px; dialogHeight=600px; resizable=yes");
+        saveArg = item;
+        openPopup('SearchPage?popupId={!popId}&isLookup=true', doLinkUnlink);
+        //doLinkUnlink(retVal);        
+    }
+    function doLinkUnlink(retVal){    	
+    	if(retVal != null && retVal != '' ) {
+            document.getElementById("linkIds").value = retVal;
+        }else if(document.getElementById("returnVal").value!=''){
+            document.getElementById("linkIds").value = document.getElementById("returnVal").value;
+        }       
+        if(document.getElementById("linkIds").value==""){msgbox("Please select data to link / unlink!", "", 2); return;}
+        if(saveArg!=null && saveArg.text.toLowerCase().indexOf("link")==0)
+            linkit();
+        else if(saveArg!=null && saveArg.text.toLowerCase().indexOf("unlink")==0)
+            unlinkit();
+        saveArg = null;
+    }
+    
+    function shNew(item){ setObjId(''); }        
+    function deleteObj(){
+        if(document.getElementById("selectedSOId").value==""){msgbox("Please select data to delete!", "", 2); return;}
+        /*if(!window.confirm("Are you sure to delete the selected data?")) return; deleteObject(); */
+        Ext.MessageBox.confirm('Delete', 'Are you sure ?', function(btn){
+														   	if(btn === 'yes'){
+														      deleteObject();
+														   }});
+    }
+    function copyObj(){if(document.getElementById("selectedSOId").value==""){msgbox("Please select data to copy!", "", 2); return;} copyObject();}
+    function pageRefresh(){pgReset(true); pgRefresh();}
+    function pageSearch(){ document.getElementById("{!$Component.frmSearch.txtSrchCrit}").value=""; pgRefresh(); }
+    function pgReset(fullPage){     
+    	document.getElementById("inactiveOption").value=document.getElementById("oriInactiveOption").value;
+    	document.getElementById("stateOption").value=document.getElementById("oriStateOption").value; 
+    	pageSearch();
+    }
+    function txtSearch(){    
+        if(2>document.getElementById("txtSrch").value.length){
+            msgbox("Please enter atleast 2 characters to search!", "", 1); 
+            return;
+        }
+        document.getElementById("{!$Component.frmSearch.txtSrchCrit}").value=document.getElementById("txtSrch").value; 
+        pgRefresh();
+    }    
+    function getValidData(data){
+    	if(data==null || data=="")
+    		return "-";
+    	return data;
+    }
+    var resultSet= new Array({!resultSet.size});
+    var idSet=new Array({!resultSet.size});
+    var colsSize = 0;
+    var noName = false;    
+    var j=0, k=0;
+    if(window.parent!=null && window.parent.listOfId!=null) {window.parent.listOfId(idSet);}
+    var idFld="", nameFld="";
+    var cols = new Array(colsSize);j=0;/*Set columnn names*/
+    var colsHdrs = new Array(colsSize);j=0;/*Set columnn headers*/
+    {!resultSetString}
+    {!colsString}
+    {!colsHeadersString}
+    for(i=0;resultSet.length>i;i++){if(0<resultSet[i].length) {idSet[i]=resultSet[i][0];}}
+    for(i=0;cols.length>i;i++){        
+        if(colsHdrs[i]==null) colsHdrs[i]='';
+        if(cols[i]==null) cols[i]='';
+        if(cols[i].toLowerCase()=="name"){nameFld="fld"+(j-1);}
+    }
+    
+    for(i=0;cols.length>i;i++){if(cols[i].toLowerCase()=="id") idFld=cols[i]; if(cols[i].toLowerCase()=='name') nameFld=cols[i];}
+    if(idFld=="" && cols.length>0) idFld=cols[0];
+    if(nameFld=="" && cols.length>1) nameFld=cols[1];
+    
+    var arrCols = new Array(colsSize);
+    for(j=0;j<colsHdrs.length;j++){
+        if(j==0)            
+            arrCols[j] = {id:cols[j], header: colsHdrs[j], width: 10, dataIndex: cols[j], hideable: false, hidden: true};
+        else if(j==1)
+            arrCols[j] = {id:cols[j], header: colsHdrs[j], width: 160, sortable: true, dataIndex: cols[j], renderer: addLink};
+        else
+            arrCols[j] = {header: colsHdrs[j], width: 150, sortable: true, dataIndex: cols[j]};
+        if(cols[j].toLowerCase()=='state__c')
+            arrCols[j] = {id:cols[j], header: colsHdrs[j], sortable: true, dataIndex: cols[j], renderer: shState};                
+    }
+
+    function renderGrid(){
+    	if(grid!=null) { grid.store.loadData(resultSet); return; }
+        //Ext.state.Manager.setProvider(new Ext.state.CookieProvider());    
+
+        // create the data store
+        var store = new Ext.data.GroupingStore({
+            reader: new Ext.data.ArrayReader({}, cols),
+            data: resultSet,//xg.dummyData,            
+            sortInfo:{field: {!sortField}, direction: 'ASC'},
+            groupField: ''
+        });
+        store.loadData(resultSet);        
+        // create the Grid
+        grid = new Ext.grid.GridPanel({
+            store: store,
+            id: 'maindatagrid', height: 500,
+            columns: arrCols, stripeRows: true,
+            //autoHeight: true, autoHeight: true,
+            //width: ((colsHdrs.length-1)*160),             
+            //viewConfig: {forceFit: true},
+            view: new Ext.grid.GroupingView({
+                forceFit:true,
+                groupTextTpl: '{text} ({[values.rs.length]} {[values.rs.length > 1 ? "Items" : "Item"]})'
+            }),
+            selModel: new Ext.grid.RowSelectionModel({singleSelect : true})
+        });        
+        grid.render('grid');
+        grid.on('rowclick', function(grid, rowIndex, e){
+            var rec = grid.store.getAt(rowIndex);
+            var id = rec.get(idFld);    
+            if(isLookup=="true"){
+                window.parent.setPopUpVar(id);
+              	window.parent.closePopup();
+            }else{               
+                document.getElementById("selectedSOId").value = id; 
+                grid.getView().focusEl.focus();
+            }
+
+        });
+        grid.on('sortchange', function(g,sortInfo){
+            var fldName= sortInfo.field;
+            fldName=fldName.replace("fld",""); 
+            var no=parseInt(fldName);          
+            columnField=cols[no];
+            direction=sortInfo.direction;
+        } );
+    }
+        
+    //4 New,Copy,Del, filter button, link button + 3 Separators + 5 buttons (Find textbox,Search icon, Refresh+Fill+Prev+Next)
+    var tbarOptions = new Array(18);j=0;
+    var srchInaHandler = function(item, checked) {
+    	setOptions("inactiveOption", item, checked);
+    };
+    var srchStaHandler = function(item, checked) {
+    	setOptions("stateOption", item, checked);
+    };
+    function setOptions(txtFld, item, checked){
+    	if(checked){
+        	document.getElementById(txtFld).value=document.getElementById(txtFld).value + item.inputValue + ",";
+        }else{
+        	document.getElementById(txtFld).value=","+document.getElementById(txtFld).value;
+        	while(document.getElementById(txtFld).value.indexOf(","+item.inputValue+",")!=-1)
+        		document.getElementById(txtFld).value=document.getElementById(txtFld).value.replace(","+item.inputValue+",", ",");
+        	while(document.getElementById(txtFld).value.indexOf(",,")!=-1)
+        		document.getElementById(txtFld).value=document.getElementById(txtFld).value.replace(",,", ",");
+        }
+    }
+    if({!showNew}){
+        tbarOptions[j++]={iconCls: 'bmcNew', tooltip: '{!$Label.new}', tooltipType: 'title', scale: 'medium', handler: shNew};        
+        tbarOptions[j++]={iconCls: 'bmcCopy', tooltip: '{!$Label.copy}', tooltipType: 'title', scale: 'medium', handler: copyObj};
+        tbarOptions[j++]={iconCls: 'bmcDelete', tooltip: '{!$Label.delete}', tooltipType: 'title', scale: 'medium', handler: deleteObj};
+    }else{
+        tbarOptions[j++]='';
+        tbarOptions[j++]='';
+        tbarOptions[j++]='';
+    }
+    tbarOptions[j++]='-';
+    var isChecked=false;
+    var filterMenus = new Array({!inactiveOptions.size}+{!stateOptions.size}+4);jj=0;                                 
+</script>
+<apex:repeat value="{!stateOptions}" var="opt">
+<script>isChecked=false; if("{!stateOption}".indexOf(",{!opt},")!=-1) {isChecked=true;}
+filterMenus[jj++]={xtype:'checkbox', name: 'sopt', group: 'soptg', checked: isChecked, iconCls: 'emptyIcon', boxLabel: '{!opt}', inputValue: '{!opt}', handler: srchStaHandler};</script>
+</apex:repeat>
+
+<script>if({!shState}){filterMenus[jj++]='-';}</script>
+<apex:repeat value="{!inactiveOptions}" var="opt">
+<script>isChecked=false; if("{!inactiveOption}".indexOf(",{!opt},")!=-1) {isChecked=true;}
+filterMenus[jj++]={xtype:'checkbox', name: 'iopt', group: 'ioptg', checked: isChecked, iconCls: 'emptyIcon', boxLabel: '{!opt}', inputValue: '{!opt}', handler: srchInaHandler};</script>
+</apex:repeat>
+
+<script>var strIconCls='';var linkMenus=new Array({!linkMenu.size});jj=0;</script>
+<apex:repeat value="{!linkMenu}" var="opt">
+<script>strIconCls="bmc"+("{!opt}".substring(0, "{!opt}".indexOf(" ")));linkMenus[jj++]={text: '{!opt}', iconCls: strIconCls, scale: 'medium', handler: linkUnlink}</script>
+</apex:repeat>
+<script>
+filterMenus[filterMenus.length-3]='-';
+filterMenus[filterMenus.length-2]={text: 'Search', handler: pageSearch};
+filterMenus[filterMenus.length-1]={text: 'Reset', handler: pgReset};
+for(jj=0;jj<filterMenus.length;jj++){if(filterMenus[jj]==null) filterMenus[jj]='';}
+if(filterMenus.length>0){ tbarOptions[j++]={iconCls: 'bmcView1', tooltip: '{!$Label.views}', tooltipType: 'title', scale: 'medium', menu: filterMenus}; }
+for(jj=0;jj<linkMenus.length;jj++){if(linkMenus[jj]==null) linkMenus[jj]='';}
+if(linkMenus.length>0){ tbarOptions[j++]={iconCls: 'bmcAction1', tooltip: '{!$Label.actions}', tooltipType: 'title', scale: 'medium', menu: linkMenus}; }
+tbarOptions[j++]='-';
+/*---*/
+    function changeGrouping() {
+        var combo = Ext.getCmp('groupoptions');
+        var selectedfield = combo.getValue();
+        var grid = Ext.getCmp('maindatagrid');
+        grid.store.sortInfo.field = selectedfield;
+        grid.store.sortInfo.direction = 'ASC';
+        grid.store.groupField = selectedfield;
+        grid.store.sort(selectedfield);
+        grid.getView().updateHeaderSortState();
+        grid.view.refresh();                       
+    }
+
+    var groupoptions = new Array(colsHdrs.length);
+    j=0; groupoptions[j++] = ['', 'None'];
+    for(var i=0;i<colsHdrs.length;i++) {//Assuming first field will always be Id
+    	if(cols[i].toLowerCase()=='id') continue;
+        groupoptions[j++] = [cols[i], colsHdrs[i]];        
+    }
+    // generate the admin search bar
+    var admSearchDS = new Ext.data.ArrayStore({
+        fields: groupoptions
+    });
+        
+    var adminSearchBar = new Ext.form.ComboBox( {
+        store: groupoptions,
+        typeAhead: true,
+        mode: 'local',
+        triggerAction: 'all',
+        emptyText:'None',        
+        selectOnFocus:true,
+        listeners :{select: changeGrouping, change: changeGrouping}, 
+        id: 'groupoptions'
+    });
+        
+    tbarOptions[tbarOptions.length-8]=new Ext.form.Label({text: 'Group by: '});
+    tbarOptions[tbarOptions.length-7]=adminSearchBar;
+/*---*/
+tbarOptions[tbarOptions.length-6]=new Ext.Toolbar.Fill();
+tbarOptions[tbarOptions.length-5]=new Ext.form.TextField({
+    id: 'txtSrch',
+    name: 'txtSrch',
+    fieldLabel: 'Search',
+    width: 150,
+    allowBlank: true,
+    blankText: 'Enter text to search'});
+tbarOptions[tbarOptions.length-4]={iconCls: 'bmcSearch', handler: txtSearch};
+
+tbarOptions[tbarOptions.length-3]={scale: 'medium', iconCls: 'bmcRefresh', tooltip: '{!$Label.refresh}', tooltipType: 'title', style:{align: 'left'}, handler: pageRefresh};
+//tbarOptions[tbarOptions.length-2]={scale: 'medium', disabled: 'true', iconCls: 'bmcPrevious', tooltip: '{!$Label.previous}', tooltipType: 'title', style:{align: 'right'}};
+//tbarOptions[tbarOptions.length-1]={scale: 'medium', disabled: 'true', iconCls: 'bmcNext', tooltip: '{!$Label.next}', tooltipType: 'title', style:{align: 'left'}};
+for(j=tbarOptions.length-1;j>0;j--)
+    if(tbarOptions[j]==null) tbarOptions[j]=' ';
+   
+function renderMenuBar(){               
+    Ext.QuickTips.init();
+    // This function renders a block of buttons
+    var SamplePanel = Ext.extend(Ext.Panel, {
+        renderTo: 'grid',
+        defaults: {bodyStyle:'padding:0px;margin:0px;zoom:0px;'}
+    }); /*, height: 50, autoWidth: true, autoHeight: true*/
+    mnuBar=new SamplePanel({
+        bodyStyle:'padding:0px;margin:0px;zoom:0px;',               
+        tbar: tbarOptions
+    });
+}
+function renderAdvSearch(){
+	if(viewport!=null) {
+		return;
+	}
+	viewport = new Ext.Viewport({
+		layout:'border',
+		renderTo: 'grid',
+		items:[
+		{region:'north', margins:'0 0 0 0'},
+		{
+			region:'west', id:'west-panel', title:'Advanced Filter', layout:'accordion', 
+			width: 200, minSize: 200, maxSize: 400, collapsible: true,collapsed: true, 
+			margins:'35 0 0 0', cmargins:'35 0 0 0', split:true, layoutConfig:{ animate:true }
+			//items: [{title:'', autoScroll:false, border:true, autoWidth: true, autoHeight: true, iconCls:'nav',html: ''}]
+		},
+		{region:'center', margins:'35 20 0 0', layout:'fit', items:[ grid ]}]
+	});
+}
+function extInit(){
+	document.getElementById('grid').innerHTML='';
+	renderMenuBar(); renderGrid(); renderAdvSearch();            
+}
+</script>
+<apex:actionFunction name="linkit" action="{!linkage}" reRender="wholePage" />
+<apex:actionFunction name="unlinkit" action="{!unlinkage}" reRender="wholePage" />
+<apex:actionFunction name="copyObject1" action="{!copyObject}" reRender="wholePage"/>
+<apex:actionFunction name="deleteObject" action="{!deleteObject}" reRender="wholePage" oncomplete="location='#';"/>
+<apex:actionFunction name="pgRefresh" action="{!research}" reRender="wholePage"/>
+<div id="grid" style="position: relative"></div>
+<apex:inputhidden id="txtSrchCrit" value="{!txtSrchCrit}" />
+<input type="hidden" id="returnVal" name="returnVal" value=""/>
+<input type="hidden" id="inactiveOption" name="inactiveOption" value="{!inactiveOption}"/>
+<input type="hidden" id="stateOption" name="stateOption" value="{!stateOption}"/>
+<input type="hidden" id="oriInactiveOption" name="oriInactiveOption" value="{!inactiveOption}"/>
+<input type="hidden" id="oriStateOption" name="oriStateOption" value="{!stateOption}"/>
+<input type="hidden" name="selectedSOId" id="selectedSOId" value="" />
+<input type="hidden" name="linkIds" id="linkIds" value="" />
+<script>Ext.onReady(extInit);if(resultSet.length==0){msgbox("No records found");}</script>
+<!--pre>{!log}</pre-->
+</apex:form>
+</apex:outputPanel>
+</body>
+</apex:page>
+                            	

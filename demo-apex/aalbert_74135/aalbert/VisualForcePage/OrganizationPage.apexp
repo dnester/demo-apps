@@ -1,0 +1,589 @@
+<apex:page showHeader="false" controller="OrganizationController">
+
+<c:CommonIncludes />
+
+
+
+<script>
+ 
+    
+     var organizationName;               
+     var organizationId;
+     var errormsg;
+     
+     var isLookup = "{!$CurrentPage.parameters.islookup}"; 
+     function saveRecords(){
+        save();
+        if(isLookup){       
+          window.parent.refreshDocs();
+          window.parent.closePopup();
+          
+       }
+     } 
+        function getORGid(orgId){
+            if(isLookup){
+              window.parent.refreshDocs();  
+              window.parent.closePopup();
+           }else{
+               setId(orgId); 
+           }
+        }
+    
+     function callCopyPage(){
+        window.parent.addTab("OrganizationPage?copyId={!organization.Id}","Organization","Organization");
+    }
+    
+    var wid = '{!$CurrentPage.parameters.wid}';
+        function closeWindow(){
+            if(isLookup){
+              window.parent.refreshDocs();                
+              window.parent.closePopup();
+           }else{
+                window.parent.refreshList();
+                window.parent.closeTab(wid);
+           }
+        }   
+
+function buttonValidator() {
+       
+       if((organizationName != null && organizationName != '')&&(errormsg == null||errormsg ==''||errormsg=='Saved successfully.')){   
+  
+        Ext.getCmp('deleteId').setDisabled(false);
+        Ext.getCmp('copyId').setDisabled(false);
+        Ext.getCmp('clearId').setDisabled(false);    
+       }  
+     }
+</script>
+
+   <script>
+         var disableTrue = true;
+        Ext.onReady(function(){
+    
+         Ext.QuickTips.init(); 
+         if(isLookup){
+            disableTrue = true;
+          }else{ 
+          disableTrue = false; }
+
+        // This function renders a block of buttons
+        var NewBtnhandler = function(button,event) { openPage("OrganizationPage","Organization","Organization"); };
+        var SaveBtnHandler = function(button,event) {  saveRecords(); };
+        var CopyBtnHandler = function(button,event) { callCopyPage(); };
+        var ResetBtnHandler = function(button,event) {  resetOrganization(); };
+        var DeleteBtnHandler = function(button,event) {  
+        												Ext.MessageBox.confirm('Delete', 'Are you sure ?', function(btn){
+															   if(btn === 'yes'){
+															          deleteOrganization();
+															   }});
+        												 };
+        var SendNotificationBtnHandler= function(button,event) {  /*deleteIncident();*/ };
+        var ClearBtnHandler= function(button,event) { clearOrganization();};
+        var OpenBtnHandler= function(button,event) {  /*deleteIncident();*/ };
+        var NextBtnHandler = function (button,event) { nextOrganizationBtnHandler1();};
+        var PreviuosBtnHandler = function (button,event) { previousOrganizationBtnHandler1();};
+        
+          var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+new SamplePanel({
+            title: '',
+			 cls:'toolSpCls',
+            bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [ {
+                scale: 'medium',
+                iconCls: 'bmcNew',
+                tooltipType : 'title',
+                tooltip: '{!$Label.new}',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcNewOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcNew');          
+                     }
+                },
+                handler:NewBtnhandler
+            } ,' ', {
+                scale: 'medium',
+                iconCls: 'bmcSave',
+                tooltipType : 'title',
+                tooltip: '{!$Label.save}',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                },
+                handler:SaveBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcCopy',
+                tooltipType : 'title',
+                tooltip: '{!$Label.copy}',
+                id:'copyId',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcCopyOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcCopy');          
+                     }
+                },
+                handler:CopyBtnHandler
+            },' ','-',' ',{
+                scale: 'medium',
+                iconCls: 'bmcDelete',
+                tooltipType : 'title',
+                tooltip: '{!$Label.delete}',
+                id:'deleteId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcDeleteOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcDelete');          
+                     }
+                },
+                handler:DeleteBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcClear',
+                tooltipType : 'title',
+                tooltip: '{!$Label.clear}',
+                id:'clearId',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcClearOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcClear');          
+                     }
+                },
+                handler:ClearBtnHandler
+                       
+                            
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcReset',
+                tooltipType : 'title',
+                tooltip: '{!$Label.Reset}',
+                id:'resetId',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcResetOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcReset');          
+                     }
+                },
+                handler:ResetBtnHandler
+                       
+                            
+            },
+            new Ext.Toolbar.Fill(),
+            {
+                scale: 'medium',
+                iconCls: 'bmcPrevious',
+                tooltipType : 'title',
+                tooltip: '{!$Label.previousRecord} ',
+                hidden:disableTrue,
+                handler:PreviuosBtnHandler,
+               
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcNext',
+                tooltipType : 'title',
+                tooltip: '{!$Label.nextRecord}',
+                hidden:disableTrue,
+                handler:NextBtnHandler,
+                
+            }
+            
+            
+            ]
+        });
+        
+        organizationId = '{!organization.Id}';    
+        if(organizationId == null ||organizationId == ''){                
+        Ext.getCmp('deleteId').setDisabled(true);
+        Ext.getCmp('copyId').setDisabled(true);
+         Ext.getCmp('clearId').setDisabled(true); 
+        }
+        
+    });
+    var organizationIdSet=window.parent.returnListOfId();
+        function previousOrganizationBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(organizationIdSet.length > i){
+                if(idSetString==''){
+                    idSetString='\''+organizationIdSet[i]+'\'';
+                }else{
+                    idSetString=idSetString+','+'\''+organizationIdSet[i]+'\'';
+                }
+                i++;
+            }
+            previousOrganizationBtnHandler(idSetString);
+        
+        }
+       organizationIdSet=window.parent.returnListOfId(); 
+       function nextOrganizationBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(organizationIdSet.length > i){
+                if(idSetString==''){
+                    idSetString='\''+organizationIdSet[i]+'\'';
+                }else{
+                    idSetString=idSetString+','+'\''+organizationIdSet[i]+'\'';
+                }
+                i++;
+            }
+            nextOrganizationBtnHandler(idSetString);
+        
+        } 
+
+    </script>
+    
+    <apex:outputPanel id="panelId">
+        <script>
+        
+           organizationName = '{!organization.Name}';               
+           organizationId = '{!organization.Id}';      
+        
+        </script>
+        </apex:outputPanel>
+        
+         <apex:outputPanel id="errorId">
+        <script>
+        
+           errormsg = '{!messageString}';               
+                
+        
+        </script>
+        </apex:outputPanel>
+         <apex:outputPanel id="titlePanel">
+            <script>
+                function updateList(){
+                	var newOrganizationId = '{!organization.Id}';
+                  	getORGid(newOrganizationId);
+                    window.parent.refreshList();
+                }
+        
+        </script>
+    </apex:outputPanel>    
+        
+    <apex:outputPanel ID="dummy"></apex:outputPanel>                                      
+        
+ <div id="capsule" class="CapsuleDiv1">       
+   <apex:outputPanel > <!-- Page body in this panel -->
+        <apex:messages />
+            <apex:form >
+             <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+            <apex:actionFunction action="{!save}" name="save" reRender="validationComponent,panelId,errorId" oncomplete="showError();buttonValidator();updateList();"/>
+                <apex:actionFunction action="{!urgencyQuery}" name="setUrgency" reRender="Urgency__c_id_name">
+                    <apex:param assignTo="{!urgency}" value="" name="saveUrgency "/>
+                </apex:actionFunction>
+                <apex:actionFunction action="{!parentOrganizationQuery}" name="setParentOrganization " reRender="Organization__c_id_name">
+                    <apex:param assignTo="{!parentOrganization}" value="" name="saveParentOrganization"/>
+                </apex:actionFunction>
+                
+                 <apex:actionFunction action="{!businessOwnerQuery}" name="setBusinessOwner" reRender="Client__c_id_name">
+                    <apex:param assignTo="{!businessOwner}" value="" name="saveBusinessOwner"/>
+                </apex:actionFunction>
+                <apex:actionFunction action="{!clear}" name="clearOrganization" />
+                <apex:actionFunction action="{!reset}" name="resetOrganization" />               
+                <apex:actionFunction action="{!deleteOrganization}" name="deleteOrganization" onComplete="closeWindow();"/>
+                 <apex:actionFunction action="{!newOrganization}" name="newOrganization" reRender="dataPanel,headerPanel"/>                             
+                <apex:actionFunction action="{!nextBtnHandler}" name="nextOrganizationBtnHandler" 
+                                    rerender="tablePanel, pbarId" > 
+                                    <apex:param assignTo="{!tempString}" name="idSetString" value=""/> 
+                </apex:actionFunction>
+                <apex:actionFunction action="{!previousBtnHandler}" name="previousOrganizationBtnHandler" 
+                                        rerender="tablePanel, pbarId"> 
+                                        <apex:param assignTo="{!tempString}" name="idSetString" value=""/>
+                </apex:actionFunction>
+                
+                <table cellpadding="0" cellspacing="0" class="clsMainTable">
+                      
+                                                
+                        <tr class="clsRowGreyBg">
+                            <td>
+                                <div id="btnToolbar"></div>
+                           <!--     <div style="display:none">
+                                
+                                <apex:commandButton value="New" action="{!newOrganization}" style="height:20px;width:60px;margin-bottom:3px;"/>
+                          
+                                </div> -->
+                            </td>
+                        </tr>
+                        
+                        
+                       
+                        
+                        
+                        <tr>
+                            <td>
+                        <apex:outputPanel id="dataPanel">
+                            <table cellpadding="0" cellspacing="0" class="clsTable">
+                            <tr>
+                                <td class="clsTopAlignment75">
+                                  <apex:outputPanel id="tablePanel"> 
+                             <table cellpadding="0" cellspacing="0" class="clsTable" >
+                                    
+                                     <tr>
+                                               <td colspan="3"><div class="div15pxVspacing"/></td>
+                                            </tr>
+                                    <tr>
+                                        
+                                        <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.OrganizationId}"/><!--<apex:outputLabel value="{!$Label.OrganizationId}"/> --><span class="clsRequiredBlack">*</span></td>
+                                        <td class="clsInputTextBoxTD">
+                                            <apex:inputField value="{!organization.Name}" styleClass="clsInputTextBox"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="clsInputLabelTD" ><apex:outputLabel value="{!$Label.name}"/><!--<apex:outputLabel value="{!$Label. name}"/>--></td>
+                                        <td class="clsInputTextBoxTD">
+                                            <apex:inputField value="{!organization.organizationName__c}" styleClass="clsInputTextBox"/> 
+                                        </td>
+                                    </tr>
+                                                                          
+                                    
+                                   <tr>
+                                        <td class="clsInputLabelTD" ><apex:outputLabel value="{!$Label.category}"/><!--<apex:outputLabel value="{!$Label.category}"/>--></td>
+                                       <td class="clsInputTextBoxTD">
+                                            <apex:inputText disabled="true" value="{!dummy}" styleClass="clsInputTextBoxReadOnly"/>
+                                        </td> 
+                                    </tr>                                     
+                                    <tr>
+                                        <td class="clsInputLabelTD" ><apex:outputLabel value="{!$Label.businessOwner}"/><!--<apex:outputLabel value="{!$Label.businessOwner}"/>--></td>
+                                        
+                                        <apex:ActionRegion >
+                                                <td class="clsInputTextBoxTD">
+                                                        <apex:inputText value="{!organization.businessOwner__c}" id="Client__c_id_name" onblur="showalldata(event);" styleClass="clsInputTextBox"/>
+                                                        
+                                              </td>
+                                                <td class="lookupIconTD">
+                                                   <div class="lookUpIconDiv">
+                                                     <apex:commandButton onclick="openPopup('SearchPage?popupId=Client&isLookup=true',setBusinessOwner);" rerender="dummy" styleClass="lookupIconOn"/>
+                                                    </div>  
+                                                </td>
+                                          </apex:ActionRegion>
+                                        
+                                        
+                                     </tr>
+                                     </table>
+                                     <table cellpadding="0" cellspacing="0" class="clsTable">
+                                     <tr>
+                                        <td class="clsInputBoldLabelTableFirstRowTD"><apex:outputLabel value="{!$Label.note}"/></td>
+                                     </tr>
+                                     <tr>
+                                        <td  class="clsInputTextAreaTD" > 
+                                           <div class="clsRelativePosition">
+                                             <apex:inputtextarea value="{!organization.note__c}"  styleClass="clsInputTextArea"  />
+                                           </div> 
+                                        </td>                                        
+                                      </tr>
+                                       <tr>
+                                           <td>
+                                               <div class="div13pxVspacing"></div>
+                                            </td>
+                                       </tr>
+                                        <tr>
+                                           <td class="clsInputCheckBox">
+                                                <apex:inputField value="{!organization.inactive__c}" id="idInactive"/>
+                                                <apex:outputLabel styleClass="clsInputCheckBoxLabel" styleClass="clsInputCheckBoxLabel" value="{!$Label.inactive}"/>
+                                            </td>
+                                         </tr>
+                                     </table>
+                                    </apex:outputPanel> 
+                                   </td>
+                                                                   
+                                 <td><div class="div17pxHspacing"/></td>
+                                
+                                <td class="clsTopAlignment25">
+                                    <div class="panelCapsuleOrganization">
+                                        <apex:outputPanel id="PanelbarOutputPanel">
+                                            <apex:panelBar headerClass="clsRowBlueBgPanel" switchType="ajax" height="100%" id="pbarId" >
+                                                <apex:panelBarItem label="{!$Label.details}" expanded="true" headerClass="panelHeader" contentClass="panelContent">
+                                                    
+                                                <table cellpadding="0" cellspacing="0" class="clsTable">
+                                                            <tr>
+                                                                <td colspan="3"><div class="div15pxVspacing"/></td>
+                                                            </tr> 
+                                                            <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.Urgency_ID}"/></td>
+                                                                  <apex:actionRegion >
+                                                                        <td class="clsPanelInputTextboxTD1">
+                                                                            <apex:inputText id="Urgency__c_id_name" value="{!organization.urgencyId__c}" onblur="showalldata(event)" styleClass="clsPanelInputTextbox"/>
+                                                                        </td>
+                                                                        <td class="lookupIconPanelTD">
+                                                                            <div class="lookUpIconDiv"><apex:commandButton onclick="openPopup('SearchPage?popupId=Urgency&isLookup=true',setUrgency);" rerender="dummy" styleClass="lookupIconOn"/></div>
+                                                                        </td>
+                                                                        <td class="lookupIconPanelTD"> </td>
+                                                                  </apex:actionRegion>
+                                                                 </tr>
+                                                            <tr>
+                                                             <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.parentOrganization}"/></td>
+                                                             
+                                                                 <td class="clsPanelInputTextTD">
+                                                                 
+                                                                    <apex:inputText id="Organization__c_id_name" onblur="showalldata(event)"  value="{!organization.parentOrganisationId__c}" styleClass="clsPanelInputTextbox"/>
+                                                                 </td>
+                                                                 <td class="lookupIconPanelTD">
+                                                                     <div class="lookUpIconDiv"><apex:commandButton onclick="openPopup('SearchPage?popupId=Organization&isLookup=true',setParentOrganization);" rerender="dummy" styleClass="lookupIconOn"/></div>
+                                                                 </td>  
+                                                                 <td class="lookupIconPanelTD"> </td>
+                                                            </tr>
+                                                            <tr>
+                                                               <td class="clsPanelInputLabelTD" ><apex:outputLabel value="{!$Label.remarks}"/></td>
+                                                                      <td class="clsPanelInputTextTD">
+                                                                            <apex:inputtextarea value="{!organization.comments__c}"  styleClass="clsPanelInputTextArea"  />
+                                                               </td>
+                                                               <td class="lookupIconPanelTD"> </td>
+                                                            </tr>
+                                                            <tr>
+                                                              <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.estimatedNoOfUsers}"/></td>
+                                                              <td class="clsPanelInputTextboxTD1">
+                                                                   <apex:inputField value="{!organization.estimatedNumberOfUsers__c}" styleClass="clsPanelInputTextbox"/>
+                                                              </td>
+                                                              <td class="lookupIconPanelTD"> </td>
+                                                              </tr>
+                                                             <tr>
+                                                             <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.purchaseDate}"/></td>
+                                                             <td class="clsPanelInputTextboxTD1">
+                                                                <apex:inputField value="{!organization.purchaseDate__c}" styleClass="clsPanelInputTextbox"/></td>
+                                                             <td class="lookupIconPanelTD"> </td>
+                                                            </tr>
+                                                           
+                                                        </table>
+                                                    </apex:panelBarItem>
+                                                    
+                                                    <apex:panelBarItem label="{!$Label.contactDetails}"  headerClassActive="" expanded="true" headerClass="panelHeader" contentClass="panelContent">
+                                                    <table  cellpadding="0" cellspacing="0" class="clsTable">
+                                                           <tr >
+                                                                <td colspan="3"><div class="div15pxVspacing"/></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td class="clsPanelInputLabelTD" ><apex:outputLabel value="{!$Label.address}"/></td>
+                                                                <td class="clsPanelInputTextboxTD1">
+                                                                   <apex:inputtextarea value="{!organization.address__c}" styleClass="clsPanelInputTextArea" />
+                                                                 </td>
+                                                                <td class="lookupIconPanelTD"> </td>
+                                                            </tr>
+                                                                  <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.country}"/></td>
+                                                                  <td class="clsPanelInputTextboxTD1">
+                                                                   <apex:inputField value="{!organization.country__c}" styleClass="clsPanelInputTextbox"/>
+                                                                 </td>
+                                                                <td class="lookupIconPanelTD"> </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.state}"/></td>
+                                                                 <td class="clsPanelInputTextboxTD1">
+                                                                     <apex:inputField id="impact" value="{!organization.state__c}" styleClass="clsPanelInputTextbox"/>
+                                                                 </td>
+                                                                  <td class="lookupIconPanelTD"> </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.city}"/></td>
+                                                                <td class="clsPanelInputTextboxTD1">
+                                                                     <apex:inputField value="{!organization.city__c}" styleClass="clsPanelInputTextbox"/>
+                                                                </td>
+                                                               <td class="lookupIconPanelTD"> </td>
+                                                            </tr>
+                                                             <tr>
+                                                                 <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.zip}"/></td>
+                                                                  <td class="clsPanelInputTextboxTD1">
+                                                                     <apex:inputField value="{!organization.zip__c}" styleClass="clsPanelInputTextbox"/>
+                                                                  </td>
+                                                                <td class="lookupIconPanelTD"> </td>
+                                                            </tr>
+                                                             
+                                                             <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.phone}"/></td>
+                                                                  <td class="clsPanelInputTextboxTD1">
+                                                                    <apex:inputField value="{!organization.phone__c}" styleClass="clsPanelInputTextbox"/>
+                                                                 </td>
+                                                                  <td class="lookupIconPanelTD"> </td>
+                                                            </tr>
+                                                             <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.fax}"/></td>
+                                                                 <td class="clsPanelInputTextboxTD1">
+                                                                    <apex:inputField value="{!organization.fax__c}" styleClass="clsPanelInputTextbox"/>
+                                                                 </td>
+                                                                 <td class="lookupIconPanelTD"> </td>
+                                                            </tr>     
+                                                           <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.mainContact}"/></td>
+                                                                  <td class="clsPanelInputTextboxTD1">
+                                                                    <apex:inputField value="{!organization.mainContact__c}" styleClass="clsPanelInputTextbox"/>
+                                                                  </td>
+                                                                 <td class="lookupIconPanelTD"> </td>
+                                                            </tr>
+                                                             <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.mainContactPhone}"/></td>
+                                                                  <td class="clsPanelInputTextboxTD1">
+                                                                    <apex:inputField value="{!organization.mainContactPhone__c}" styleClass="clsPanelInputTextbox"/>
+                                                                  </td>
+                                                                   <td class="lookupIconPanelTD"> </td>
+                                                            </tr>
+                                                             <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.intlPostalCcode}"/></td>
+                                                                  <td class="clsPanelInputTextboxTD1">
+                                                                    <apex:inputField value="{!organization.intlPostalCode__c}" styleClass="clsPanelInputTextbox"/>
+                                                                  </td>
+                                                                  <td class="lookupIconPanelTD"> </td>
+                                                            </tr> 
+                                                            
+                                                            
+                                                             <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.intlPhone}"/></td>
+                                                                <td class="clsPanelInputTextboxTD1">
+                                                                    <apex:inputField value="{!organization.intlPhone__c}" styleClass="clsPanelInputTextbox"/>
+                                                                </td>
+                                                                 <td class="lookupIconPanelTD"> </td>
+                                                            </tr>
+                                                             <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.intlFax}"/></td>
+                                                                <td class="clsPanelInputTextboxTD1">
+                                                                    <apex:inputField value="{!organization.intlFax__c}" styleClass="clsPanelInputTextbox"/>
+                                                                </td>
+                                                               <td class="lookupIconPanelTD"> </td>
+                                                            </tr>
+                                                                                                                                                               
+                                                        </table>
+                                                    </apex:panelBarItem>
+                                                     
+                                                    </apex:panelBar>
+                                                     </apex:outputPanel>
+                                            </div>
+                                </td>
+                            </tr>
+                            </table>
+                            </apex:outputPanel>
+                            </td>
+                        </tr>
+                           <tr class="clsRowGreyBg" valign="middle">
+			                    <td valign="top" style="padding-top: 10px;">
+			                           <c:detailSectionComponent objectName="Organization__c" fKeyValue="{!organizationId}"/>
+			                    </td>
+               	 			</tr>                      
+            		</table>
+                        
+            
+                   
+                <c:tabOutComponent ></c:tabOutComponent>
+     </apex:form>
+    </apex:outputPanel> 
+    </div> 
+</apex:page>
+                            	

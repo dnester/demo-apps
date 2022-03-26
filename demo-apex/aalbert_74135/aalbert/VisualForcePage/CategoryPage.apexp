@@ -1,0 +1,497 @@
+<apex:page showHeader="false" controller="CategoryController">
+
+ 
+    <c:CommonIncludes />
+ 
+ <style> 
+    .x-toolbar-cell .x-form-check-wrap label { 
+        vertical-align:bottom;
+        color:#004376  ;
+}
+ </style>
+    <script>
+    
+    var categoryName;               
+     var categoryId;
+     var errormsg;
+     var chkBoxValue;
+    
+        var isLookup = "{!$CurrentPage.parameters.islookup}";  
+       
+        function getCATid(catId){
+            if(isLookup){
+              window.parent.refreshDocs();  
+              window.parent.closePopup();
+           }else{
+                setId(catId); 
+           }
+        }
+        
+         function callCopyPage(){
+            categoryId = '{!$CurrentPage.parameters.id}';
+            window.parent.addTab("CategoryPage?copyId=" + categoryId,"Category","Category");
+        }
+        var wid = '{!$CurrentPage.parameters.wid}';
+        function closeWindow(){
+          if(isLookup){
+              window.parent.refreshDocs();                
+              window.parent.closePopup();
+           }else{
+                window.parent.refreshList();
+                window.parent.closeTab(wid);
+           }
+        }
+        var disableTrue = true;
+        Ext.onReady(function(){
+    
+        Ext.QuickTips.init();
+        if(isLookup){
+            disableTrue = true;
+          }else{ 
+          disableTrue = false; }
+        // This function renders a block of buttons
+        var NewBtnHandler = function(button,event) { openPage('CategoryPage','Category','Category'); };
+        var SaveBtnHandler = function(button,event) {  
+        chkBoxValue=Ext.getCmp('idInactive').getValue();
+        save(chkBoxValue); };
+        var CopyBtnHandler = function(button,event) {  callCopyPage(); };
+        var DeleteBtnHandler = function(button,event) { 
+        												
+        												 Ext.MessageBox.confirm('Delete', 'Are you sure ?', function(btn){
+														   if(btn === 'yes'){
+														         deleteCategory();
+														   }});
+        											  };
+        var ClearBtnHandler = function(button, event) {clearCategory();};  
+        var ResetBtnHandler = function(button, event) {resetCategory();
+        Ext.getCmp('idInactive').setValue('{!category.inactive__c}');
+        };
+        var NextBtnHandler = function (button,event) { nextCategoryBtnHandler1();};
+        var PreviuosBtnHandler = function (button,event) { previousCategoryBtnHandler1();};
+   
+          var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+        new SamplePanel({
+            title: '',
+            cls:'toolSpCls',
+             bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [{
+                scale: 'medium',
+                iconCls: 'bmcNew',
+                tooltipType : 'title',
+                tooltip: '{!$Label.new}',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcNewOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcNew');          
+                     }
+                },               
+                handler: NewBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcSave',
+                tooltipType : 'title',
+                tooltip: '{!$Label.save}',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                },
+                
+                handler:SaveBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcCopy',
+                tooltipType : 'title',
+                tooltip: '{!$Label.copy}',
+                id:'copyId',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcCopyOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcCopy');          
+                     }
+                },
+                
+                handler:CopyBtnHandler
+            },' ','-',' ',{
+                scale: 'medium',
+                iconCls: 'bmcDelete',
+                tooltipType : 'title',
+                tooltip: '{!$Label.delete}',
+                id:'deleteId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcDeleteOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcDelete');          
+                     }
+                },
+                
+                handler:DeleteBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcClear',
+                tooltipType : 'title',
+                 tooltip: '{!$Label.clear}',
+                 id:'clearId',
+                 hidden:disableTrue,
+                 listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcClearOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcClear');          
+                     }
+                },                 
+                handler:ClearBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcReset',
+                tooltipType : 'title',
+                 tooltip: '{!$Label.Reset}',
+                 id:'resetId',
+                 hidden:disableTrue,
+                 listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcResetOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcReset');          
+                     }
+                },                 
+                handler:ResetBtnHandler
+            },' ',new Ext.Toolbar.Fill(), 
+            {
+                  id :'idInactive',
+               xtype  : 'checkbox',
+               width  : 93,
+               align:'top',
+               checked: false,
+               boxLabel:'{!$Label.inactive}'
+            
+              
+            }, {
+               
+               
+                xtype : 'box',
+                autoEl:  {tag: 'img', 
+                          src:('/resource/BMCStyle/images/b_previous.gif'),   
+                         title:'{!$Label.previousRecord}'
+                         },
+                          
+                style :'cursor: pointer;',
+                hidden:disableTrue,
+               listeners : { render: function(f){f.el.on('click', PreviuosBtnHandler);}}
+                             
+            },{
+               
+                xtype : 'box',
+                autoEl:  {tag: 'img', 
+                          src:'/resource/BMCStyle/images/b_next.gif',
+                          title:'{!$Label.nextRecord}' },
+                style : 'cursor:pointer;',
+                hidden:disableTrue,
+                listeners : { render: function(f){f.el.on('click', NextBtnHandler)}},
+               
+                
+            }
+
+            ] 
+        });
+        
+        Ext.getCmp('idInactive').setValue('{!category.inactive__c}');
+
+        
+        categoryId = '{!category.Id}';
+        if(categoryId == null ||categoryId == ''){
+            Ext.getCmp('deleteId').setDisabled(true);
+            Ext.getCmp('copyId').setDisabled(true);
+            Ext.getCmp('clearId').setDisabled(true);           
+        }
+    });
+
+    var categoryIdSet=window.parent.returnListOfId();
+        function previousCategoryBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(categoryIdSet.length > i){
+                if(idSetString==''){
+                    idSetString='\''+categoryIdSet[i]+'\'';
+                }else{
+                    idSetString=idSetString+','+'\''+categoryIdSet[i]+'\'';
+                }
+                i++;
+            }
+            previousCategoryBtnHandler(idSetString);
+        
+        }
+
+       function nextCategoryBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(categoryIdSet.length > i){
+                if(idSetString==''){
+                    idSetString='\''+categoryIdSet[i]+'\'';
+                }else{
+                    idSetString=idSetString+','+'\''+categoryIdSet[i]+'\'';
+                }
+                i++;
+            }
+            nextCategoryBtnHandler(idSetString);
+        
+        }
+
+
+    function buttonValidator() {
+       
+       if((categoryName != null && categoryName != '')&&(errormsg == null||errormsg ==''||errormsg=='Saved successfully.')){   
+  
+        Ext.getCmp('deleteId').setDisabled(false);
+        Ext.getCmp('copyId').setDisabled(false);
+        Ext.getCmp('clearId').setDisabled(false);    
+        
+       }  
+     }
+ 
+    </script>
+    
+    <apex:outputPanel id="panelId">
+        <script>
+        
+           categoryName = '{!category.Name}';               
+           categoryId = '{!category.Id}';      
+        
+        </script>
+        </apex:outputPanel>
+        
+        <apex:outputPanel id="errorId">
+        <script>
+        
+           errormsg = '{!messageString}';               
+                
+        
+        </script>
+        </apex:outputPanel>
+    
+
+    <apex:outputPanel id="titlePanel">
+        <script>
+            function updateList(){
+                var newId = '{!category.Id}'; 
+                getCATid(newId);
+                //var newTitle = 'Category # '+'{!category.Name}';     
+               // window.parent.changeTitle(wid,newTitle );
+                window.parent.refreshList();
+            }
+        
+        </script>
+    </apex:outputPanel> 
+    <apex:outputPanel id="dummy"></apex:outputPanel>
+    <div id="capsule" class="CapsuleDiv1">
+    <apex:outputPanel >
+        <apex:form >
+            <c:tabOutComponent >
+            </c:tabOutComponent>
+            <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+            <apex:actionFunction action="{!save}" name="save" reRender="validationComponent,panelId,errorId" oncomplete="showError();updateList();buttonValidator();">
+            <apex:param assignTo="{!chkBoxValue}" name="idSetString" value=""/> 
+                 </apex:actionFunction>
+            <apex:actionFunction action="{!newCategory}" name="newCategory" />
+            <apex:actionFunction action="{!reset}" name="resetCategory" />
+            <apex:actionFunction action="{!deleteCategory}" name="deleteCategory" oncomplete="closeWindow();"/>
+             <apex:actionFunction action="{!clear}" name="clearCategory" />
+            <!--  <apex:actionFunction action="{!copyCategory}" name="copyCategoryNext" rerender="dummy"/> -->
+            <apex:actionFunction action="{!categoryTypeQuery}"
+                name="setCategoryType" reRender="CategoryTypes__c_id_name">
+                <apex:param assignTo="{!categoryType}" value=""
+                    name="saveCategoryType" />
+            </apex:actionFunction>
+
+            <apex:actionFunction action="{!parentCategoryQuery}"
+                name="setParentCategory" reRender="Category__c_id_name">
+                <apex:param assignTo="{!parentCategory}" value=""
+                    name="saveParentCategory" />
+            </apex:actionFunction>
+
+            <apex:actionFunction action="{!urgencyQuery}" name="setUrgency"
+                reRender="Urgency__c_id_name">
+                <apex:param assignTo="{!urgency}" value="" name="saveUrgency " />
+            </apex:actionFunction>
+            
+            <apex:actionFunction action="{!nextBtnHandler}" name="nextCategoryBtnHandler" 
+                                    rerender="tablePanel, panelBarId1" >
+                                    <apex:param assignTo="{!tempString}" name="idSetString" value=""/>  
+            </apex:actionFunction>
+            <apex:actionFunction action="{!previousBtnHandler}" name="previousCategoryBtnHandler" 
+                                        rerender="tablePanel, panelBarId1" >
+                                        <apex:param assignTo="{!tempString}" name="idSetString" value=""/> 
+            </apex:actionFunction>
+      
+            
+            <table class="clsMainTable" cellspacing="0" cellpadding="0">
+
+                <tr class="clsRowGreyBg">
+                    <td>
+                    <div id="btnToolbar"></div>
+                    </td>
+                </tr>
+
+
+                <tr>
+                    <td>
+                    <table  class="clsTable" cellspacing="0" cellpadding="0">  
+                        <tr>
+                            <td class="clsTopAlignment75">
+                            <apex:outputPanel id="tablePanel">
+                             <table class="clsTable" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td colspan="3">
+                                        <div class="div15pxVspacing"></div>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.Category_ID}" /> <span
+                                        class="clsRequiredBlack">*</span></td>
+                                    <td class="clsInputTextBoxTD" colspan="2">      <apex:inputField value="{!category.Name}"
+                                        styleClass="clsInputTextBox" /></td>
+                                </tr>                              
+                                </table>
+                                    <table class="clsTable" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td class="clsInputBoldLabelTableFirstRowTD" colspan="3"><apex:outputLabel value="{!$Label.description}" /> <span
+                                        class="clsRequiredBlack">*</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="clsInputTextAreaTD" >
+                                    <div class="clsRelativePosition"><apex:inputTextarea value="{!category.categoryDescription__c}"
+                                        styleClass="clsInputTextArea" /></div></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3">
+                                        <div class="div13pxVspacing"></div>
+                                    </td>
+                                </tr>
+                                </table>
+                                <table class="clsTable" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td class="clsInputLabelTD">
+                                        <apex:outputLabel value="{!$Label.Category_Types}" />
+                                    </td>
+                                    <td class="clsInputTextBoxTD">
+                                        <apex:inputText value="{!category.categoryTypeId__c}"
+                                                        styleClass="clsInputTextBox" id="CategoryTypes__c_id_name"
+                                                        onblur="showalldata(event)" />
+                                    </td>
+                                    <td class="lookupIconTD" >
+                                    <div class="lookUpIconDiv">
+                                        <apex:commandButton onclick="openPopup1('SearchPage?popupId=CategoryType&isLookup=true',setCategoryType);" reRender="dummy"
+                                        styleClass="lookupIconOn" /></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.Parent_Category}" /></td>
+
+                                    <td class="clsInputTextBoxTD"><apex:inputText value="{!category.parentCategoryId__c}"
+                                        styleClass="clsInputTextBox" id="Category__c_id_name"
+                                        onblur="showalldata(event)" />
+                                    </td>
+                                    <td class="lookupIconTD" >  
+                                    <div class="lookUpIconDiv">
+                                        <apex:commandButton onclick="openPopup1('SearchPage?popupId=Category&isLookup=true',setParentCategory);" rerender="dummy"
+                                            styleClass="lookupIconOn" /></div>
+                                    </td>
+                                </tr>
+                                 <tr>
+                                    <td>
+                                        <div class="div9pxVspacing"></div>
+                                    </td>
+                                </tr>
+                                </table>
+                                 <table class="clsTable" cellspacing="0" cellpadding="0">
+                                                               
+                            </table>
+                            </apex:outputPanel>
+                            </td>
+                            <td>
+                                <div class="div17pxHspacing" />
+                            </td>
+                           <td class="clsTopAlignment25">
+                            <div class="panelCapsule"><apex:panelBar headerClass="clsRowBlueBgPanel" switchType="ajax" id="panelBarId1" >
+                                <apex:panelBarItem label="Incident Handling Information"
+                                    expanded="true" headerClass="panelHeader" id="panelBarItemId1" contentClass="panelContent">
+                                    <table class="clsTable" cellspacing="0" cellpadding="0">
+
+                                        <tr>
+                                            <td >
+                                                <div class="div14pxVspacing" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                           <td class="clsPanelInputCheckboxTD" colspan="2"><apex:inputField value="{!category.requireFollowUp__c}" /> <apex:outputLabel value="{!$Label.followUp}" styleClass="clsPanelCheckBoxLabel" />
+                                        </td>
+                                        </tr>
+                                         
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.after}" /></td>
+                                            <td class="clsPanelInputTextboxTD"><apex:inputField id="after" styleClass="clsPanelInputTextbox"
+                                                value="{!category.followUpAfter__c}" /> </td><td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.Follow_Up_After}" /></td>
+
+
+                                        </tr>
+                                       
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.Urgency_ID}" /></td>
+                                            <td class="clsPanelInputTextboxTD"><apex:inputField styleClass="clsPanelInputTextbox"
+                                                value="{!category.urgencyID__c}" id="Urgency__c_id_name"
+                                                onblur="showalldata(event)" />
+                                            </td>
+                                            <td class="lookupIconPanelTD"> 
+                                            <div class="lookUpIconDiv">                                         
+                                            <apex:commandButton onclick="openPopup1('SearchPage?popupId=Urgency&isLookup=true',setUrgency);" rerender="dummy"
+                                                styleClass="lookupIconOn" /></div></td>
+                                            
+                                        </tr>
+                                        <tr>
+                                        </tr>
+                                       
+
+                                    </table>
+                                </apex:panelBarItem>
+                            </apex:panelBar></div>
+                            </td>
+
+
+                        </tr>
+                    </table>
+                    </td>
+                </tr>
+
+
+                <tr class="clsRowGreyBg" valign="middle">
+                    <td valign="top" style="padding-top: 10px;">
+                           <c:detailSectionComponent objectName="Category__c" fKeyValue="{!categoryId}"/>  
+                    </td>
+                </tr>
+            </table>
+
+            
+        </apex:form>
+    </apex:outputPanel>
+    </div>
+</apex:page>
+                            	

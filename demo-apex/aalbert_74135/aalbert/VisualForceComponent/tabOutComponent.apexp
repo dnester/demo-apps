@@ -1,0 +1,171 @@
+<apex:component controller="RecordsListCon">
+            <apex:actionRegion >
+                  <apex:inputText value="{!strObject}" id="strObject_id" style="display:none"/>
+                  <apex:inputText value="{!strFieldToSearch}" id="strFieldToSearch_id" style="display:none"/>
+                  <apex:inputText value="{!strValue}" id="strValue_id" style="display:none"/>
+                  <apex:outputText id="hiddenText"></apex:outputText>
+                  <apex:inputText value="{!strname}" id="strname_id" style="display:none"/>
+                  <apex:actionFunction name="showdata" action="{!produceData}" reRender="id_populate" />
+
+                  <apex:actionFunction name="setSelectedValue">
+                        <apex:param assignTo="{!strname}" value=""/>
+                  </apex:actionFunction>
+                                
+              <apex:outputPanel id="id_populate">
+                  <apex:outputPanel rendered="true">
+                   <script>
+                   
+                   //***** This part of code is used to trim the spaces from Strings****//
+                   
+                   function trim(str, chars) {
+                        return ltrim(rtrim(str, chars), chars);
+                   }
+ 
+                    function ltrim(str, chars) {
+                        chars = chars || "\\s";
+                        return str.replace(new RegExp("^[" + chars + "]+", "g"), "");
+                    }
+                     
+                    function rtrim(str, chars) {
+                        chars = chars || "\\s";
+                        return str.replace(new RegExp("[" + chars + "]+$", "g"), "");
+                    }
+                    
+                //****** All the Ids which contains a perticular syntax are stored in an array*****//    
+                var elements = document.getElementsByTagName('*');
+                var element = null;
+                var elementID = null;
+                var len = elements.length;
+                var arrEle = new Array(len);
+                     while(len!=0){
+                     
+                        element = elements[len];
+                        if(element!=null)
+                        {
+                            elementID = element.id;
+                            
+                            if(elementID.match("_id_")!=null)
+                            {
+                                  arrEle.push(elementID);
+                            }                                      
+                        }
+                        len--;
+                     }              
+                    
+                        var onComplete;
+                        var boolMultipleRecords = {!boolCheckSize};
+                        var fieldName;
+                        //******Code for Populating the fields starts from here *****////////////
+                        var checkFieldExists = {!isNotAvailable};
+                 if(checkFieldExists){
+                        if(!boolMultipleRecords){
+                            if (document.getElementById('{!$Component.strname_id}') != null) {
+                                var itemp=0;
+                                document.getElementById('{!$Component.strname_id}').value = '';
+                                }
+                            var tempnames = '{!fieldsList}';
+                            if (tempnames.length > 0) {
+                                var names = tempnames.split(',');
+                                for ( var i in names ){
+                                    var tempitm = names[i];
+                                    var itm = tempitm .toString();
+                                    itm = itm.replace('"','').replace('"','').replace('[','').replace(']','');
+                                    if (itm.length > 0) {
+                                        var itmarr = itm.split(':');
+                                        var name = '';
+                                        var val = '';
+                                    
+                                        if (itmarr.constructor.toString().indexOf('Array') != -1) {
+                                                if (typeof(itmarr[0]) == 'string')
+                                                    name = trim(itmarr[0]);
+                                          if (typeof(itmarr[1]) == 'string')
+                                                    val = trim(itmarr[1]);
+                                        }
+                                        
+                                        var objId = '{!strObject}';
+                                        for(var j in arrEle){
+                                         if (typeof(arrEle[j]) == 'string'){
+                                            //alert(objId +' ...... '+name);
+                                            var partialId = objId +'_id_'+ name;
+                                            if(arrEle[j].indexOf(partialId)>0){
+                                            if(val=='null')
+                                                    document.getElementById(arrEle[j]).value = '' ;
+                                            else
+                                                    document.getElementById(arrEle[j]).value = val ;
+                                        }
+                                        } }                                 
+                                    
+                                        
+                                         if(name == fieldName){
+                                            if(typeof(onComplete)!='undefined'){
+                                                onComplete(val);
+                                            }
+                                        }
+                                        
+                                    }
+                                }
+                            }
+                        }
+                        //*****If multiple records are found this is the code to show pop up*****//
+                        else{  
+                             var popupId = "{!strPopupId}";
+                             var searchField = "{!strFieldToSearch}";
+                             fieldValue = "{!strValue}";
+
+                             //var popupReturnedValue = window.showModalDialog("/apex/SearchPage?popupId="+popupId+"&searchField="+searchField+"&fieldValue="+fieldValue,"test","dialogWidth:550px; dialogHeight:500px; center:yes");
+                             openPopup('SearchPage?popupId='+popupId+'&searchField='+searchField+'&fieldValue='+fieldValue+'&isLookup=true',onCompPopulate);
+                             /*if(popupReturnedValue!=null){
+                                document.getElementById('{!$Component.strname_id}').value = popupReturnedValue;
+                                showdata();
+                             }*/
+                        }
+                        
+                  }else{
+                    
+                    document.getElementById(mainId).value='';
+                    document.getElementById(mainId).focus();
+                }
+                        </script>
+                 </apex:outputPanel>
+                 
+                 <script>
+                    function onCompPopulate(val){
+                        document.getElementById('{!$Component.strname_id}').value = val;
+                        showdata();
+                    }
+                 </script>
+           </apex:outputPanel>
+                    <script>
+                        var mainId;
+                        //***** This is the function called onBlut of the input text****//
+                           function showalldata(eventObject,onCompleteFunction){
+                               document.getElementById('{!$Component.hiddenText}').focus();
+                                if(onCompleteFunction!=null){
+                                    onComplete = onCompleteFunction;
+                                }
+                                var target=eventObject.target;
+                                if(target == null) 
+                                    target = eventObject.srcElement;                              
+                                
+                                mainId = target.id;
+                                var idPrefix = mainId.substring(0,mainId.lastIndexOf(":")); 
+                                var objFld = mainId.substring(mainId.lastIndexOf(":")+1); 
+                                var objFldArray = objFld.split('_id_');
+                                var val = target.value;
+                                var ftcId = target.id;
+                                fieldName = objFldArray[1];
+                                
+                                //**** here string values for objects, field on which search is to be made
+                                // and its corresponding value is set****//
+                                if(val!=null && val!='' && val.length >0){
+                                    document.getElementById('{!$Component.strObject_id}').value = objFldArray[0];
+                                    document.getElementById('{!$Component.strFieldToSearch_id}').value = objFldArray[1];
+                                    document.getElementById('{!$Component.strValue_id}').value = val;
+                                    
+                                    showdata();
+                                }
+                            }
+                    </script>                            
+            </apex:actionRegion>
+</apex:component>
+                             	

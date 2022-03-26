@@ -1,0 +1,9 @@
+<apex:page controller="TemplateDetailController" sidebar="false" showHeader="false">
+    <c:CommonIncludes />
+    <apex:form >
+    	<div id="capsule">
+        <c:detailSectionComponent fKeyValue="{!fkeyval}" objectName="{!objectname}" />
+        </div>
+    </apex:form>
+</apex:page>
+                            	

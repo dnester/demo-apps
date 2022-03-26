@@ -1,0 +1,474 @@
+<apex:page showHeader="false"  controller="StatusController">
+   <c:CommonIncludes />
+<!-- <script type="text/javascript" src="{!$Resource.ExtJS}/ext-all-debug.js"></script> -->
+ 
+     
+    <script>
+    
+     var statusName;               
+     var statusId;
+     var errormsg;
+     var checkDefaultStatus;
+     
+    function callCopyPage(){ 
+        statusId= '{!$CurrentPage.parameters.id}';
+        window.parent.addTab("StatusPage?copyId=" + statusId,"Status","Status");
+    }
+    
+    var wid = '{!$CurrentPage.parameters.wid}';
+        function closeWindow(){
+                window.parent.refreshList();
+                window.parent.closeTab(wid);
+        }
+        
+        Ext.onReady(function(){
+
+        Ext.QuickTips.init();   
+        disableDefaultStatus1();
+        // This function renders a block of buttons
+        var SaveBtnHandler = function(button,event) { save(); };
+        var NewbtnController= function(button,event) {openPage("StatusPage","Status","Status");};
+        var DeleteBtnHandler = function(button,event) { 
+                                                        
+                                                        Ext.MessageBox.confirm('Delete', 'Are you sure ?', function(btn){
+                                                           if(btn === 'yes'){
+                                                                  deleteStatus();
+                                                           }});
+                                                                 };
+        var CopyBtnHandler = function(button,event) {  callCopyPage();};
+        var ClearBtnHandler = function(button,event) {  clearStatus(); };
+        var ResetBtnHandler = function(button,event) {  resetStatus(); };
+        var NextBtnHandler = function (button,event) { nextStatusBtnHandler1();};
+        var PreviuosBtnHandler = function (button,event) { previousStatusBtnHandler1();};
+        
+          var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+       new SamplePanel({
+            title: '',
+            cls:'toolSpCls',
+            bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [ {
+                scale: 'medium',
+                tooltipType: 'title',
+                tooltip: '{!$Label.new}',
+                iconCls: 'bmcNew',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcNewOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcNew');          
+                     }
+                },                
+                handler:NewbtnController
+            } ,' ', {
+                scale: 'medium',
+                tooltipType: 'title',
+                 tooltip: '{!$Label.save}',
+                iconCls: 'bmcSave',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                },                
+                handler:SaveBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcCopy',
+                tooltipType: 'title',
+                tooltip: '{!$Label.copy}',
+                id:'copyId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcCopyOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcCopy');          
+                     }
+                },                
+                handler:CopyBtnHandler 
+            },' ','-',' ',{
+                scale: 'medium',
+                iconCls: 'bmcDelete',
+                tooltipType: 'title',
+                tooltip: '{!$Label.delete}',
+                id:'deleteId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcDeleteOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcDelete');          
+                     }
+                },                
+                handler:DeleteBtnHandler 
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcClear',
+                tooltipType: 'title',
+               tooltip: '{!$Label.clear}',
+                id:'clearId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcClearOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcClear');          
+                     }
+                },                
+                handler:ClearBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcReset',
+                tooltipType: 'title',
+               tooltip: '{!$Label.Reset}',
+                id:'resetId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcResetOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcReset');          
+                     }
+                },                
+                handler:ResetBtnHandler
+            },
+            new Ext.Toolbar.Fill(),
+            {
+                scale: 'medium',
+                iconCls: 'bmcPrevious',
+                tooltipType: 'title',
+                tooltip: '{!$Label.previousRecord}',
+                
+                handler:PreviuosBtnHandler,
+                style:{
+                    align:'right'
+                }
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcNext',
+                tooltipType: 'title',
+                tooltip: '{!$Label.nextRecord}',
+                handler:NextBtnHandler,
+               
+            }]
+        });
+        
+        statusId = '{!status.Id}';    
+        if(statusId == null ||statusId == ''){                
+        Ext.getCmp('deleteId').setDisabled(true);
+        Ext.getCmp('copyId').setDisabled(true);
+         Ext.getCmp('clearId').setDisabled(true); 
+        }
+        else if('{!status.defaultStatus__c}' == 'true') {
+            Ext.getCmp('deleteId').setDisabled(true);
+            disableDefaultStatus();
+
+        }
+          
+       
+    });
+    var statusIdSet=window.parent.returnListOfId();
+        function previousStatusBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(statusIdSet.length > i){
+                if(idSetString==''){
+                    idSetString='\''+statusIdSet[i]+'\'';
+                }else{
+                    idSetString=idSetString+','+'\''+statusIdSet[i]+'\'';
+                }
+                i++;
+            }
+            previousStatusBtnHandler(idSetString);
+        
+        }
+
+       function nextStatusBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(statusIdSet.length > i){
+                if(idSetString==''){
+                    idSetString='\''+statusIdSet[i]+'\'';
+                }else{
+                    idSetString=idSetString+','+'\''+statusIdSet[i]+'\'';
+                }
+                i++;
+            }
+            previousStatusBtnHandler(idSetString);
+        
+        } 
+    
+    function buttonValidator() {
+       
+       if((statusName != null && statusName != '')&&(errormsg == null||errormsg ==''||errormsg=='Saved successfully.')){   
+        
+         if('{!status.defaultStatus__c}' == 'true') {
+            Ext.getCmp('deleteId').setDisabled(true);
+            disableDefaultStatus();
+
+        }
+        Ext.getCmp('deleteId').setDisabled(false);
+        Ext.getCmp('copyId').setDisabled(false);
+        Ext.getCmp('clearId').setDisabled(false);    
+       }
+       if(checkDefaultStatus == 'true') {
+            Ext.getCmp('deleteId').setDisabled(true);
+            disableDefaultStatus();
+       }
+       
+    }
+    
+     
+    function disableDefaultStatus(){
+        //document.getElementById('{!$Component.defaultStatus}').disabled = true;
+        disableDefaultStatus2();
+    }
+    
+    </script>
+   
+  
+  <apex:outputPanel id="titlePanel">
+            <script>
+                function updateList(){
+                    window.parent.refreshList();
+                }
+        
+        </script>
+    </apex:outputPanel>  
+  <apex:outputPanel id="panelId">
+        <script>
+        
+           statusName = '{!status.Name}';               
+           statusId = '{!status.id}';
+           checkDefaultStatus = '{!status.defaultStatus__c}';
+           
+        </script>
+        </apex:outputPanel>
+        
+        <apex:outputPanel id="errorId">
+        <script>
+        
+           errormsg = '{!messageString}';               
+                
+        
+        </script>
+        </apex:outputPanel>
+        <apex:outputPanel id="panel1">
+      <script>
+          var checkDefaultStatus1 ='{!status.defaultStatus__c}';  
+                           if(checkDefaultStatus1 == 'true') {
+                                    document.getElementById('{!$Component.defaultStatus}').disabled = true;
+                          }
+      </script>
+  </apex:outputPanel>
+  
+  <apex:outputPanel > <!-- Page body in this panel -->
+            <apex:form >
+             <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+             <apex:actionFunction action="{!save}" name="save" reRender="panel1,validationComponent,panelId,errorId" oncomplete="showError();buttonValidator();updateList();"/>
+             <apex:actionFunction action="{!newStatus}" name="newStatus"/>
+             <apex:actionFunction action="{!clear}" name="clearStatus"/>
+              <apex:actionFunction action="{!reset}" name="resetStatus"/>
+             <apex:actionFunction action="{!deleteStatus}" name="deleteStatus" onComplete="closeWindow();"/>
+     <!-- apex:actionFunction action="{!copyStatus}" name="copyStatus"/ -->
+    
+    <apex:actionFunction action="{!nextBtnHandler}" name="nextStatusBtnHandler" 
+                                    rerender="tablePanel, statuspanelBar" >
+                                    <apex:param assignTo="{!tempString}" name="idSetString" value=""/>  
+             </apex:actionFunction>
+             <apex:actionFunction action="{!previousBtnHandler}" name="previousStatusBtnHandler" 
+                                        rerender="tablePanel, statuspanelBar">
+                                        <apex:param assignTo="{!tempString}" name="idSetString" value=""/> 
+             </apex:actionFunction>
+             
+                <div id="capsule" class="CapsuleDiv1">
+                    <table cellpadding="0" cellspacing="0" class="clsMainTable">
+                     
+                      <!--Following code for display Tool box -->
+                        
+                        <tr class="clsRowGreyBg">
+                            <td>
+                                <div id="btnToolbar"></div>                                
+                            </td>
+                        </tr>
+                       
+                     <!--End of Tool Box---->    
+                     
+                        <tr>
+                          <td>
+                             <table class="clsTable" cellspacing="0" cellpadding="0">
+                              
+                                <tr>
+                                     <td class="clsTopAlignment75">
+                                    <apex:outputPanel id="tablePanel">
+                                       <table class="clsTable" cellspacing="0" cellpadding="0">
+                                         
+                                            <tr>
+                                                <td colspan="2"><div class="div15pxVspacing"/></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="clsInputLabelTD">
+                                                    <apex:outputLabel value="{!$Label.Status_Id}"/><span class="clsRequiredBlack">*</span>
+                                                </td>
+                                                <td class="clsInputTextBoxTD">
+                                                    <apex:inputField value="{!status.Name}" styleClass="clsInputTextBox"/>
+                                                </td>
+                                            </tr>
+                                            
+                                         </table>
+                                         
+                                          <table class="clsTable" cellspacing="0" cellpadding="0">    
+                                            <tr>
+                                                <td class="clsInputBoldLabelTableFirstRowTD">
+                                                    <apex:outputLabel value="{!$Label.description}"/><span class="clsRequiredBlack">*</span>
+                                                </td>
+                                            </tr>
+                                            
+                                             <tr>
+                                                 <td class="clsInputTextAreaTD"> 
+                                                    <apex:inputtextarea value="{!status.statusDescription__c}" styleClass="clsInputTextArea"/>
+                                                </td>
+                                            </tr>
+                                            <tr> <td colspan="2"><div class="div9pxVspacing"/></td></tr>
+                                         </table>
+                                         <table  class="clsTable" cellspacing="0" cellpadding="0">   
+                                            <tr>
+                                                <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.state}"/><span class="clsRequiredBlack">*</span>
+                                                    <apex:selectRadio value="{!state}" layout="pageDirection"  >
+                                                    
+                                                        <apex:selectOptions value="{!stateValue}" />
+                                                    </apex:selectRadio>  
+                                                </td>
+                                            </tr>
+                                             <tr>
+                                      <td>
+                                        <div class="div13pxVspacing"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="clsInputCheckBox"><apex:inputField value="{!status.defaultStatus__c}"
+                                         id="defaultStatus" /> <label
+                                                                for="defaultStatus" class="clsInputCheckBoxLabel">{!$Label.defaultStatus}</label>
+                                           <script>   
+                                                    function disableDefaultStatus1(){
+                                                            var checkDefaultStatus1 ='{!status.defaultStatus__c}';  
+                                                            if(checkDefaultStatus1 == 'true') {
+                                                                document.getElementById('{!$Component.defaultStatus}').disabled = true;
+                                                            }
+                                                     }
+                                                                          
+                                                    function disableDefaultStatus2(){
+                                                    document.getElementById('{!$Component.defaultStatus}').disabled = true;
+                                                
+                                             }    
+                                            </script>                   
+                                        </td>
+                                </tr>
+                                <tr>
+                                    <td class="clsInputCheckBox" ><apex:inputField value="{!status.inactive__c}" id="inactive"
+                                         /> <label for="inactive" class="clsInputCheckBoxLabel">{!$Label.inactive}</label>
+                                    </td>
+                                </tr>
+                                     
+                                           
+                                         </table>
+                                            </apex:outputPanel> 
+                                    </td>
+                                    <td><div class="div17pxHspacing"/></td>
+                                    <td class="clsTopAlignment25">
+                                        <div class="panelCapsule">
+                                                     <apex:panelBar headerClass="clsRowBlueBgPanel" switchType="ajax">
+                                                        <apex:panelBarItem label="Applies To" expanded="true" headerClass="panelHeaderS" contentClass="panelContent">
+                                                            <table class="clsTable" cellspacing="0" cellpadding="0">
+                                                                   <tr>
+                                                                        <td><div class="div15pxVspacing"/></td>
+                                                                   </tr>
+                                                                   
+                                                                    <tr>
+                                                                      <td class="clsPanelInputCheckboxTDS">
+                                                                          <apex:inputfield value="{!status.appliesToBroadcasts__c}" id="radFCR8"/> 
+                                                                          <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.broadcasts}"/>
+                                                                      </td>
+                                                                  </tr>
+
+                                                                <tr>
+                                                                      <td class="clsPanelInputCheckboxTDS">
+                                                                          <apex:inputfield value="{!status.appliesToChange__c}" id="radFCR5"/> 
+                                                                          <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.changes}"/>
+                                                                      </td>
+                                                                  </tr>
+                                                                   <tr>
+                                                                      <td class="clsPanelInputCheckboxTDS">
+                                                                          <apex:inputfield value="{!status.appliesToConfigurationItems__c}" id="radFCR3"/>
+                                                                          <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.configurationItems}"/> 
+                                                                      </td>
+                                                                   </tr>
+                                                                     <tr> 
+                                                                         <td class="clsPanelInputCheckboxTDS">
+                                                                          <apex:inputfield value="{!status.appliesToIncident__c}" id="radFCR2"/> 
+                                                                          <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.incidents}"/>
+                                                                      </td>
+                                                                   </tr>
+                                                                   <tr>
+                                                                      <td class="clsPanelInputCheckboxTDS">
+                                                                          <apex:inputfield value="{!status.appliesToServices__c}"  id="radFCR6"/> 
+                                                                          <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.services}"/>
+                                                                      </td>
+                                                                  </tr>
+                                                                    <tr>
+                                                                      <td class="clsPanelInputCheckboxTDS">
+                                                                          <apex:inputfield value="{!status.appliesToSLA__c}" id="radFCR7"/> 
+                                                                          <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.SLAs}"/>
+                                                                      </td>
+                                                                  </tr>
+                                                                    <tr>
+                                                                      <td class="clsPanelInputCheckboxTDS">
+                                                                          <apex:inputfield value="{!status.appliesToTask__c}" id="radFCR4"/> 
+                                                                          <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.tasks}"/>
+                                                                      </td>
+                                                                   </tr>
+                                                                   
+                                                                   
+                                                                   
+                                                            </table>
+                                                        </apex:panelBarItem>
+                                                        <apex:panelBarItem label="Details" headerClass="panelHeader">
+                                                            <table border="0" cellpadding="0" cellspacing="0" >
+                                                                  <tr>
+                                                                        <td><div class="div15pxVspacing"/></td>
+                                                                   </tr>
+                                                                  <tr>
+                                                                      <td class="clsPanelInputCheckboxTDS">
+                                                                          <apex:inputfield value="{!status.system__c}" id="radFCR9"/> 
+                                                                          <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.system}"/>
+                                                                      </td>
+                                                                  </tr>
+                                                                 
+                                                              </table>
+                                                        </apex:panelBarItem>
+                                                    </apex:panelBar>
+                                         </div>
+                                    </td>
+                                </tr>
+                              
+                              </table>
+                          </td>
+                        </tr>
+                        <tr class="clsRowGreyBg" valign="middle">
+                            <td valign="top">
+                                
+                            </td>
+                        </tr>
+                    </table>
+                </div>    
+            </apex:form>
+    </apex:outputPanel>  
+ </apex:page>
+                            	

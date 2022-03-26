@@ -1,0 +1,250 @@
+<apex:page showHeader="false" controller="CategorySearchController">
+<c:CommonIncludes />
+<apex:stylesheet value="{!URLFOR($Resource.BMCStyle, 'CategorySearchStyleSheet.css')}" />
+ 
+ <script>
+      var categoryId='';
+      var descriptionId='';
+      var resolutionId='';
+      var checkValue1= 0;
+      var checkValue2= 0;
+    
+     function SendValueToParent(a){ 
+        window.parent.setPopUpVar(a);
+        parent.window.closePopup();
+         
+    }
+    
+    function saveCategory(){
+          if(categoryId !='Categories by Description'){
+            var retunValue=categoryId +":"+descriptionId+":"+resolutionId;
+            var rval=new Array();
+            rval[0]=categoryId;   
+            if(checkValue1== 1)
+                  rval[1]=descriptionId;               
+            if(checkValue2== 1)
+                    rval[2]= resolutionId;
+              window.parent.setPopUpVar(rval);
+              parent.window.closePopup();
+            
+          }else{
+                Ext.MessageBox.show({
+                                title: 'Warning',
+                                msg:'Select a Category first',
+                                width:'auto',
+                                buttons: Ext.MessageBox.OK
+                            });
+              
+          }
+     }
+      
+    </script>
+
+    <script>
+                                                                                                     
+            Ext.onReady(function() {
+              
+                new Ext.Panel({
+                  
+                    renderTo: 'categoryPageTree',
+                    border :true,
+                    height:250,
+                    autoScroll: true,
+                    bodyStyle: {"border-color":"#000000"},
+                    items: [
+                    {
+                        xtype: 'treepanel',
+                        width: 'auto',
+                        margins: '0 10 0 0',
+                        autoScroll: true,
+                        useArrows: true,
+                        split: true,
+                       
+                        border: false,
+                        margins: '0 5 0 0',
+                        cmargins: '0 5 0 0',
+                        titleCollapse: true,
+                        loader: new Ext.tree.TreeLoader(),
+                        root: new Ext.tree.AsyncTreeNode({
+                            text :'Categories by Description', 
+                            expanded: true,
+                           
+                            children: <apex:outputText escape="false" value="{!categories}"/>
+                        }),
+                        rootVisible: true,
+                        listeners: {
+                            click: function(n) {
+                                    setCategoryId(n.text);                                
+                                    nodeClicked(n.text);
+                               /* if(n.leaf){
+                                    setCategoryId(n.text);                                
+                                    nodeClicked(n.text);
+                                }else{
+                                    if(n.expanded){
+                                        n.collapse();
+                                    }else{
+                                        n.expand();
+                                    }
+                                }*/
+                            }
+                        }
+                    }
+                ]
+           });
+            function setCategoryId(catId){  
+                        categoryId=catId;
+                  
+                    
+            } 
+           });     
+        </script>
+        
+   
+    
+    <apex:outputPanel >
+    <apex:form >
+    
+    <apex:commandButton value="OK" onclick="javascript: saveCategory();"  reRender="abc"/>
+    <apex:commandButton value="Close" onclick="javascript: parent.window.closePopup();" reRender="abc"/> 
+
+
+   
+    <apex:outputPanel >
+    <apex:actionFunction action="{!diasplayStandardDescriptions}" name="diasplayStandardDescriptions" reRender="selectedValues" />
+     
+      <table class="clsMainTableC" cellpadding="5" cellspacing="0">
+           <tr class="clsRowGreyBgC">
+                  <td class="clsLeftPadding5">
+                    <span class="clsHeader">Category</span>
+                  </td>
+            </tr>
+            <tr>
+                <td class="clsLeftPadding10">
+                    
+                     <div id="categoryPageTree"></div>
+                     <apex:actionFunction name="nodeClicked" action="{!diasplayStandardDescriptions}" id="value" reRender="resultPanel">
+
+                      <apex:param name="paramId" value="" /> 
+
+                    </apex:actionFunction>
+              
+               </td>
+          </tr>   
+       </table>  
+       
+       
+       </apex:outputPanel>
+       
+ 
+
+      <apex:outputPanel >
+      <table class="clsTable100" cellspacing="0" cellpadding="0">
+              <tr>
+                  <td class="clsLeftPadding5Cs" colspan ="4">
+                     
+                      <apex:inputCheckbox value="{!objDescription}"  onclick="selectDescCheckbox();" styleClass="valignC" />
+                      <apex:outputLabel styleClass="clsInputLabelTDCs">Standard Description </apex:outputLabel>
+                      <script>
+                         function selectDescCheckbox(){
+                                 
+                              if(checkValue1==0)
+                                 { checkValue1=1;}
+                               else
+                                  { checkValue1=0 ; }  
+                            
+                         }
+                       </script>
+                  </td>
+                  <td>
+                      <apex:inputCheckbox value="{!objResolution}" onclick=" selectResCheckbox();" styleClass="valignC" />
+                      <apex:outputLabel styleClass="clsInputLabelTDCs">Standard Resolution</apex:outputLabel>
+                      <script>
+                         function selectResCheckbox(){
+                                 
+                              if(checkValue2==0)
+                                 { checkValue2=1;}
+                               else
+                                  { checkValue2=0 ; }  
+                           
+                         }
+                       </script>
+                  </td>
+              </tr>
+      </table> 
+
+       </apex:outputPanel>
+     <apex:outputPanel id="resultPanel">
+          <table class="clsMainTableCS" cellpadding="5" cellspacing="0">
+             <tr class="clsRowGreyBgC">
+                 <td class="clsCateSearch">
+                      <table class="clsTable" cellspacing="0" cellpadding="0">
+                         <tr>
+                              <td class="clsLeftPadding5Cs">
+                                <span class="clsHeader">Standard Description</span>
+                              </td>
+
+                          </tr>
+                      </table>
+                  </td>
+                  <td class="clsCateSearch1">
+                      <table class="clsTable" cellspacing="0" cellpadding="0"> 
+                         <tr>
+                              <td class="clsLeftPadding5Cs">
+                                <span class="clsHeader">Standard Resolution</span>
+                              </td>
+
+                          </tr>
+                      </table>
+                  </td>
+              </tr>
+              <tr>
+                   <td class="clsTD51">
+                       <apex:outputPanel id="descriptionPanel">
+                            <apex:dataTable value="{!DescriptionList}" var="standardDescription" styleClass="clsCateSearch2">
+                                    <apex:column styleClass="clsLeftPadding5Cs">
+                                        <apex:commandLink onclick="setDescription('{!standardDescription.Id}')" action="{!diasplayStandardResolutions}" reRender="resolutionPanel" styleClass="clsCateSearch3">
+                                            {!standardDescription.description__c}
+                                            <apex:param name="descriptionID" id="descriptionID" value="{!standardDescription.Name}"/>
+                                            
+                                            <script>
+                                                function setDescription(stdDescriptionId){
+                                                    descriptionId=stdDescriptionId;
+                                                }
+                                            </script>
+                                            
+                                        </apex:commandLink> 
+                                     </apex:column>   
+                                   
+                                </apex:dataTable>
+                         
+                      </apex:outputPanel>
+                   </td>             
+                    <td class="clsCateSearch4">
+                       <apex:outputPanel id="resolutionPanel">
+                          <apex:dataTable value="{!ResolutionList}" var="StandardResolution" styleClass="clsCateSearch5">
+                              <apex:column styleClass="clsLeftPadding5Cs">
+                                 <apex:commandLink action="{!selctStandardResolution}" onclick="setResolution('{!StandardResolution.Id}');" reRender="resolutionPanel" styleClass="clsCateSearch3">
+                                      {!StandardResolution.resolution__c}
+                                            
+                                            <script>
+                                                function setResolution(stdResolutionId){
+                                                    resolutionId=stdResolutionId;
+                                                }
+                                            </script>
+                                 </apex:commandLink>
+                              </apex:column>
+                          </apex:dataTable> 
+                       </apex:outputPanel>
+                 </td>
+            </tr>   
+       </table> 
+      </apex:outputPanel>
+       
+
+
+                        
+    </apex:form>                           
+   </apex:outputPanel>    
+ 
+</apex:page>
+                            	

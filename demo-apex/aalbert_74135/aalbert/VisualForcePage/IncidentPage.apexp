@@ -1,0 +1,1236 @@
+<apex:page showHeader="false" controller="IncidentController" >
+    <c:CommonIncludes />
+    <apex:includeScript value="{!$Resource.JSResource}/JSTemplate.js"/>
+    <apex:outputPanel id="repeatId">
+    	<apex:repeat value="{!keyValues}" var="mapkeys"> 
+	    	 <script>setTemplVal("{!mapkeys.key}", "{!mapkeys.value}");</script>
+		</apex:repeat>
+    </apex:outputPanel>  
+    <script>           
+		var clientID;
+    	var categoryId;
+    	var orgId;
+    	var iscalcPriority = false;  
+    	var incidentId;
+    	var incidentClient;
+    	var incidentCategory;
+        var errormsg;
+        
+        var isLookup = "{!$CurrentPage.parameters.islookup}";  
+        function saveRecords(){
+         
+        	saveIncident();
+            
+        }
+        
+        function getINCid(incId){
+        
+            
+        	if(isLookup){
+            	window.parent.refreshDocs();  
+              	window.parent.closePopup();
+           	}else{
+            	setId(incId);
+           	}
+        }
+        
+        
+        function callCopyPage(){
+            window.parent.addTab("IncidentPage?copyId=" + incidentId,"Incident","Incident");
+        }
+
+        function openCategoryLookup(returnValues){              
+            if(returnValues!= null) {
+				if(returnValues[0] != null ||returnValues[0] !='' ) {
+                	setCategoryNext(returnValues[0]); //Calling Action Function
+					document.getElementById('{!$Component.incidentForm.incidentcategoryfk}').value = returnValues[0];
+				}
+                if(returnValues[1] != null || returnValues[1] != '') {
+                       setDescriptionNext(returnValues[1]); //Calling Action Function
+				}
+                if(returnValues[2] != null || returnValues[2] != ''){
+					setResolutionNext(returnValues[2]); //Calling Action Function
+                }
+			}
+		}
+		
+		function setClientDetails(returnvalue) {
+			setClientNext(returnvalue);
+			if (returnvalue != null) {
+				document.getElementById('{!$Component.incidentForm.incidentclientfk}').value = returnvalue;
+			}
+		}
+ 
+        function openImpactLookup(impactId ){            
+            if(impactId != null && impactId != '' ){
+                     setImpactNext(impactId );
+                     iscalcPriority= true;   
+            }               
+        }   
+        
+        function buttonValidator() {                
+            if((incidentClient != null && incidentClient != '')&&
+                (incidentCategory != null && incidentCategory != '')&&
+                (errormsg == null||errormsg ==''||errormsg=='Saved successfully.')){   
+                
+                //enableButtons(new Array('deleteId','copyId','clearId','resetId'));
+                Ext.getCmp('deleteId').setDisabled(false);
+                Ext.getCmp('copyId').setDisabled(false);
+                Ext.getCmp('clearId').setDisabled(false);
+                Ext.getCmp('resetId').setDisabled(false);
+                Ext.getCmp('templatebutton').setDisabled(true);
+				Ext.getCmp('viewId').setDisabled(false);
+                Ext.getCmp('deleteId').setIconClass('bmcDelete');
+                Ext.getCmp('copyId').setIconClass('bmcCopy');
+                Ext.getCmp('clearId').setIconClass('bmcClear1');
+                Ext.getCmp('resetId').setIconClass('bmcReset');
+				Ext.getCmp('viewId').setIconClass('bmcView1');
+                    
+            } 
+            if((incidentClient != null && incidentClient != '')&&
+                (incidentCategory != null && incidentCategory != '') && incidentCloseState == 'true' && incidentReOpenState == 'false'){
+                
+                
+                //Ext.getCmp('newId').setDisabled(true);
+                //Ext.getCmp('newId').setIconClass('bmcNewDisable');
+                
+                //disableButtons(new Array('saveId','deleteId','copyId','clearId','resetId','viewId','assignedToId'));
+                //disableMenus(new Array('closeButtonId','quickCloseButtonId','assignToMyselfButtonId','reopenButtonId','respondedButtonId'));
+                
+                Ext.getCmp('saveId').setDisabled(true);
+                Ext.getCmp('saveId').setIconClass('bmcSaveDisable');
+                /*Ext.getCmp('deleteId').setDisabled(true);
+                Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+                Ext.getCmp('copyId').setDisabled(true);
+                Ext.getCmp('copyId').setIconClass('bmcCopyDisable');
+                Ext.getCmp('clearId').setDisabled(true);
+                Ext.getCmp('clearId').setIconClass('bmcClear');
+                Ext.getCmp('resetId').setDisabled(true);
+                Ext.getCmp('resetId').setIconClass('bmcResetDisable'); 
+                Ext.getCmp('viewId').setDisabled(true);
+                Ext.getCmp('viewId').setIconClass('bmcView');*/
+                Ext.getCmp('assignedToId').setDisabled(true);
+                Ext.getCmp('assignedToId').setIconClass('bmcAssign');
+                Ext.getCmp('closeButtonId').setDisabled(true);
+                Ext.getCmp('quickCloseButtonId').setDisabled(true);
+                Ext.getCmp('reopenButtonId').setDisabled(false);
+                Ext.getCmp('respondedButtonId').setDisabled(true);
+                
+            }/*else 
+            	if((incidentClient != null && incidentClient != '')&&
+                		(incidentCategory != null && incidentCategory != '') )
+            	{	
+            		
+            		//enableButtons(new Array('newId','saveId','deleteId','copyId','clearId','resetId','viewId','assignedToId'));
+            		//enableMenus(new Array('closeButtonId','quickCloseButtonId','assignToMyselfButtonId','reopenButtonId','respondedButtonId'));
+            		
+	                Ext.getCmp('newId').setDisabled(false);
+	                Ext.getCmp('newId').setIconClass('bmcNew');
+	                Ext.getCmp('saveId').setDisabled(false);
+	                Ext.getCmp('saveId').setIconClass('bmcSave');
+	                Ext.getCmp('deleteId').setDisabled(false);
+	                Ext.getCmp('deleteId').setIconClass('bmcDelete');
+	                Ext.getCmp('copyId').setDisabled(false);
+	                Ext.getCmp('copyId').setIconClass('bmcCopy');
+	                Ext.getCmp('clearId').setDisabled(false);
+	                Ext.getCmp('clearId').setIconClass('bmcClear1');
+	                Ext.getCmp('resetId').setDisabled(false);
+	                Ext.getCmp('resetId').setIconClass('bmcReset'); 
+	                Ext.getCmp('viewId').setDisabled(false);
+	                Ext.getCmp('viewId').setIconClass('bmcView1');
+	                Ext.getCmp('assignedToId').setDisabled(false);
+	                Ext.getCmp('assignedToId').setIconClass('bmcAssign1');
+	                
+	                Ext.getCmp('closeButtonId').setDisabled(false);
+	                Ext.getCmp('quickCloseButtonId').setDisabled(false);
+	                Ext.getCmp('reopenButtonId').setDisabled(true);
+	                Ext.getCmp('respondedButtonId').setDisabled(false);
+	                 
+            }*/
+       }
+       var separator;
+       var disableTrue = true;
+       Ext.onReady(function(){
+			Ext.QuickTips.init();   
+        	if(isLookup){
+            disableTrue = true;
+            separator = '';
+          }else{ 
+              disableTrue = false;
+              separator = '-';
+          }
+            // This function renders a block of buttons
+            var NewBtnhandler = function(button,event) {openPage("IncidentPage","Incident","Incident"); };
+            var SaveBtnHandler = 
+                function(button,event) {
+                    var incident = '{!incident.Id}';
+                    
+                    if(iscalcPriority && (incident  != null && incident  != '' )){
+                        var duedate = 
+                            window.showModalDialog("/apex/recalculateDueDate?incidentId={!incident.Id}", 
+                            "Calculate Due Date","dialogWidth=600px; dialogHeight=600px; resizable=yes");
+                        
+                        if(duedate != null && duedate != ''){
+                            document.getElementById('{!$Component.incidentForm.pbarId.Incidentdetail.dueDateId}').value = duedate;
+                        }
+                    }  
+                    //saveIncident();
+                    categoryId = document.getElementById('{!$Component.incidentForm.Category__c_id_name}').value;
+                    document.getElementById('{!$Component.incidentForm.incidentcategoryfk}').value = categoryId;
+                    saveRecords();
+                };
+            var ClearBtnHandler= function(button,event) {clearIncident();};         
+            var CopyBtnHandler = function(button,event) { callCopyPage(); };
+            var ResetBtnHandler = function(button,event) {  resetIncident(); };
+            var DeleteBtnHandler = function(button,event) { 
+            												
+           												 Ext.MessageBox.confirm('Delete', 'Are you sure ?', function(btn){
+														   if(btn === 'yes'){
+														           deleteIncident();
+														   }});
+            												 };
+            var SendNotificationBtnHandler= function(button,event) {  /*deleteIncident();*/ };
+            var AssignedToStaffBtnHandler = function(button,event) {  
+                AssignedToStaff();
+                //enableMenus(new Array('assignToMyselfButtonId','assignToStaffButtonId','assignToSuggestedStaffButtonId','assignToSelectedProfileButtonId','assignToMemberOfAdminButtonId','ClearAssignToButton','respondedButtonId'));
+                //disableMenus(new Array('reopenButtonId'));
+                 
+                Ext.getCmp('assignToMyselfButtonId').enable();          
+                Ext.getCmp('assignToStaffButtonId').enable();
+                Ext.getCmp('assignToSuggestedStaffButtonId').enable();
+                Ext.getCmp('assignToSelectedProfileButtonId').enable();
+                Ext.getCmp('assignToMemberOfAdminButtonId').enable();            
+                Ext.getCmp('ClearAssignToButton').enable();
+                Ext.getCmp('respondedButtonId').enable();            
+            };          
+            var AssignedToMyselfBtnHandler  = function(button,event) {
+                AssignedToMyself();
+                //enableMenus(new Array('assignToStaffButtonId','assignToSuggestedStaffButtonId','assignToSelectedProfileButtonId','assignToMemberOfAdminButtonId','ClearAssignToButton','respondedButtonId'));
+                //disableMenus(new Array('assignToMyselfButtonId','reopenButtonId'));
+                  
+                Ext.getCmp('assignToStaffButtonId').enable();
+                Ext.getCmp('assignToSuggestedStaffButtonId').enable();
+                Ext.getCmp('assignToMyselfButtonId').disable();
+                Ext.getCmp('assignToSelectedProfileButtonId').enable();
+                Ext.getCmp('assignToMemberOfAdminButtonId').enable();
+                Ext.getCmp('ClearAssignToButton').enable();
+                Ext.getCmp('reopenButtonId').disable();
+                Ext.getCmp('respondedButtonId').enable();
+            };
+            var AssignToQueueHandler = function(button,event) {  
+                openAssignTOQueue();
+                Ext.getCmp('ClearAssignToButton').enable();
+            };
+            var AssignedToClearBtnHandler  = function(button,event) { 
+                AssignedToClear();
+                //enableMenus(new Array('assignToStaffButtonId','assignToSuggestedStaffButtonId','assignToSelectedProfileButtonId','assignToMemberOfAdminButtonId','assignToMyselfButtonId','respondedButtonId'));
+                //disableMenus(new Array('ClearAssignToButton','reopenButtonId'));
+                
+                Ext.getCmp('assignToStaffButtonId').enable();
+                Ext.getCmp('assignToSuggestedStaffButtonId').enable();
+                Ext.getCmp('assignToMyselfButtonId').enable();
+                Ext.getCmp('assignToSelectedProfileButtonId').enable();
+                Ext.getCmp('assignToMemberOfAdminButtonId').enable();
+                Ext.getCmp('ClearAssignToButton').disable();
+                Ext.getCmp('reopenButtonId').disable();
+                Ext.getCmp('respondedButtonId').enable();
+            };
+       
+            var OpenBtnHandler= function(button,event) {  /*deleteIncident();*/ };
+            var CloseBtnHandler= function(button,event) { closeIncident();};
+            var QuickCloseBtnHandler = function(button,event) { quickCloseIncident();};
+            var ReopenBtnHandler = function(button,event) { 
+				reopenIncident();
+				Ext.getCmp('saveId').setDisabled(false);
+				Ext.getCmp('saveId').setIconClass('bmcSave');
+			};
+            var IncidentForClient = function(button,event) { incidentForClient();};
+            /// *********** Code by Vilas *************//
+            var IncidentForClient = function(button,event) { incidentForClient();};
+            var IncidentForCategory = function(button,event) { incidentForCatagory();};
+            var IncidentForOrganization = function(button,event) { incidentForOrganization();};
+            var RespondedBtnHandler = function (button,event) { respondedBtnHandler();};
+            var MyselfBtnHandler = function (button,event) { myselfBtnHandler();};
+            var CallCounterBtnHandler = function (button,event) { callCounterBtnHandler();}; 
+            var PreviuosBtnHandler = function (button,event) { previousIncidentBtnHandler1();};
+            var NextBtnHandler = function (button,event) { nextIncidentBtnHandler1();}; 
+            var TemplateBtnHandler = function (button, event){
+            openPopup('SearchPage?popupId=IncidentTemplates&isLookup=true',fetchIncidentTemplates,500,400); };
+            
+            var SamplePanel = Ext.extend(Ext.Panel, {
+                renderTo: 'btnToolbar',
+                defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+            });
+        
+            new SamplePanel({
+                title: '',
+            cls:'toolSpCls',
+                bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+                tbar: [ {
+                    scale: 'medium',
+                    iconCls: 'bmcNew',
+                    tooltipType : 'title',
+                    tooltip: '{!$Label.new}',
+                    id:'newId',
+                    hidden:disableTrue,
+                    listeners: {
+                        mouseover: function(){
+                            this.setIconClass('bmcNewOn');    
+                        },
+                        mouseout: function(){
+                            this.setIconClass('bmcNew');          
+                        }
+                    },     
+                    handler:NewBtnhandler
+                } ,' ', {
+                    scale: 'medium',
+                    iconCls: 'bmcSave',
+                    tooltipType : 'title',
+                    tooltip: '{!$Label.save}',
+                    id:'saveId',
+                    listeners: {
+                        mouseover: function(){
+                            this.setIconClass('bmcSaveOn');    
+                         },
+                        mouseout: function(){
+                            this.setIconClass('bmcSave');          
+                        }
+                    }, 
+                    handler:SaveBtnHandler
+                },' ',{
+                    scale: 'medium',
+                    iconCls: 'bmcCopy',
+                    tooltipType : 'title',
+                    tooltip: '{!$Label.copy}',
+                    id:'copyId',
+                    hidden:disableTrue,
+                    listeners: {
+                        mouseover: function(){
+                            this.setIconClass('bmcCopyOn');    
+                         },
+                        mouseout: function(){
+                            this.setIconClass('bmcCopy');          
+                        }
+                    },     
+                    handler:CopyBtnHandler
+                },' ','-',' ',{
+                    scale: 'medium',
+                    iconCls: 'bmcDelete',
+                    tooltipType : 'title',
+                    tooltip: '{!$Label.delete}',
+                    id:'deleteId',
+                    listeners: {
+                        mouseover: function(){
+                            this.setIconClass('bmcDeleteOn');    
+                         },
+                         mouseout: function(){
+                            this.setIconClass('bmcDelete');          
+                         }
+                    },               
+                    handler:DeleteBtnHandler
+                },' ',{
+                    scale: 'medium',
+                    iconCls: 'bmcClear1',
+                    tooltipType : 'title',
+                    tooltip: '{!$Label.clear}',
+                    id:'clearId',
+                    hidden:disableTrue,
+                    listeners: {
+                        mouseover: function(){
+                            this.setIconClass('bmcClearOn');    
+                        },
+                        mouseout: function(){
+                            this.setIconClass('bmcClear1');          
+                        }
+                    },              
+                    handler:ClearBtnHandler
+                },' ',{
+                    scale: 'medium',
+                    iconCls: 'bmcReset',
+                    tooltipType : 'title',
+                    tooltip: '{!$Label.Reset}',
+                    id:'resetId',
+                    hidden:disableTrue,
+                    listeners: {
+                        mouseover: function(){
+                            this.setIconClass('bmcResetOn');    
+                        },
+                        mouseout: function(){
+                            this.setIconClass('bmcReset');          
+                         }
+                    },              
+                    handler:ResetBtnHandler
+                },' ',separator,' ',{
+                    scale: 'medium',
+                    iconCls: 'bmcSendNotification',
+                    tooltipType : 'title',
+                    tooltip: '{!$Label.sendNotification}',
+                     hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                        this.setIconClass('bmcSendNotificationOn');    
+                    },
+                    mouseout: function(){
+                        this.setIconClass('bmcSendNotification');          
+                    }
+                },     
+                disabled: 'true',
+                handler:SaveBtnHandler
+            },' ',separator,' ',{
+                scale: 'medium',
+                iconCls: 'bmcView1',
+                tooltipType : 'title',
+                tooltip: '{!$Label.viewOpenIncidentsFor}',
+                id:'viewId',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                        this.setIconClass('bmcViewOn');    
+                    },
+                    mouseout: function(){
+                        this.setIconClass('bmcView1');          
+                    }
+                },     
+                menu: [ {text:'Incidents for Client', icon:'{!$Resource.JIcons}/_.GIF', handler:IncidentForClient},
+                        {text:'Incidents for Organization', icon:'{!$Resource.JIcons}/_.GIF', handler:IncidentForOrganization},
+                        {text:'Incidents for Category', icon:'{!$Resource.JIcons}/_.GIF', handler:IncidentForCategory},
+                        {text:'Incidents for CI Assembly',disabled: 'true', icon:'{!$Resource.JIcons}/_.GIF'} ]
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcAssign1',
+                tooltipType : 'title',
+                tooltip: '{!$Label.assignTo}',
+                id:'assignedToId',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                        this.setIconClass('bmcAssignOn');    
+                    },
+                    mouseout: function(){
+                        this.setIconClass('bmcAssign1');          
+                    }
+                },                
+                menu: [ {text:'Staff', icon:'{!$Resource.JIcons}/_.GIF', id:'assignToStaffButtonId',
+                            disabled:{!assignStaffState}, handler:AssignedToStaffBtnHandler },
+                        {text:'Suggested Staff',disabled: 'true', icon:'{!$Resource.JIcons}/_.GIF',id:'assignToSuggestedStaffButtonId',disabled:{!assignSuggestedStaffState}},
+                         {text:'Myself', icon:'{!$Resource.JIcons}/_.GIF', id:'assignToMyselfButtonId', 
+                         disabled:{!assignMyselfState}, handler:AssignedToMyselfBtnHandler},
+                        {text:'Queue', icon:'{!$Resource.JIcons}/_.GIF', id:'assignToQueueButtonId', 
+                         handler:AssignToQueueHandler},
+                        {text:'Selected Profile',id:'assignToSelectedProfileButtonId', 
+                         disabled:{!assignSelectedProfileState}, icon:'{!$Resource.JIcons}/_.GIF'},
+                        {text:'Member of Administrators', id:'assignToMemberOfAdminButtonId', 
+                         disabled:{!assignMemberOfAdminState},icon:'{!$Resource.JIcons}/_.GIF'},
+                        {text:'Clear Assign To', id:'ClearAssignToButton', disabled:{!clearAssignState},
+                         icon:'{!$Resource.JIcons}/_.GIF',handler:AssignedToClearBtnHandler }]
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcAction1',
+                tooltipType : 'title',
+                tooltip: '{!$Label.actions}',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                        this.setIconClass('bmcActionOn');    
+                    },
+                    mouseout: function(){
+                        this.setIconClass('bmcAction1');          
+                    }
+                },                
+                menu: [ 
+                        {
+                            text:'Close', 
+                            icon:'{!$Resource.JIcons}/_.GIF',
+                            id:'closeButtonId',
+                            disabled:{!closeState}, 
+                            handler:CloseBtnHandler
+                        },
+                        {
+                            text:'Quick Close', 
+                            icon:'{!$Resource.JIcons}/_.GIF',
+                            id:'quickCloseButtonId', 
+                            disabled:{!closeState}, 
+                            handler:QuickCloseBtnHandler 
+                        },
+                        {
+                            text:'Reopen Incident', 
+                            icon:'{!$Resource.JIcons}/_.GIF', 
+                            id:'reopenButtonId', 
+                            disabled:{!reOpenState}, 
+                            handler:ReopenBtnHandler
+                        },
+                        {
+                            text:'Increment Call Counter',
+                            disabled:'true', 
+                            icon:'{!$Resource.JIcons}/_.GIF', 
+                            handler:CallCounterBtnHandler
+                        },
+                        {
+                            text:'Select CI Assembly', 
+                            disabled:'true', 
+                            icon:'{!$Resource.JIcons}/_.GIF'
+                        },
+                        {
+                            text:'Responded', 
+                            icon:'{!$Resource.JIcons}/_.GIF', 
+                            id:'respondedButtonId', 
+                            disabled:{!respondedState}, 
+                            handler:RespondedBtnHandler
+                        }]
+                },' ',{
+                scale:'medium',
+                iconCls: 'bmcTemplate',
+                tooltipType : 'title',
+                tooltip:'{!$Label.template}',
+                id:'templatebutton',
+                disabled:{!flagForTemplate},
+                hidden:disableTrue,
+                handler:TemplateBtnHandler
+            },
+            new Ext.Toolbar.Fill(), 
+            {
+                scale: 'medium',
+                iconCls: 'bmcPrevious',
+                tooltipType : 'title',
+                tooltip: '{!$Label.previousRecord}',
+                hidden:disableTrue,
+                handler:PreviuosBtnHandler,
+                style:{
+                    align:'right'
+                }
+            },{
+                scale: 'medium',
+                iconCls: 'bmcNext',
+                tooltipType : 'title',
+                tooltip: '{!$Label.nextRecord}',
+                hidden:disableTrue,
+                handler:NextBtnHandler,
+                style:{
+                    align:'left'
+                }
+            }
+            ] 
+        });
+        
+        incidentId = '{!Incident.Id}';
+        incidentState = '{!incident.state__c}';
+          
+        if(incidentId == null || incidentId == ''){
+        	//disableButtons(new Array('deleteId','copyId','clearId','resetId'));
+        	                
+            Ext.getCmp('deleteId').setDisabled(true);
+            Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+            Ext.getCmp('copyId').setDisabled(true);
+            Ext.getCmp('copyId').setIconClass('bmcCopyDisable');
+            Ext.getCmp('clearId').setDisabled(true);
+            Ext.getCmp('clearId').setIconClass('bmcClear');
+            Ext.getCmp('resetId').setDisabled(true);
+            Ext.getCmp('resetId').setIconClass('bmcResetDisable');
+            Ext.getCmp('viewId').setDisabled(true);
+            Ext.getCmp('viewId').setIconClass('bmcView'); 
+        }else if(incidentId != null && incidentState == 'false'){
+				//disableButtons(new Array('newId','saveId','deleteId','copyId','clearId','resetId'));
+            //Ext.getCmp('newId').setDisabled(true);
+            //Ext.getCmp('newId').setIconClass('bmcNewDisable');
+            
+            Ext.getCmp('saveId').setDisabled(true);
+            Ext.getCmp('saveId').setIconClass('bmcSaveDisable');
+            /*Ext.getCmp('deleteId').setDisabled(true);
+            Ext.getCmp('deleteId').setIconClass('bmcDeleteDisable');
+            Ext.getCmp('copyId').setDisabled(true);
+            Ext.getCmp('copyId').setIconClass('bmcCopyDisable');
+            Ext.getCmp('clearId').setDisabled(true);
+            Ext.getCmp('clearId').setIconClass('bmcClear');
+            Ext.getCmp('resetId').setDisabled(true);
+            Ext.getCmp('resetId').setIconClass('bmcResetDisable');*/
+            
+            Ext.getCmp('closeButtonId').setDisabled(true);
+            Ext.getCmp('quickCloseButtonId').setDisabled(true);
+            Ext.getCmp('reopenButtonId').setDisabled(false);  
+        }
+    });
+    /// *********** Code by Vilas *************//
+    var idset=window.parent.returnListOfId();
+    
+    function previousIncidentBtnHandler1(){
+        var idSetString='';
+        var i=0;
+        while(idset.length > i){
+            if(idSetString==''){
+                idSetString='\''+idset[i]+'\'';
+            }else{
+                idSetString=idSetString+','+'\''+idset[i]+'\'';
+            }
+            i++;
+        }
+        previousIncidentBtnHandler(idSetString);
+    } // ends function previousIncidentBtnHandler1()
+    
+    function nextIncidentBtnHandler1(){
+        var idSetString='';
+        var i=0;
+        while(idset.length > i){
+            if(idSetString==''){
+                idSetString='\''+idset[i]+'\'';
+            }else{
+                idSetString=idSetString+','+'\''+idset[i]+'\'';
+            }
+            i++;
+        }
+        nextIncidentBtnHandler(idSetString);
+    }
+    
+    function incidentForClient(){
+        var clientId = document.getElementById('{!$Component.incidentForm.Client__c_id_name}').value;
+        if(clientId != null && clientId != ''){
+            openPopup('SearchPage?popupId=Incident&filterObj=1&clientId='+ 
+                clientId+'&isLookup=true',setIncidentNext);           
+        }   
+    }
+        
+    function incidentForCatagory(){
+        var categoryName = document.getElementById('{!$Component.incidentForm.Category__c_id_name}').value; 
+        if(categoryName != null && categoryName != ''){
+            openPopup('SearchPage?popupId=Incident&filterObj=3&categoryId='+
+                categoryName+'&isLookup=true',setIncidentNext);                           
+        } 
+    }
+    function incidentForOrganization(){
+        var orgName = document.getElementById('{!$Component.incidentForm.pbarId.pbarItemIdCD.Client__c_id_organizationid__c}').value; 
+        if(orgName != null && orgName != ''){
+            openPopup('SearchPage?popupId=Incident&filterObj=2&orgnizationId='+
+                orgName+'&isLookup=true',setIncidentNext);                               
+        }else{
+			Ext.MessageBox.show({ msg: 'Selected Client does not have Organization...', buttons: Ext.MessageBox.OK});
+            //alert("Selected Client does not have Organization...");
+        }                       
+    }
+    
+    function FetchUrgency(){
+        FetchUrgencyDetails();
+        calculatePriority();
+    }
+    
+    
+    ///***************************************//
+    
+    function  AssignedToStaff(){
+        openPopup('SearchPage?popupId=Staff&isLookup=true',setAssignedToStaffNext);                               
+    }
+    
+    
+    function openAssignTOQueue() {
+        var queueId = showModalDialog("/apex/QueueListPage?sObjectType=Incident__c",
+            "queuelistpage","dialogWidth=600px; dialogHeight=600px; resizable=yes");           
+        if(queueId != null && queueId  != '' ){                  
+            assignIncidentTOQueue(queueId); //Calling Action Function
+        }
+    }
+    
+    function AssignedToMyself(){
+        AssignedToMyselfNext();
+    }
+    
+    function AssignedToClear(){
+        AssignedToClearNext();
+    }
+    function clientLookUp(){
+        showalldata(event,'{!$Component.pbarId.pbarItemIdCD}');
+        FetchUrgencyName();
+    }
+    function deleteIncident(){
+        deleteIncidentNext();
+    }
+    function copyIncident(){
+    
+    //  copyIncidentNext();
+    }
+        
+    ////***********************  code by Daya  *****************************//
+    function quickCloseIncident(){
+        quickCloseIncidentNext();        
+    }
+    
+    function reopenIncident(){
+        reopenIncidentNext();
+    }
+   function calculatePriority(){
+        calculatePriorityNext();
+   } 
+
+   var wid = '{!$CurrentPage.parameters.wid}';
+   
+   function closeWindow(){
+       if(isLookup){
+              window.parent.refreshDocs();                
+              window.parent.closePopup();
+           }else{
+                window.parent.refreshList();
+                window.parent.closeTab(wid);
+           }
+    }
+    
+    </script>
+    <apex:outputPanel id="titlePanel">
+        <script>
+        
+        	function updateTitle(){
+            	var newTitle = 'Incident # '+'{!incident.Name}';  
+                var newIncidentId = '{!incident.Id}'; 
+                getINCid(newIncidentId);
+                window.parent.changeTitle(wid,newTitle );
+                window.parent.refreshList();
+    
+	}
+    
+	    </script>
+    </apex:outputPanel>
+    <apex:outputpanel id="calculate" >
+      <apex:outputpanel id="calculatePriority" rendered="{!iscalculatePriority}">
+        <script>
+           calculatePriority();
+         </script>   
+      </apex:outputpanel>
+    </apex:outputpanel>
+    <apex:outputPanel id="panelId">
+        <script>
+        
+        	incidentId = '{!Incident.Id}';
+           	incidentClient = '{!Incident.clientId__c}';
+           	incidentCategory  = '{!Incident.categoryId__c}';  
+           	incidentCloseState = '{!closeState}';
+           	incidentReOpenState  = '{!reOpenState}'        
+        
+        </script>
+        </apex:outputPanel>
+    <apex:outputPanel id="errorId">
+        <script>
+        
+           errormsg = '{!messageString}';               
+                
+        
+        </script>
+        </apex:outputPanel>
+        
+    <apex:outputPanel id="varPanel">
+            <script>
+                function closeIncident(){
+                          openPopup('closeIncidentPage?incidentId={!incident.Id}&isLookup=true',
+                              setCloseIncidentNext);
+                    }
+                  function checkEnable(){
+                  Ext.getCmp('assignToMyselfButtonId').setDisabled({!assignMyselfState});
+                  Ext.getCmp('assignToStaffButtonId').setDisabled({!assignStaffState});
+                  Ext.getCmp('assignToSuggestedStaffButtonId').setDisabled({!assignSuggestedStaffState});
+                  Ext.getCmp('assignToSelectedProfileButtonId').setDisabled({!assignSelectedProfileState});
+                  Ext.getCmp('assignToMemberOfAdminButtonId').setDisabled({!assignMemberOfAdminState});                  
+                  Ext.getCmp('ClearAssignToButton').setDisabled({!clearAssignState});
+                  Ext.getCmp('quickCloseButtonId').setDisabled({!closeState});
+                  //Ext.getCmp('saveId').setDisabled({!closeState});
+                  Ext.getCmp('closeButtonId').setDisabled({!closeState});
+                  Ext.getCmp('reopenButtonId').setDisabled({!reOpenState});
+              }
+            </script>
+      </apex:outputPanel>
+    
+    <apex:outputPanel title="Style classes">
+        <!--  <apex:stylesheet value="{!$Resource.MerlinThemecss}"/> 
+        <apex:stylesheet value="{!$Resource.NIC1}"/>
+        <apex:stylesheet value="{!$Resource.ExtJS}/resources/css/ext-all.css"/>  -->
+
+        <!-- apex:stylesheet value="{!URLFOR($Resource.BMCStyle, 'BMCStyleSheet.css')}" / -->
+        <apex:stylesheet value="{!URLFOR($Resource.ExtJSStyle, 'ExtJSStyleSheet.css')}" />
+        
+    </apex:outputPanel>
+
+    <apex:outputPanel title="Hidden Fields">
+        <!-- <apex:outputText rendered="false" value="{!Incident.Status__r.name}" />
+        <apex:outputText rendered="false" value="{!Incident.Status__r.Stage__c}" />-->
+
+    </apex:outputPanel>
+<div id="capsule" class="CapsuleDiv1">
+    <apex:outputPanel id="formOuputPanel">
+        <!-- Page body in this panel -->
+        <apex:messages />
+        <apex:form id="incidentForm">
+        <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+            <apex:actionFunction name="calculatePriorityNext" action="{!calculatePriority}" 
+                reRender="Priority__c_id_name,Incident__c_id_duedatetime__c"/>
+            
+            <!--------------------Added By Rajan --------------------------------->    
+            <apex:actionFunction action="{!setSelectedClientNext}" name="setClientNext"  
+                rerender="Client__c_id_name,clientDetailsOutputPanel, Priority__c_id_name" >
+                <apex:param assignTo="{!savedID}" name="savedID" value=""/>
+            </apex:actionFunction> 
+            
+            <apex:actionFunction action="{!setSelectedUrgencytNext}" name="setUrgencyNext"  
+                rerender="Urgency__c_id_name,Priority__c_id_name,calculate" >
+                <apex:param assignTo="{!savedID}" name="savedID" value=""/>
+            </apex:actionFunction>  
+            
+             <apex:actionFunction action="{!setSelectedImpactNext}" name="setImpactNext"  
+                 rerender="Impact__c_id_name,Priority__c_id_name,calculate" >
+                <apex:param assignTo="{!savedID}" name="savedID" value=""/>
+            </apex:actionFunction> 
+            
+            <apex:actionFunction action="{!setSelectedAssignedToStaffNext}" name="setAssignedToStaffNext"  
+                rerender="staffPanel" >
+                <apex:param assignTo="{!savedID}" name="savedID" value=""/>
+            </apex:actionFunction> 
+            
+            <apex:actionFunction action="{!setSelectedAssignedToMyselfNext}" name="AssignedToMyselfNext"  
+                rerender="staffPanel" >
+                <apex:param assignTo="{!savedID}" name="savedID" value=""/>
+            </apex:actionFunction> 
+            
+            <apex:actionFunction action="{!setSelectedAssignedToClearfNext}" name="AssignedToClearNext"  
+                rerender="staffPanel" >
+                <apex:param assignTo="{!savedID}" name="savedID" value=""/>
+            </apex:actionFunction> 
+            
+            <apex:actionFunction action="{!setSelectedIncidentNext}" name="setIncidentNext" 
+                    rerender="titlePanel,panelId,numberPanel,tablePanel,incidentDetailsPanel, clientDetailsOutputPanel,CIDetailsPanel, BroadcastPanel,staffPanel" 
+                    oncomplete="buttonValidator();updateTitle();">
+                <apex:param assignTo="{!savedID}" name="savedID" value=""/>
+            </apex:actionFunction>
+                          
+             <apex:actionFunction action="{!setSelectedCloseIncidentNext}" name="setCloseIncidentNext" 
+                    rerender="panelId,numberPanel,tablePanel,incidentDetailsPanel, clientDetailsOutputPanel,CIDetailsPanel, BroadcastPanel,staffPanel,varPanel,validationComponent,errorId" 
+                    oncomplete="buttonValidator();checkEnable();showError();">
+                <apex:param assignTo="{!savedID}" name="savedID" value=""/>
+            </apex:actionFunction>
+            
+             
+            <!-------------------- --------------------------------->                    
+
+            
+            <apex:actionFunction action="{!setSelectedBroadcastNext}" name="setBroadcastNext" reRender="BroadcastPanel">  
+                <apex:param assignTo="{!savedId}" name="savedName" value=""/>
+            </apex:actionFunction>
+            
+            <apex:actionFunction action="{!descriptionQuery}" name="setDescriptionNext" reRender="incident_incidentDescription__c"> 
+                <apex:param assignTo="{!savedId}" name="savedName" value=""/>
+            </apex:actionFunction>
+            
+            <apex:actionFunction action="{!categoryQuery}" name="setCategoryNext" reRender="Category__c_id_name"> 
+                <apex:param assignTo="{!savedId}" name="savedName" value=""/>
+            </apex:actionFunction>
+            
+            <apex:actionFunction action="{!resolutionQuery}" name="setResolutionNext" reRender="incident_incidentResolution__c"> 
+               <apex:param assignTo="{!savedId}" name="savedName" value=""/>
+           </apex:actionFunction>  
+            
+            <apex:actionFunction action="{!setSelectedStatusNext}" name="setStatusNext" rerender="Status__c_id_name" >
+                <apex:param assignTo="{!savedID}" name="savedID" value=""/> 
+            </apex:actionFunction> 
+            
+            <apex:actionFunction action="{!setSelectedPriorityNext}" name="setPriorityNext" rerender="Priority__c_id_name" >
+                <apex:param assignTo="{!savedID}" name="savedID" value=""/>
+            </apex:actionFunction>
+            
+            <apex:actionFunction name="assignIncidentTOQueue" action="{!assignIncidentTOQueue}" rerender="dummy,varPanel,staffPanel" onComplete="checkEnable();"> 
+                     <apex:param assignTo="{!savedId}" name="savedName" value=""/>
+              </apex:actionFunction>
+
+             <apex:actionFunction action="{!nextBtnHandler}" name="nextIncidentBtnHandler" oncomplete="updateTitle();"
+                                    rerender="titlePanel, incidentPanelId, tablePanel, PanelbarOutputPanel, pbarItemIdCD, CIDetailsPanel, staffPanel" > 
+                    <apex:param assignTo="{!tempString}" name="idSetString" value=""/>          
+            </apex:actionFunction>
+            <apex:actionFunction action="{!previousBtnHandler}" name="previousIncidentBtnHandler" oncomplete="updateTitle();"
+                                    rerender="titlePanel, incidentPanelId, tablePanel, PanelbarOutputPanel, pbarItemIdCD, CIDetailsPanel, staffPanel" > 
+                                    <apex:param assignTo="{!tempString}" name="idSetString" value=""/>  
+            </apex:actionFunction>
+            <apex:actionFunction action="{!quickClose}" name="quickCloseIncidentNext" 
+                reRender="panelId,varPanel,Status__c_id_name,validationComponent,errorId" 
+                onComplete="buttonValidator();checkEnable();showError();"/> 
+            
+            <apex:actionFunction action="{!reopenIncident}" name="reopenIncidentNext" 
+                reRender="varPanel,Status__c_id_name,panelId" 
+                onComplete="checkEnable();buttonValidator();"/> 
+            <apex:actionFunction action="{!save}" name="saveIncident" 
+                reRender="varPanel,incidentPanelId,titlePanel, validationComponent,panelId,errorId" 
+                oncomplete="checkEnable();showError();updateTitle();buttonValidator();"/>
+            
+            <apex:actionFunction action="{!newIncident}" name="newIncident" immediate="true" />
+            <apex:actionFunction action="{!reset}" name="resetIncident" rerender="tablePanel,PanelbarOutputPanel"/>
+            <apex:actionFunction action="{!deleteIncident}" name="deleteIncidentNext" oncomplete="closeWindow();"/>
+            
+            <!--  apex:actionFunction action="{!copyIncident}" name="copyIncidentNext" rerender="numberPanel"/--> 
+            
+            
+            <apex:actionFunction action="{!clearIncident}" name="clearIncident"  
+                rerender="titlePanel,tablePanel,PanelbarOutputPanel" oncomplete="window.parent.changeTitle(wid,'Incident');"/> 
+            
+            <apex:actionFunction action="{!myselfBtnHandler}" name="myselfBtnHandler" rerender="firstName, profileName"/>
+            
+            <apex:actionFunction action="{!callCounterBtnHandler}" name="callCounterBtnHandler" rerender="counterPanel"/>
+            
+            <apex:actionFunction action="{!respondedBtnHandler}" name="respondedBtnHandler" rerender="dummypanel,respondedId"/>
+            
+            <apex:actionFunction name="FetchUrgencyDetails" action="{!FetchUrgency}" rerender="Urgency__c_id_name" >
+        </apex:actionFunction>
+            
+           <apex:actionFunction name="fetchIncidentTemplates" action="{!fetchIncidentTemplates}"  
+                                    rerender="titlePanel, incidentPanelId, tablePanel, PanelbarOutputPanel, pbarItemIdCD, CIDetailsPanel, staffPanelm, repeatId" > 
+                             <apex:param assignTo="{!templateId}" name="savedName" value=""/>
+            </apex:actionFunction> 
+            
+            <apex:outputPanel id="dummypanel"> </apex:outputPanel>
+            
+            
+            <!--  <apex:actionFunction action="{!deleteIncident}" name="deleteIncident" /> -->
+            
+            
+            <table class="clsMainTable" cellspacing="0" cellpadding="0">
+                <tr class="clsRowGreyBg">
+                    <td>
+                        <div id="btnToolbar"></div>
+                        
+                    </td>
+                    
+                </tr>
+                <tr>
+                    <td>
+                   
+                    <table class="clsTable" cellspacing="0" cellpadding="0">
+                        <tr>
+                            <td class="clsTopAlignment75">
+                                 <apex:outputPanel id="tablePanel">                                
+                            <table class="clsTable" cellspacing="0" cellpadding="0">
+                                <tr>
+                                     <td colspan="3"><div class="div15pxVspacing"/></td>
+
+                                </tr>
+                                <tr>
+                                    <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.clientName}" /><span
+                                        class="clsRequiredBlack">*</span></td>
+                                    
+                                     <!--  <apex:ActionRegion >-->
+                                        <td class="clsInputTextBoxTD">
+                                        <apex:inputText value="{!Incident.clientId__c}" styleClass="clsInputTextBox"  id="Client__c_id_name"  onblur="showalldata(event,FetchUrgency);"  >
+                                        <apex:inputhidden value="{!Incident.FKClient__c}" id="incidentclientfk"/>
+                                        </apex:inputText> 
+                                        </td>
+                                        <td class="lookupIconTD">
+                                        <div class="lookUpIconDiv">
+                                        <!--<apex:commandButton onclick="openLookup('Client',setClientNext);" styleClass="lookupIconOn"  oncomplete="FetchUrgency()" reRender="dummy"/>-->
+                                        <apex:commandButton onclick="openPopup('SearchPage?popupId=Client&isLookup=true',setClientNext);" styleClass="lookupIconOn"  oncomplete="FetchUrgency()" reRender="dummy"/>
+                                        </div>
+                                       </td>
+                                        
+                                    <!--  </apex:ActionRegion>-->
+                                        
+                                                
+                                   
+                                </tr>
+                                <tr>
+                                    <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.service}" /></td>
+                                    <td class="clsInputTextBoxTD"><apex:inputText id="serviceId" styleClass="clsInputTextBox" />
+                                    </td>
+                                    <td class="lookupIconTD">
+                                       <div class="lookUpIconDiv">
+                                        <apex:commandButton onclick="Ext.MessageBox.show({ msg: 'TBD', buttons: Ext.MessageBox.OK});" oncomplete="FetchUrgency()" reRender="dummy" styleClass="lookupIconOn" />
+                                       </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.category}" /><span
+                                        class="clsRequiredBlack">*</span></td>
+                                    <td class="clsInputTextBoxTD"><apex:inputField id="Category__c_id_name" value="{!Incident.categoryId__c}" styleClass="clsInputTextBox" onblur="showalldata(event,FetchUrgency);"/>
+                                    </td>
+                                    <td class="lookupIconTD">
+                                    <div class="lookUpIconDiv">
+                                        <apex:commandButton onclick="openPopup('CategorySearchPage?isLookup=true',openCategoryLookup);" oncomplete="FetchUrgency();" reRender="dummy" styleClass="lookupIconOn" />
+                                    </div>
+                                    <apex:inputhidden value="{!Incident.categoryId__c}" id="incidentcategoryfk" />
+                                     
+                                    </td>
+
+                                </tr>
+                                
+
+                            </table>
+                            <table class="clsTable" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td class="clsInputBoldLabelTableFirstRowTD"><apex:outputLabel value="{!$Label.description}" /></td>
+                                </tr>
+                                <tr>
+                                    <td class="clsInputTextAreaTD" >
+                                    <div class="clsRelativePosition">
+                                        <apex:inputTextarea id="incident_incidentDescription__c" value="{!Incident.incidentDescription__c}" styleClass="clsInputTextArea" />
+                                    </div>
+                                    </td>
+                                </tr>
+                                <tr >
+                                    <td class="clsInputBoldLabelTD"><apex:outputLabel value="{!$Label.resolution}" /></td>
+
+                                </tr>
+                                <tr>
+                                    <td class="clsInputTextAreaTD">
+                                    <div class="clsRelativePosition">
+                                        <apex:inputTextarea value="{!Incident.incidentResolution__c}" id="incident_incidentResolution__c" styleClass="clsInputTextArea" />
+                                    </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="div13pxVspacing"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="clsInputCheckBox"><apex:inputField value="{!Incident.firstCallResolution__c}"
+                                         id="incident_firstCallResolution__c" /> <label
+                                        for="radFCR" class="clsInputCheckBoxLabel">{!$Label.firstCallResolution}</label></td>
+                                </tr>
+                                <tr>
+                                    <td class="clsInputCheckBox" ><apex:inputField value="{!Incident.inactive__c}" id="incident_inactive__c"
+                                         /> <label for="idInactive" class="clsInputCheckBoxLabel">{!$Label.inactive}</label>
+                                    </td>
+                                </tr>
+                           </table>
+                           </apex:outputPanel>
+						</td>
+						<td><div class="div17pxHspacing"/></td>
+						
+						<td class="clsTopAlignment25">
+                        	<div class="panelCapsule">
+                            <apex:outputPanel id="PanelbarOutputPanel">
+
+                            <apex:panelBar headerClass="clsRowBlueBgPanel" switchType="ajax" id="pbarId">
+                                <apex:panelBarItem label="{!$Label.incidentDetails}" expanded="true" id="Incidentdetail" headerClass="panelHeader" contentClass="panelContent">
+                                 <apex:outputPanel id="incidentDetailsPanel">   
+                                    <table class="clsTable" cellspacing="0" cellpadding="0" >
+                                        <tr>
+                                            <td><div class="div15pxVspacing"/></td><td></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.status}" /></td>
+                                            <td class="clsPanelInputTextboxTD1" align="right">
+                                                <apex:inputField id="Status__c_id_name" value="{!Incident.statusId__c}" styleClass="clsPanelInputTextbox" onblur="showalldata(event);"/>
+                                            </td>
+                                            <td class="lookupIconPanelTD">
+                                                  <div class="lookUpIconDiv">
+                                                  <!--<apex:commandButton onclick="openLookup('Status',setStatusNext);" styleClass="lookupIconOn" reRender="dummy"/>-->
+                                                      <apex:commandButton onclick="openPopup('SearchPage?popupId=Status&isLookup=true',setStatusNext);" styleClass="lookupIconOn" reRender="dummy"/>
+                                                  </div>    
+                                              </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.impact}" /></td>
+                                            <td class="clsPanelInputTextboxTD1" align="right"><apex:inputField id="Impact__c_id_name" value="{!Incident.impactId__c}" styleClass="clsPanelInputTextbox" onblur="showalldata(event,calculatePriority); iscalcPriority=true;"/>
+                                            </td>
+                                            <td class="lookupIconPanelTD">
+                                                  <div class="lookUpIconDiv"><apex:commandButton onclick="openPopup('SearchPage?popupId=Impact&isLookup=true',openImpactLookup);"  styleClass="lookupIconOn" reRender="dummy,Priority__c_id_name,Incident__c_id_duedatetime__c"/></div>
+                                             </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.urgency}" /></td>
+                                            <td class="clsPanelInputTextboxTD1"><apex:inputField id="Urgency__c_id_name" value="{!Incident.urgencyId__c}" styleClass="clsPanelInputTextbox" onblur="showalldata(event,calculatePriority); iscalcPriority=true;"/>
+                                            </td>
+                                            <td class="lookupIconPanelTD" >
+                                                <div class="lookUpIconDiv">
+                                                    <!--<apex:commandButton onclick="openLookup('Urgency',setUrgencyNext);" oncomplete="calculatePriority();" styleClass="lookupIconOn" reRender="dummy,Priority__c_id_name" />-->
+                                                    <apex:commandButton onclick="openPopup('SearchPage?popupId=Urgency&isLookup=true',setUrgencyNext);"  styleClass="lookupIconOn" reRender="dummy,Priority__c_id_name,Incident__c_id_duedatetime__c" />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.priority}" /></td>
+                                            <td class="clsPanelInputTextboxTD1"><apex:inputText disabled="true" value="{!Incident.priorityId__c}"
+                                                styleClass="clsPanelInputTextboxReadOnly" id="Priority__c_id_name" onblur="showalldata(event);"/>
+                                            </td>
+                                            <td class="lookupIconPanelTD">
+                                                <div class="lookUpIconDiv">
+                                                    <!--<apex:commandButton onclick="openLookup('Priority',setPriorityNext);" styleClass="lookupIconOn" reRender="dummy" />-->
+                                                    <apex:commandButton onclick="openPopup('SearchPage?popupId=Priority&isLookup=true',setPriorityNext);" styleClass="lookupIconOn" reRender="dummy" />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"> <apex:outputLabel value="{!$Label.opened}" /></td>
+                                            <td class="clsPanelInputTextboxTD1"><apex:inputField id="openDateId" value="{!incident.openDateTime__c}" styleClass="clsPanelInputTextboxReadOnly" />
+												<script>document.getElementById('{!$Component.openDateId}').disabled = true; </script>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"> <apex:outputLabel value="{!$Label.responded}" /></td>
+                                            <td class="clsPanelInputTextboxTD1"><apex:inputField id="respondedId" value="{!Incident.respondedDateTime__c}" styleClass="clsPanelInputTextboxReadOnly" />
+                                            <script>document.getElementById('{!$Component.respondedId}').disabled = true; </script>
+                                            </td>
+                                            <td class="lookupIconPanelTD"> </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.dueDate}" /></td>
+                                            <td class="clsPanelInputTextboxTD1"><apex:inputField value="{!incident.dueDateTime__c}" id="Incident__c_id_duedatetime__c" styleClass="clsPanelInputTextbox" />
+                                            <script>document.getElementById('{!$Component.Incident__c_id_duedatetime__c}').disabled = true; </script>
+                                            </td>
+                                            <td class="lookupIconPanelTD" > </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.closeDate}" /> </td>
+                                            <td class="clsPanelInputTextboxTD1"><apex:inputField id="closeDateId" value="{!Incident.closeDateTime__c}" styleClass="clsPanelInputTextboxReadOnly" />
+                                            <script>document.getElementById('{!$Component.closeDateId}').disabled = true; </script>
+                                            </td>
+                                            <td class="lookupIconPanelTD" > </td>
+                                        </tr>
+                                        
+                                    </table>
+                                    </apex:outputPanel> 
+                                </apex:panelBarItem>
+                                <apex:panelBarItem label="{!$Label.clientDetails}" headerClass="panelHeader" id="pbarItemIdCD" contentClass="panelContent">
+                                    <apex:outputPanel id="clientDetailsOutputPanel">
+                                    <table class="clsTable" cellspacing="0" cellpadding="0">
+                                        <tr>
+                                            <td colspan="3" class="viewMoreDtlsBg"><apex:commandbutton styleClass="bmcUserInfoPopup" /> </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3">
+                                                <div class="div15pxVspacing"/>
+                                            </td>
+                                        </tr> 
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.firstName}" /></td>
+                                            <td class="clsPanelInputTextboxTD1"><apex:inputText disabled="true"
+                                                value="{!client.firstName__c}" id="Client__c_id_firstname__c" styleClass="clsPanelInputTextboxReadOnly" /></td>
+                                            <td class="lookupIconPanelTD" > </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.lastName}" /></td>
+                                            <td class="clsPanelInputTextboxTD1"><apex:inputText id="Client__c_id_lastname__c" disabled="true" value="{!client.lastName__c}" styleClass="clsPanelInputTextboxReadOnly" /></td>
+                                            <td class="lookupIconPanelTD" > </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.organization}" /></td>
+                                            <td class="clsPanelInputTextboxTD1" ><apex:inputText id="Client__c_id_organizationid__c" disabled="true" value="{!client.FKOrganization__r.Name}" styleClass="clsPanelInputTextboxReadOnly" /></td>
+                                            <td class="lookupIconPanelTD" > </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.phone}" /></td>
+                                            <td class="clsPanelInputTextboxTD1"><apex:inputText id="Client__c_id_phone__c" disabled="true" value="{!client.phone__c}" styleClass="clsPanelInputTextboxReadOnly" /></td>
+                                            <td class="lookupIconPanelTD" > </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.extension}" /></td>
+                                            <td class="clsPanelInputTextboxTD1"><apex:inputText id="Client__c_id_ext__c" disabled="true" value="{!client.ext__c}" styleClass="clsPanelInputTextboxReadOnly" /></td>
+                                            <td class="lookupIconPanelTD" > </td>
+                                        </tr>
+                                    </table>
+                                    </apex:outputPanel>
+                                </apex:panelBarItem>
+                                <apex:panelBarItem label="CI Details" headerClass="panelHeader" contentClass="panelContent">
+                                    <apex:outputPanel id="CIDetailsPanel">
+                                            <table class="clsTable" cellpadding="0" cellspacing="0">
+                                                            <tr>
+                                                                <td colspan="3" style="height:30px" class="viewMoreDtlsBg"> <apex:commandbutton styleClass="bmcExplorer" /></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td><div colspan="3" class="div10pxVspacing"/></td>
+                                                            </tr> 
+                                                            <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.ciType}" /></td>
+                                                                <td class="clsPanelInputTextboxTD1"><apex:inputText disabled="true"  styleClass="clsPanelInputTextbox" /></td> 
+                                                                <td class="lookupIconPanelTD" > </td>
+                                                          </tr>
+                                                           <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.asset}" /></td>
+                                                                <td class="clsPanelInputTextboxTD1"><apex:inputText disabled="true"  styleClass="clsPanelInputTextboxReadOnly" /></td>
+                                                                 <td class="lookupIconPanelTD" > </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.serial}" /></td>
+                                                                <td class="clsPanelInputTextboxTD1"><apex:inputText disabled="true"  styleClass="clsPanelInputTextboxReadOnly" /></td>
+                                                                 <td class="lookupIconPanelTD" > </td>
+                                                            </tr>
+                                                        </table>
+                                    </apex:outputPanel> 
+                                   
+                                </apex:panelBarItem>
+                                <apex:panelBarItem label="{!$Label.broadcast1}" headerClass="panelHeader" contentClass="panelContent">
+                                <apex:outputPanel id="BroadcastPanel"> 
+                                    <table class="clsTable" border="0" cellpadding="0" cellspacing="0">
+                                        
+                                        <tr>
+                                            <td colspan="3"><div class="div10pxVspacing"/></td>
+                                        </tr> 
+                                        <tr>
+                                             <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.broadcastId}" /></td>
+                                             <td class="clsPanelInputTextboxTD1"><apex:inputField id="Broadcasts__c_id_name" value="{!Incident.broadcastId__c}" styleClass="clsPanelInputTextbox" onblur="showalldata(event,null);"/>
+                                             </td>
+                                             <td class="lookupIconPanelTD">
+                                                  <div class="lookUpIconDiv"><apex:commandButton onclick="openPopup('SearchPage?popupId=Broadcast&isLookup=true',setBroadcastNext);"  styleClass="lookupIconOn" reRender="dummy"/></div>
+                                             </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.broadcast1}" /></td>
+                                            <td class="clsPanelInputTextboxTD1"><apex:inputTextArea id="Broadcasts__c_id_note__c" disabled="true" value="{!broadcastNote}" styleClass="clsPanelInputTextAreaReadOnly" /></td>
+                                            <td class="lookupIconPanelTD" > </td>
+                                        </tr>
+                                    </table>
+                                    </apex:outputPanel>
+                                </apex:panelBarItem>
+                                <apex:panelBarItem label="{!$Label.staffAssignment}" headerClass="panelHeader" contentClass="panelContent">
+                                    <apex:outputPanel id="staffPanel">                
+                                    <table class="clsTable" cellpadding="0" cellspacing="0">
+                                                                <tr>
+                                                                    <td colspan="3" class="viewMoreDtlsBg"><apex:commandbutton styleClass="bmcUserInfoPopup" /></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td colspan="3"><div class="div10pxVspacing"/></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.firstName}" /></td>
+                                                                    <td class="clsPanelInputTextboxTD1"><apex:inputText disabled="true" value="{!user.firstName}" styleClass="clsPanelInputTextboxReadOnly" /></td>
+                                                                    <td class="lookupIconPanelTD" > </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.lastName}" /></td>
+                                                                    <td class="clsPanelInputTextboxTD1"><apex:inputText disabled="true" value="{!user.lastName}" styleClass="clsPanelInputTextboxReadOnly" /></td>
+                                                                    <td class="lookupIconPanelTD" > </td>
+                                                                </tr>
+                                                                <tr> 
+                                                                    <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.profile}" /></td>
+                                                                    <td class="clsPanelInputTextboxTD1"><apex:inputText id="dummyProfile" disabled="true" value="{!user.profile.Name}" styleClass="clsPanelInputTextboxReadOnly"/></td> 
+                                                                    <td class="lookupIconPanelTD" > </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.phone}" /></td>
+                                                                    <td class="clsPanelInputTextboxTD1"><apex:inputText id="assignedTo" disabled="true"  value="{!user.phone}" styleClass="clsPanelInputTextboxReadOnly"/></td>  
+                                                                    <td class="lookupIconPanelTD" > </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td class="clsPanelInputLabelTD"><apex:outputLabel value="{!$Label.extension}" /></td>
+                                                                    <td class="clsPanelInputTextboxTD1"><apex:inputText id="supplierName" disabled="true" value="{!user.extension}"  styleClass="clsPanelInputTextboxReadOnly"/></td>  
+                                                                    <td class="lookupIconPanelTD" align="left"> </td>
+                                                                </tr>
+																<tr>
+                                                                    <td class="clsPanelInputLabelTD"><apex:outputLabel value="Queue" /></td>
+                                                                    <td class="clsPanelInputTextboxTD1"><apex:inputText id="supplierNameOne" disabled="true" value="{!queue}"  styleClass="clsPanelInputTextboxReadOnly"/></td>  
+                                                                    <td class="lookupIconPanelTD" align="left"> </td>
+                                                                </tr>
+                                                            </table>
+                                   </apex:outputPanel>
+                                </apex:panelBarItem>
+                            </apex:panelBar>
+                             </apex:outputPanel>
+                            </div>
+                            </td>
+                        </tr>
+                    </table>
+                    </td>
+                </tr>
+                <tr class="clsRowGreyBg" valign="middle">
+                    <td valign="top" style="padding-top: 10px;">
+                           <c:detailSectionComponent objectName="Incident__c" fKeyValue="{!incidentId}"/>
+                    </td>
+                </tr>
+            </table>
+            
+
+            
+            <apex:outputPanel id="dummy"></apex:outputPanel>
+            <c:tabOutComponent ></c:tabOutComponent>
+        </apex:form>
+    </apex:outputPanel>
+    </div>
+</apex:page>
+                            	

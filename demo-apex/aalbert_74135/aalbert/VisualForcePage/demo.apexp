@@ -1,0 +1,344 @@
+<apex:page controller="DemoController" showHeader="false">
+<c:CommonIncludes ></c:CommonIncludes>        
+    <style>
+        .BRInfoTitle{
+            height: 25px; 
+            background: url({!$Resource.BMCStyle}/images/blue_bg.gif) repeat;
+            color: #FFFFFF;
+            font: bold 1em Tahoma, MS Sans Serif;
+            padding-left: 10px;
+            margin:0px;
+            border: solid 1px grey;
+            border-bottom:none;
+        }
+        .clsMainTableBR{
+            background-color: #EFF3F5;
+            height:100%;
+            width: 100%;
+            border: solid 1px grey;
+            border-top:none;
+            align:center;
+        }
+        .clsBrTable{
+            border: solid 1px grey;
+            border-top: none;
+            height:auto;
+            width:100%;
+            border: solid 1px grey;
+            background-color: white;
+        }
+        #stageBar tr td
+        {
+            background:#EFF3F5;
+        }
+    #stageBar tr td.l
+    {
+        background:url('/resource/JIcons/status_curveL.gif');
+        width:7px;height:25px;
+    }
+    #stageBar tr td.r
+    {
+        background:url('/resource/JIcons/status_curveR.gif');
+        width:7px;height:25px;
+    }
+    #stageBar tr td img
+    {
+        vertical-align:middle;
+    }
+    #progressBar{
+        float: right;
+        clear: 
+    }
+    
+    .topAlignTD{
+        vertical-align: top;
+    }
+    .clsButtonStyle {
+        height:20px; 
+        padding-right:5px;
+    }
+    
+    .informationBar {
+        background-color:#dee0e0; 
+        border-style:solid; 
+        border-width:1px;
+        padding-left:10px;
+        margin-left:15px;
+        margin-right:15px;
+        margin-bottom:15px;
+        margin-top:15px;
+        height:25px;
+    }
+    .QVStage
+    {
+         background:url('/resource/JIcons/hr_grey.gif') repeat-x;
+         background-position:center;
+         vertical-align:middle;
+     }
+     .statusTxt, .currentStatusTxt
+     {
+         color:#004376;
+         font-family: Tahoma, MS Sans Serif;
+         font-size: 8pt;
+         font-weight: bold;
+     }
+
+     .currentStatusTxt
+     {
+          color:#0069a5;
+     }
+     .clsBrProgressBar{
+           height: 50px;
+           text-align: center;
+           margin:0px;
+           border: 0px;.
+           background:#EFF3F5;
+     }
+
+     img
+     {
+            display:block;
+            margin: 0px 0px;
+            hspace: 0px;
+            vspace: 0px;
+     }
+/*Added By Avadhut K.*/
+.qvTd {
+    background-color:#FFFFFF; 
+    padding-left:0px;
+    margin-left:15px;
+    margin-right:15px;
+    margin-bottom:15px;
+    margin-top:15px;
+}
+
+.x-grid3-hd-row td {
+    font-family: Tahoma,Verdana,Arial,Geneva, Helvetica, sans-serif, MS Sans Serif;
+    font-weight: bold;
+    font-size: 13pt;
+    color: #000000;
+    border-bottom :solid 1px  #013B66;
+    border-right:solid 1px #013B66;
+    border-bottom :solid 1px #7CC0EA;
+    border-right:solid 1px #7CC0EA;     
+}
+.x-grid3-hd-inner {
+    background-color: #2E7DB3;
+    font-family: Tahoma,Verdana,Arial,Geneva, Helvetica, sans-serif, MS Sans Serif;
+    font-weight: bold;
+    font-size: 8pt;
+    color: #FFFFFF;
+    border-bottom: solid 1px  #013B66;
+    border-right: solid 1px #013B66;
+    border-bottom: solid 1px #7CC0EA;
+    border-right: solid 1px #7CC0EA;     
+}
+td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-asc .x-grid3-hd-inner, td.x-grid3-hd-menu-open .x-grid3-hd-inner {
+    background-color: #2E7DB3;
+    background-image: none;        
+}
+
+.x-grid3-row-selected {
+    background-color: #E0EE70 !important;
+    background-image: none;
+    border-color: #a3bae9;
+}
+
+.x-grid3-cell-text{
+    white-space: normal;
+}
+.x-grid3-cell{  
+    white-space: normal;
+    width: 100%;
+}
+/*End addition by Avadhut K.*/
+</style>
+<div id="capsule" class="CapsuleDiv1" style="height:100%">
+<apex:outputPanel id="genSection">
+<apex:form id="QVInforForm">                
+<script>
+var resultSet;
+var cols = new Array(3);     
+cols[0]='ID'; 
+cols[1]='Name';
+cols[2]='Description';
+var sm = new Ext.grid.CheckboxSelectionModel({locked: false});
+var arrCols = new Array(cols.length+1);
+arrCols[0] = sm;
+arrCols[1] = {id:cols[0], header: cols[0], width: 10, dataIndex: cols[0], hideable: false, hidden: true};
+arrCols[2] = {id:cols[1], header: cols[1], sortable: true, dataIndex: cols[1]};
+arrCols[3] = {id:cols[2], header: cols[2], sortable: true, dataIndex: cols[2]};
+resultSet = new Array({!lstProfiles.size});
+{!lstProfilesData}
+
+var grid;
+function renderGrid(){
+    if(grid!=null) { grid.store.loadData(resultSet); return; }
+    Ext.QuickTips.init();
+    var xg = Ext.grid;
+    // shared reader
+    var reader = new Ext.data.ArrayReader({}, cols);
+    var store = new Ext.data.Store({
+        reader: reader, data: resultSet
+    });
+    grid = new xg.GridPanel({
+        store: store,
+        cm: new xg.ColumnModel({
+            defaults: {sortable: true},
+            columns:arrCols
+        }),
+        sm: sm, viewConfig: {forceFit: true},       
+        autoWidth: true,
+        height:300,
+        listeners: {
+             afterrender: function() {
+                 setSelectedRows();
+             }, delay: 1000
+        }
+    });    
+    grid.render('grid');
+}
+function extInit(){
+    renderGrid();
+}
+function saveProfiles(){
+    var conditionString=''; 
+    var m = grid.getSelectionModel().getSelections();   
+    for(j=0; j < m.length; j++){
+       conditionString = conditionString + m[j].get(cols[0])+",";
+    }
+    document.getElementById("{!$Component.selectedProfiles}").value=conditionString;        
+}
+function setSelectedRows(){
+    var selectedRecs=","+document.getElementById("{!$Component.selectedProfiles}").value;        
+    var str = grid.getStore();
+    for (var i = 0; i < str.getCount(); i++) {        
+        if(selectedRecs.indexOf(","+str.getAt(i).get(cols[0])+",")!=-1){
+            grid.getSelectionModel().selectRow(i, true);
+        }   
+    }
+}
+function backPage(){saveProfiles(); /*backPg();*/ }
+function nextPage(){saveProfiles(); /*nextPg();*/ }
+</script>
+<apex:messages />
+                  <table cellpadding="0" cellspacing="0" class="clsMainTableBR">
+                  <tBody>
+                    <tr align="center" >
+                       <td align="center" style="background-color:#eff3f5;" colspan="3">
+                        <!-- Progress bar image -->
+                             <table class="clsBrProgressBar" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td height="15px" colspan="17"></td>
+                                </tr>
+                                <tr>
+                                    <td style="width:25%"></td>
+                                    <td style="width:45px"></td>
+                                    <td class="QVStage" style="align=right; width=23px">
+                                        <img src="/resource/JIcons/Stage_Current.gif"/>
+                                    </td>
+                                    <td class="QVStage" style="width:45px"></td>
+                                    <td class="QVStage" style="width:45px"></td>
+                                    <td class="QVStage" style="align=right; width=23px">
+                                        <img src="/resource/JIcons/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="QVStage" style="width:45px"></td>
+                                    <td class="QVStage" style="width:45px"></td>
+                                    <td class="QVStage" style="align=right; width=23px">
+                                        <img src="/resource/JIcons/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="QVStage" style="width:45px"></td>
+                                    <td class="QVStage" style="width:45px"></td>
+                                    <td class="QVStage" style="align=right; width=23px">
+                                        <img src="/resource/JIcons/Stage_Pending.gif"/>
+                                    </td>
+                                    <td class="QVStage" style="width:45px"></td>
+                                    <td class="QVStage" style="width:45px"></td>
+                                    <td class="QVStage" style="align=right; width=23px">
+                                        <img src="/resource/JIcons/Stage_Pending.gif"/>
+                                    </td>
+                                    <td style="width:45px"></td>
+                                    <td style="width:25%"></td>
+                                </tr>
+                                <tr>
+                                    <td height="10px" colspan="17"></td>
+                                </tr>
+                                <tr>
+                                    <td style="width:25%"></td>
+                                    <td colspan="3" class="currentStatusTxt" align="center">General</td>
+                                    <td colspan="3" class="statusTxt" align="center">Query</td>
+                                    <td colspan="3" class="statusTxt" align="center" >Table View</td>
+                                    <td colspan="3" class="statusTxt" align="center">Chart View</td>
+                                    <td colspan="3" class="statusTxt" align="center">Calendar View</td>
+                                    <td style="width:25%"></td>
+                                </tr>
+                                
+                            </table>
+                                                                                                               
+                        </td>
+                    </tr>
+                     
+                   <tr style="vertical-align: bottom;">
+                      <td width="15px"></td>
+                      <td class="topAlignTD">   
+            <table class="clsBrTable" cellpadding="0" cellspacing="0">
+              <tbody>   
+                <tr>
+                  <td colspan="3">
+                   <div class="BRInfoTitle">
+                       <apex:outputLabel value="{!$Label.qvEditGeneral}" />                                                     
+                  </div>      
+                  </td>
+                </tr>
+                
+                <tr>
+                  <td colspan="3">
+                        <div class="informationBar">
+                              <apex:outputLabel value="{!$Label.qvGenInfoMsg}" style="valign: middle;"/>       
+                        </div>
+                    </td>
+                </tr>
+                
+                <tr>
+                  <td width="25%"><div class="qvTd">{!$Label.qvName}</div></td><td colspan="2"><div class="qvTd">
+                  <apex:inputText id="qvName" value="{!qvQry.name__c}" styleClass="clsInputTextBox"/></div></td>
+                </tr>
+                <tr>
+                  <td colspan="2"><div class="qvTd">{!$Label.qvDesc} <BR/> 
+                  <apex:inputTextarea id="qvDesc" value="{!qvQry.description__c}" styleClass="clsInputTextArea"/></div></td><td></td>
+                </tr>
+                <tr>
+                  <td colspan="3"><div class="qvTd">{!$Label.qvShareWith}: <BR/> <div id="grid" /></div></td>
+                </tr>
+              </tbody>  
+            </table>
+                      </td>
+                      <td width="15px"></td>
+                 </tr>
+        <tr style="background-color:#dee0e0;height:35px; width:100%;" >
+          <td colspan="4" align="right">
+            <table >
+                <tr>
+                    <td>
+                        <apex:commandButton value="Previous" styleclass="clsButtonStyle" onClick="backPage();" action="{!stepIntro}"/>
+                        <apex:commandButton value="Next" styleclass="clsButtonStyle" onClick="nextPage();" action="{!stepQuery}"/>
+                    </td>
+                </tr>
+            </table>
+           </td>
+        </tr>
+
+                 <tr>
+                        <td height="15px" colspan="3"></td>
+                 </tr>
+               </tBody>
+              </table>  
+           <apex:inputHidden id="selectedProfiles" value="{!qvQryAcc.profiles__c}" />
+<apex:actionFunction Name="backPg" action="{!stepIntro}"/>
+<apex:actionFunction Name="nextPg" action="{!stepQuery}"/>
+</apex:form>           
+</apex:outputPanel>
+</div>  
+<script>Ext.onReady(extInit);</script>
+</apex:page>
+                            	

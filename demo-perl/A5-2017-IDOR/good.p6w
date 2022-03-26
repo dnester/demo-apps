@@ -1,0 +1,30 @@
+#!/usr/bin/env smackup
+use v6;
+
+sub app(%env) {
+    # Parse the parameters (naïvely)
+    my $qs       = %env<QUERY_STRING>;
+    my %params   = %env<p6w.input>.reduce({ $^a ~ $^b }).decode('UTF-8')\
+                                  .split('&')».split('=').flat; # naïve
+    my %session := %env<p6w.session>;
+
+    # Get the name and make sure it's valid
+    my $name = %params<name>;
+    return 400, [ Content-type => 'text/plain' ], [ 'You give love a bad name.' ]
+        if $name ~~ /^ <[ a..z A..Z ]>+ $/
+
+    # Check that the user is authorized to use this site
+    return 403, [ Content-type => 'text/plain' ], [ 'Neener! Neener! Neener!' ]
+        unless %session<authorized-user>;
+
+    # Check that this user can see this secret data
+    return 403, [ Content-type => 'text/plain' ], [ 'Begone, usurper!' ]
+        unless %session<user-name> eq $name;
+
+    # Lookup secret data for the named user
+    my $data = %secret-data-for{ $name };
+
+    200, [ Content-type => 'text/plain' ], [ $data ];
+}
+
+# vim: ft=perl6 ts=4 sw=4

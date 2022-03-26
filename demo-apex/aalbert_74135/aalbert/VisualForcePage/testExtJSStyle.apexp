@@ -1,0 +1,25 @@
+<apex:page sidebar="false">
+<c:CommonIncludes />
+<link rel="Stylesheet" type="text/css" href="{!$Resource.TestStyle}/style.css" />
+
+<script>
+  Ext.onReady(function(){
+  
+  var tabs = new Ext.TabPanel({
+        renderTo: 'mydiv',
+        width:250,
+        width:350,
+        plain:true,
+        baseCls:'myCSSClass',
+        activeTab: 0,
+        items:[
+            {id:'tab1', title: 'Search Field', html:'tab One'},
+            {id:'tab2', title: 'Display Field', html:'tab TWO'}
+        ]
+    });
+  })
+</script>
+<H2>TEST Styles</H2>
+<div id="mydiv"></div>
+</apex:page>
+                            	

@@ -1,0 +1,839 @@
+<apex:page showHeader="false" controller="TemplateController">
+<c:CommonIncludes />
+<!-- specific to itemselector -->
+<apex:includeScript value="{!$Resource.SDEFCommonJS}/itemselector.js" id="itemselector"/>    
+<style>
+  .x-grid3-hd-row td {
+    font-family: Tahoma,Verdana,Arial,Geneva, Helvetica, sans-serif, MS Sans Serif;
+    font-weight: bold;
+    font-size: 13pt;
+    color: #000000;
+    border-bottom :solid 1px  #013B66;
+    border-right:solid 1px #013B66;
+    border-bottom :solid 1px #7CC0EA;
+    border-right:solid 1px #7CC0EA;     
+}
+    .x-grid3-hd-inner {
+      
+        background:transparent url(/resource/BMCStyle/icons/blue_bg.gif) repeat scroll 0 0;
+        font-family: Tahoma,Verdana,Arial,Geneva, Helvetica, sans-serif, MS Sans Serif;
+        font-weight: bold;
+        font-size: 11px;
+        color: #FFFFFF;
+       /* border-bottom: solid 1px  #013B66;
+        border-right: solid 1px #013B66;
+        border-bottom: solid 1px #7CC0EA;
+        border-left: solid 1px #7CC0EA; */   
+    }
+        td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-asc .x-grid3-hd-inner, td.x-grid3-hd-menu-open .x-grid3-hd-inner {
+            background-color: #2E7DB3;
+            background-image: none;        
+        }
+
+    .x-grid3-row-selected {
+        background-color: #E0EE70 !important;
+        background-image: none;
+        border-color: #a3bae9;
+    }
+
+    .x-grid3-cell-text{
+        white-space: normal;
+    }
+    .x-grid3-cell{  
+        white-space: normal;
+        width: 100%;
+    }
+
+   .x-grid3-row{
+       background-color:#ffffff;
+       border:0px;
+   }
+   .x-grid3-row-alt{
+       background-color:#dee0e0;
+       border:0px;
+   }
+   
+        .bgBtnGrey {
+            -moz-background-clip:border;
+            -moz-background-inline-policy:continuous;
+            -moz-background-origin:padding;
+            background:transparent  url({!$Resource.SDEFimages}/grey_bg.gif) repeat scroll 0 0;
+            border-top:1px solid #cccccc;
+            border-left:1px solid #cccccc;
+            border-right:1px solid #666666;
+            border-bottom:1px solid #666666;
+            margin-top:0px;
+            margin-left:0px;
+            color:black;
+            font:tahoma,arial,verdana,sans-serif;
+            font-size:11px;
+            font-weight:normal;
+            width:auto;
+            height:auto;
+            
+        }
+        .btnDisabled .bgBtnGrey {
+           height:80px;
+        
+        }
+        .clsTemplateSelectList1 {
+            width: 205px;
+            margin-top: 5px;
+            color: #000000;
+            height: 19px;
+            vertical-align: top;
+            border-top: solid 1px grey;
+            border-left: solid 1px grey;
+            border-right: solid 1px grey;
+            border-bottom: solid 1px grey;
+            font-family: Tahoma, MS Sans Serif;
+            font-size: 8pt;
+        }
+        .clsTemplateSelectList {
+            font-family: Tahoma, MS Sans Serif;
+            font-size: 8pt;
+            width: 205px;
+        
+        }
+     
+</style>
+<apex:outputPanel id="dataPanel">
+    <script>
+        var listData = [{!listData}];     
+    </script>
+  
+</apex:outputPanel>
+<apex:outputPanel id="lookUpPanel">
+    <script>
+        function openLookup(){
+            var popUpString = '{!popUpId}';
+            openPopup('SearchPage?popupId='+popUpString+'&isLookup=true', setReferenceToText);      
+        }
+    </script>  
+</apex:outputPanel>
+<apex:outputPanel id="titlePanel">
+    <script>
+         
+        function updateTitle(){
+            var newTitle = 'Template # '+'{!template.Name}';  
+            var newTemplateId = '{!template.Id}';             
+            handleSave(newTemplateId,wid,newTitle);            
+        }
+    </script>  
+</apex:outputPanel>
+<apex:outputPanel id="reRenderTemplateFor">
+    <script>
+        function setTemplateHierarchy(){            
+            var templateFor='{!template.templateFor__c}';
+            setTemplateHierarchyNext(templateFor);            
+        }
+    </script>  
+</apex:outputPanel>
+
+     
+<script>
+    var templateName;               
+    var templateId;
+    var parentTemplateId;
+    var errormsg;
+    var isLookup = "{!$CurrentPage.parameters.islookup}";
+            
+    function callNewPage(){
+        window.parent.addTab("TemplatePage","Template","Template");
+     }
+    function callCopyPage(){
+        window.parent.addTab("TemplatePage?copyId={!template.Id}","Template","Template");
+     }
+     
+    function setTemplateHierarchyNext(templateFor){     
+        openHierarchyPopup('TemplateHierarchy?templateFor='+templateFor,'',265,375);          
+    }
+     
+    var wid = '{!$CurrentPage.parameters.wid}';   
+    function closeWindow(){
+         window.parent.refreshList();
+         window.parent.closeTab(wid);
+    }
+
+    Ext.reg('itemselector', Ext.ux.form.ItemSelector);
+    
+    //backwards compat
+    Ext.ux.ItemSelector = Ext.ux.form.ItemSelector;
+        var ds;
+        var ds1;    
+        var selectedValues ='';
+        Ext.onReady(function(){
+        
+            Ext.QuickTips.init();
+        
+            // This function renders a block of buttons
+            var NewBtnHandler = function(button,event) { callNewPage(); };
+            var SaveBtnHandler = function(button,event) {  
+                var record = Ext.getCmp('selectedListId').store;
+                var rowCount=record.data.length;
+                var i=0;
+                selectedValues='';
+                while(rowCount>i){
+                    var rec = record.getAt(i); 
+                    // var rec1 = comboStore.getById(rec.get('type'));
+                    selectedValues = selectedValues +rec.get('text')+ ',';
+                    i++;
+                }
+                save(); 
+            };
+            var CopyBtnHandler = function(button,event) {  callCopyPage();};
+            var DeleteBtnHandler = function(button,event) {  
+                                                            Ext.MessageBox.confirm('Delete', 'Are you sure ?', function(btn){
+                                                            if(btn === 'yes'){
+                                                                 deleteTemplate();
+                                                           }});
+                                                             };
+            var FindBtnHandler = function(button,event) {  /*searchTemplate();*/ };
+            var ResetBtnHandler = function(button,event) {  resetTemplate(); };
+            var TemplateHierarchyBtnHandler = function(button,event) { setTemplateHierarchy(); };
+            var ClearBtnHandler = function(button,event) {  clearTemplate(); };
+            var NextBtnHandler = function (button,event) { nextTemplateBtnHandler1();};
+            var PreviuosBtnHandler = function (button,event) {previousTemplateBtnHandler1(); };
+            var SamplePanel = Ext.extend(Ext.Panel, {
+                renderTo: 'btnToolbar',
+                defaults: {bodyStyle:'padding:0px;margin:0px;zoom:0px;'}
+            });
+            new SamplePanel({
+                title: '',
+                bodyStyle:'padding:0px;margin:0px;zoom:0px;',
+                tbar: [{
+                    scale: 'medium',
+                    tooltipType:'title',
+                    tooltip: '{!$Label.new}',
+                    iconCls: 'bmcNew',
+                    listeners: {
+                        mouseover: function(){
+                            this.setIconClass('bmcNewOn');    
+                        },
+                        mouseout: function(){
+                            this.setIconClass('bmcNew');          
+                        }
+                    },            
+                    handler:NewBtnHandler
+                },{
+                    scale: 'medium',
+                    tooltipType:'title',
+                    tooltip: '{!$Label.save}',
+                    iconCls: 'bmcSave', 
+                    listeners: {
+                        mouseover: function(){
+                            this.setIconClass('bmcSaveOn');    
+                        },
+                        mouseout: function(){
+                            this.setIconClass('bmcSave');          
+                        }
+                    },              
+                    handler:SaveBtnHandler
+                },' ',{
+                    scale: 'medium',
+                    tooltip:'Copy',
+                    tooltipType:'title',
+                    iconCls: 'bmcCopy',
+                    tooltip: '{!$Label.copy}',
+                    id:'copyId', 
+                    listeners: {
+                        mouseover: function(){
+                            this.setIconClass('bmcCopyOn');    
+                        },
+                        mouseout: function(){
+                            this.setIconClass('bmcCopy');          
+                        }
+                    },               
+                    handler:CopyBtnHandler
+                },' ',{
+                    scale: 'medium',
+                    tooltipType:'title',
+                    tooltip:'Delete',
+                    iconCls: 'bmcDelete',
+                    tooltip: '{!$Label.delete}',
+                    listeners: {
+                        mouseover: function(){
+                            this.setIconClass('bmcDeleteOn');    
+                        },
+                        mouseout: function(){
+                            this.setIconClass('bmcDelete');          
+                        }
+                    },
+                    id:'deleteId',
+                    handler:DeleteBtnHandler
+                },' ',{
+                    scale: 'medium',
+                    tooltipType:'title',
+                    tooltip:'Clear',
+                    iconCls: 'bmcClear',
+                    tooltip: '{!$Label.clear}',
+                    id:'clearId',
+                    listeners: {
+                        mouseover: function(){
+                            this.setIconClass('bmcClearOn');    
+                        },
+                        mouseout: function(){
+                            this.setIconClass('bmcClear');          
+                        }
+                    },  
+                    handler:ClearBtnHandler
+                },' ',{
+                    scale: 'medium',
+                    tooltipType:'title',
+                    iconCls: 'bmcReset',
+                    tooltip: '{!$Label.Reset}',
+                    id:'resetId',
+                    listeners: {
+                        mouseover: function(){
+                            this.setIconClass('bmcResetOn');    
+                        },
+                        mouseout: function(){
+                            this.setIconClass('bmcReset');          
+                    }
+                },  
+                handler:ResetBtnHandler
+                },' ',{
+                    scale: 'medium',
+                    tooltipType:'title',
+                    iconCls: 'bmcTemplateOrder',
+                    tooltip: '{!$Label.templateDisplayOrder}',
+                    id:'templateHierarchyId',
+                    listeners: {
+                        mouseover: function(){
+                            this.setIconClass('bmcTemplateOrderOn');    
+                        },
+                        mouseout: function(){
+                            this.setIconClass('bmcTemplateOrder');   
+                        }       
+                    },                  
+                    handler:TemplateHierarchyBtnHandler
+                },
+                new Ext.Toolbar.Fill(),
+                {
+                    scale: 'medium',
+                    tooltipType:'title',
+                    iconCls: 'bmcPrevious',
+                    tooltip: '{!$Label.previousRecord}',
+                    disabled: 'true',
+                    handler:PreviuosBtnHandler,
+                    style:{
+                        align:'right'
+                    }
+                },' ',{
+                    scale: 'medium',
+                    iconCls: 'bmcNext',
+                    tooltipType:'title',
+                    tooltip: '{!$Label.nextRecord}',
+                    disabled: 'true',
+                    handler:NextBtnHandler,
+                    style:{
+                        align:'left'
+                    }
+                }]
+            });
+            templateId = '{!template.Id}';
+            parentTemplateId = '{!parentTemplateId}';    
+            if(templateId == null ||templateId == ''){                
+                Ext.getCmp('deleteId').setDisabled(true);
+                Ext.getCmp('copyId').setDisabled(true);
+                Ext.getCmp('clearId').setDisabled(true); 
+            }
+            showTable();       
+            setData();
+            /* For Select profile SelectList--------------*/
+            //Ext.QuickTips.init();
+            Ext.form.Field.prototype.msgTarget = 'side';
+                    
+            var dataSourceData = new Array();
+                   
+            setDataSourceName('');
+                    
+            var fieldList = new Array();
+            var profileList = new Array();
+                    
+            ds = new Ext.data.ArrayStore({
+                data: fieldList,
+                fields: ['value','text'],
+                sortInfo: {
+                    field: 'value',
+                    direction: 'ASC'
+                }
+            });
+            
+            ds1 = new Ext.data.ArrayStore({
+                data: profileList,
+                fields: ['value','text'],
+                sortInfo: {
+                    field: 'value',
+                    direction: 'ASC'
+                }
+            });
+            
+            /*
+            ** Ext.ux.form.ItemSelector Example Code
+            */
+            var path='{!$Resource.SDEFimages}/';
+            var isForm = new Ext.Panel({
+                id: 'form',
+                title: '',
+                width:285,
+                border: false,
+                bodyStyle: 'padding-top:10px;padding-left:5px;',
+                renderTo: 'itemselector',
+                    items:[{
+                        xtype: 'itemselector',
+                        name: 'itemselector',
+                        //iconUp:"up2.gif",
+                        //iconDown:"down2.gif",
+                        iconLeft:"left2.gif",
+                        iconRight:"right2.gif",
+                        //iconTop:"top2.gif",
+                        //iconBottom:"bottom2.gif",
+                        drawUpIcon:false,
+                        drawDownIcon:false,
+                        drawLeftIcon:true,
+                        drawRightIcon:true,
+                        drawTopIcon:false,
+                        drawBotIcon:false,
+                        fieldLabel: '',
+                        imagePath: path,
+                        multiselects: [{
+                            width:128,
+                            height: 200,
+                            store: ds1,
+                            displayField: 'text',
+                            valueField: 'value'
+                        },{
+                            id:'selectedListId',
+                            width:128,
+                            height: 200,
+                            store: ds,
+                            displayField: 'text',
+                            valueField: 'value'
+                            
+                        }]
+                    }]
+                });                             
+        });
+    
+        function setData2(){
+            ds.loadData(fieldList);
+            ds1.loadData(profileList);
+            Ext.getCmp('form').getView().refresh();
+        }
+    
+        function generateData(){
+          
+            return gridData;
+        }
+        /* For set Grid Data*/
+        function setData(){
+            store.removeAll();
+            Ext.getCmp('grid').getView().refresh();
+            store.loadData(listData);
+            Ext.getCmp('grid').getView().refresh();
+        }
+        /*For Display grid*/
+        function showTable(){
+            store = new Ext.data.ArrayStore({
+                fields: [
+                    {
+                        name: 'field'
+                    },
+                    {
+                        name: 'value', 
+                        type: 'string'
+                    }
+                ],
+                data : gridData
+            });
+                
+            grid = new Ext.grid.GridPanel({
+                renderTo:'extGridPanel',
+                id:'grid',
+                store: store,
+                columns: [{
+                    id:'FieldLabel',
+                    header: 'Field Label', 
+                    width:50, 
+                    sortable: true, 
+                    dataIndex: 'field'
+                },{
+                    header: 'Value', 
+                    width:50, 
+                    sortable: true, 
+                    dataIndex: 'value'
+                }],
+                stripeRows: true,
+                autoExpandColumn: 'FieldLabel',
+                height:125,
+                layout: 'fit',
+                stateful: true,
+                stateId: 'grid',
+                autoScroll:false,
+                viewConfig:{
+                    forceFit:true 
+                },
+                autoFitColumns: true,
+                    listeners: {
+                        rowClick :function(grid,a,b){
+                            var record = grid.store.getAt(a);
+                            var field=record.get('field');
+                            handleRowClick1(field);
+                        }
+                    }        
+            });
+        }
+        var gridData= [];
+        var grid;
+        var store2;  
+     
+        function buttonValidator() {
+            if((templateName != null && templateName != '')&&(errormsg == null||errormsg ==''||errormsg=='Saved successfully.')){   
+                Ext.getCmp('deleteId').setDisabled(false);
+                Ext.getCmp('copyId').setDisabled(false);
+                Ext.getCmp('clearId').setDisabled(false);     
+            }       
+        }
+    
+        //var templateIdSet=window.parent.returnListOfId();
+        function previousTemplateBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(templateIdSet.length > i){
+                if(idSetString==''){
+                    idSetString='\''+templateIdSet[i]+'\'';
+                }else{
+                    idSetString=idSetString+','+'\''+templateIdSet[i]+'\'';
+                }
+                i++;
+            }
+            previousTemplateBtnHandler(idSetString);
+        }
+        templateIdSet=window.parent.returnListOfId(); 
+        function nextTemplateBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(templateIdSet.length > i){
+                if(idSetString==''){
+                    idSetString='\''+templateIdSet[i]+'\'';
+                }else{
+                    idSetString=idSetString+','+'\''+templateIdSet[i]+'\'';
+                }
+                i++;
+            }
+            nextTemplateBtnHandler(idSetString);        
+        }
+        
+        function refreshParentList(){
+            window.parent.refreshList();
+        }
+    
+    
+        function handleSave(templId,wid,newTitle){
+        
+            
+            if(isLookup){
+                if(errormsg!= null && errormsg!= '' && errormsg!='Saved successfully.' ){
+                    showError();
+                }else{
+                    window.parent.setPopUpVar('done');
+                    window.parent.refreshParentList();
+                    window.parent.closePopup();
+                }
+            }else{
+                showError();
+                rerenderIframe();
+                window.parent.changeTitle(wid,newTitle );
+                window.parent.refreshList();
+                //refreshDetailSec(templId); 
+                setId(templId);
+            }
+        }
+        
+        function removeDataConfirm(){
+            Ext.MessageBox.confirm('Remove', 'Are you sure you want to remove selected fields?', function(btn){
+                                if(btn === 'yes'){
+                                     removeData();
+                               }});
+        }           
+    </script>
+    <apex:outputPanel id="panelId">
+        <script>
+            templateName = '{!template.Name}';               
+            templateId = '{!template.Id}';
+            parentTemplateId = '{!parentTemplateId}';
+        </script>
+    </apex:outputPanel>
+        
+    <apex:outputPanel id="errorId">
+    <script>
+        errormsg = '{!messageString}';               
+    </script>
+    </apex:outputPanel>
+     
+                   
+    <apex:outputpanel id="ModuleFieldsPanel">
+    <script>
+        fieldList = new Array();
+        var i=0; 
+        <apex:repeat value="{!fieldNameList}" var="fieldName" >    
+            fieldList[i] = new Array(2);
+            fieldList[i++][0]='{!fieldName}';
+        </apex:repeat>
+        
+        var i=0; 
+        <apex:repeat value="{!fieldLabelList}" var="fieldLabel" >
+            fieldList[i++][1]='{!fieldLabel}';
+        </apex:repeat>
+  
+        profileList = new Array();
+        var i=0; 
+        <apex:repeat value="{!profileNameList}" var="profileNameList" >    
+            profileList[i] = new Array(2);
+            profileList[i++][0]='{!profileNameList}';
+        </apex:repeat>
+    
+        var i=0; 
+        <apex:repeat value="{!profileLabelList}" var="profileLabelList" >
+            profileList[i++][1]='{!profileLabelList}';
+        </apex:repeat>
+    </script>
+    </apex:outputpanel>
+    
+  
+    <apex:outputPanel id="dummy" ></apex:outputPanel>               
+    <div id="capsule" class="CapsuleDiv1">
+        <apex:form >
+            <apex:outputPanel id="formPanel" > <!-- Page body in this panel -->
+                <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+           
+             <apex:actionFunction Name="setDataSourceName" action="{!FetchFieldItems}" reRender="ModuleFieldsPanel" onComplete="setData2();"/>
+             <apex:actionFunction Name="rerenderIframe" reRender="iframePanel"/>
+             <apex:actionFunction Name="assignSelectedProfiles" action="{!assignSelectedProfiles}" reRender="ModuleFieldsPanel" >
+                    <apex:param assignTo="{!selectedProfiles}" name="selectedProfiles" value=""/>
+             </apex:actionFunction>
+             <apex:actionFunction name="populateFields" reRender="id_selectList,dataPanel" oncomplete="setData();"/>
+             <apex:actionFunction name="handleRowClick1" action="{!handleRowClick}" reRender="testId,removeButtonId,id_selectList,selectListPanel,widgetPanelGrp,ButtonPanelGrp">
+                   <apex:param name="paramId" value="" /> 
+               </apex:actionFunction>
+               
+             <apex:actionFunction name="save" action="{!save}" reRender="titlePanel,reRenderTemplateFor,scriptpanel,validationComponent,panelId,errorId,templateForDisablePanel" 
+                                oncomplete="changeframesource();assignSelectedProfiles(selectedValues); buttonValidator(); updateTitle(); " />
+                <apex:actionFunction name="newTemplate" action="{!newTemplate}"/>
+                <apex:actionFunction name="clearTemplate" action="{!clear}"/>
+                <apex:actionFunction name="resetTemplate" action="{!reset}"/>
+                <apex:actionFunction name="deleteTemplate" action="{!deleteTemplate}" reRender="titlePanel" oncomplete="updateTitle();closeWindow();"/>             
+                <apex:actionFunction action="{!nextBtnHandler}" name="nextTemplateBtnHandler" 
+                                    rerender="tablePanel, pbarId" > 
+                                    <apex:param assignTo="{!tempString}" name="idSetString" value=""/> 
+                </apex:actionFunction>
+                <apex:actionFunction action="{!previousBtnHandler}" name="previousTemplateBtnHandler" 
+                                        rerender="tablePanel, pbarId"> 
+                                        <apex:param assignTo="{!tempString}" name="idSetString" value=""/>
+                </apex:actionFunction>
+                <apex:actionFunction name="setReferenceToText" action="{!assignReferenceToTextField}" reRender="inputTxt"> 
+                    <apex:param assignTo="{!savedId}" name="savedName" value=""/>                   
+                </apex:actionFunction>
+                
+               
+                <table class="clsMainTable" cellspacing="0" cellpadding="0">
+                    <tr class="clsRowGreyBg">
+                        <td >
+                            <div id="btnToolbar"></div>
+                        </td>
+                    </tr>  
+                    <tr>
+                        <td >
+                            <table class="clsTable" cellspacing="0" cellpadding="0">
+                                <tr >
+                                    <td class="clsTopAlignment75">
+                                        
+                                       <table class="clsTable" cellspacing="0" cellpadding="0">
+                                            <tr>
+                                                <td colspan="3"><div class="div15pxVspacing"/></td><td></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.templateFor}"/>
+                                                    <span class="clsRequiredBlack">*</span>
+                                                </td>
+                                                <td class="clsInputTextBoxTD">
+                                                    <apex:inputField value="{!template.templateFor__c}" id="templateForId" styleClass="clsTemplateSelectList" onchange="changeframesource();populateFields();"/>                                                        
+                                                    <apex:outputpanel id="scriptpanel">
+                                                    <script>
+                                                        //alert('scriptpanel rerendered');
+                                                        function changeframesource() {
+                                                            //alert('changeframesource called');
+                                                            var obj = document.getElementById('templatedetailframe');                                                            
+                                                            var modulename = document.getElementById('{!$Component.templateForId}').value;
+                                                            obj.src = '/apex/TemplateDetailPage?templateFor=' + modulename + 'Template__c&?templateid={!templateid}';
+                                                            //alert(obj.src);
+                                                        }
+                                                    </script>
+                                                    </apex:outputpanel>
+                                                    <apex:outputPanel id="templateForDisablePanel">
+                                                        <script>
+                                                           if(templateId != null && templateId != '')
+                                                           {   
+                                                              document.getElementById('{!$Component.templateForId}').disabled = true;
+                                                           }
+                                                           if(parentTemplateId != null && parentTemplateId != '')
+                                                           {   
+                                                              document.getElementById('{!$Component.templateForId}').disabled = true;
+                                                           }
+                                                       </script>
+                                                    </apex:outputPanel>
+                                               </td>
+                                               
+                                            </tr>
+                                            <tr>
+                                                <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.templateName}"/>
+                                                    <span class="clsRequiredBlack">*</span>
+                                                </td>
+                                                <td class="clsInputTextBoxTD">
+                                                    <apex:inputField value="{!template.Name}" styleClass="clsInputTextBox"/>
+                                                </td>
+                                                
+                                            </tr>
+                                            
+                                            <tr>
+                                                <td class="clsInputBoldLabelTD"><apex:outputLabel value="{!$Label.description}"/>
+                                                </td>
+        
+                                            </tr>
+                                            <tr>
+                                                <td class="clsInputTextAreaTD" colspan="2">
+                                                   <div class="clsRelativePosition">
+                                                     <apex:inputTextarea id="descriptionId" value="{!template.description__c}" styleClass="clsInputTextArea"/>
+                                                   </div>  
+                                                 </td>
+                                              </tr>
+                                              <tr>
+                                                <td>
+                                                    <div class="div15pxVspacing"></div>
+                                                </td>
+                                             </tr>
+                                            <!-- <tr>
+                                                  <td class="clsInputCheckBox" colspan="2">
+                                                     <apex:inputField value="{!template.displayInSelfService__c}" id="idDisplayInSelfService"/>
+                                                     <apex:outputLabel styleClass="clsInputCheckBoxLabel" value="{!$Label.displayInSelfService}"/>
+                                                  </td>
+                                                        
+                                              </tr>
+                                <tr>
+                                                 <td class="clsInputCheckBox" colspan="2">
+                                                        <apex:inputField value="{!template.inactive__c}" id="idInactive"/>
+                                                       <apex:outputLabel styleClass="clsInputCheckBoxLabel" value="{!$Label.inactive}"/>
+                                                 </td>
+                                              </tr> -->
+                                              
+                                              
+                                                 
+                                        <tr>
+                                                  <td class="clsInputCheckBox" colspan="2">
+                                                  <apex:inputField value="{!template.displayInSelfService__c}" id="idDisplayInSelfService"/>
+                                                 <label for="idDisplayInSelfService" class="clsInputCheckBoxLabel">
+                                                   {!$Label.displayInSelfService}
+                                                 </label>
+                                            </td>
+                                       </tr>
+
+                                         <tr>
+                                                 <td class="clsInputCheckBox">
+                                                    <apex:inputfield value="{!template.inactive__c}" id="idInactive"/>
+                                                     <label for="idInactive" class="clsInputCheckBoxLabel">                                                    
+                                                      {!$Label.inactive}
+                                                      </label>                                                      
+                                             </td>
+                                          </tr>
+                                          
+                                        </table>
+                                        
+                                    </td>
+                                    <td><div class="div20pxHspacing"/></td>
+                                    <td class="clsTopAlignment25">
+                                         <div class="panelCapsule" >
+                                              <apex:panelBar headerClass="clsRowBlueBgPanel" switchType="ajax" >
+                                                 <apex:panelBarItem label="{!$Label.forUseBy}" expanded="true" headerClass="panelHeader">
+                                                     <table class="clsTable" cellspacing="0" cellpadding="0">
+                                                        <tr>
+                                                          
+                                                            <td> <div id="itemselector" class="demo-ct"></div> </td>
+                                                         </tr>
+                                                                                                                     
+                                                     </table>
+                                                 </apex:panelBarItem>
+                                              </apex:panelBar>
+                                         </div>
+                                        
+                                    </td>
+                                </tr>
+                                </table>
+                         </td>
+                       </tr>
+                       
+                       <tr>
+                          <td  >
+                                <div>
+                                    <table>
+      
+                                        <tr>
+                                            <td Class="clsTemplateInputTextBoxTD" >
+                                                <apex:inputText value="{!strFieldLabel}" id="testId" style="display:none"/>
+                                                <apex:selectList size="1" value="{!strFieldLabel}" onchange="setVisibility();" styleClass="clsTemplateSelectList1" id="id_selectList">
+                                                         <apex:selectOptions value="{!fieldItems}" ></apex:selectOptions>   
+                                                         <apex:actionFunction name="setVisibility" rerender="widgetPanelGrp,ButtonPanelGrp,removeButtonId,lookUpPanel" action="{!changeVisibility}"/>
+                                                 </apex:selectList>
+                                                      
+                                             </td><td width="45px"></td>
+                                             <td width="251px"> 
+                                                    <apex:panelGroup id="widgetPanelGrp">
+                                                        <apex:inputText id="inputTxt" value="{!fieldValue}" disabled="{!inputTxtDisable}" rendered="{!inputTxtVisibility}" styleClass="clsInputTextBox"/>
+                                                        <apex:commandButton id="lookUp" styleClass="lookupIconOn" rendered="{!lookUpVisibility}" rerender="dummy" onClick="openLookup();"/>
+                                                        <apex:inputTextarea id="inputTxtArea" value="{!fieldValue}" rendered="{!inputTxtAreaVisibility}"/>
+                                                        <apex:selectRadio id="selectRd" value="{!fieldValue}" rendered="{!radioBtnVisibility}" >
+                                                            <apex:selectOptions value="{!booleanItems}" />
+                                                        </apex:selectRadio>
+                                                        
+                                                        <apex:selectList id="selectLst" value="{!fieldValue}" rendered="{!picklistVisibility}" size="1" styleClass="clsTemplateSelectList">
+                                                            <apex:selectOptions value="{!listItems}"/>
+                                                        </apex:selectList>
+                                                   </apex:panelGroup>
+                                             </td>
+                                             <td >
+                                                  <apex:panelGroup id="ButtonPanelGrp">
+                                                     <apex:commandButton styleClass="bgBtnGrey"  value="Add" action="{!addData}" id="okButtonId" reRender=" id_selectList,widgetPanelGrp,dataTableId,dataPanel,validationComponent"
+                                                       rendered="{!addButtonVisibility}"  oncomplete="showError(); setData(); "  />
+                                                     <apex:commandButton styleClass="bgBtnGrey" value="Update" action="{!updateData}" id="updateButtonId" reRender="testId, id_selectList,widgetPanelGrp,dataTableId,dataPanel,validationComponent"
+                                                       rendered="{!updateButtonVisibility}"  oncomplete="setData();"  />   
+                                                  
+                                                     <apex:commandButton styleClass="bgBtnGrey" value="Remove" onClick="removeDataConfirm();" rerender="dummy" id="removeButtonId" disabled="{!removeButtonVisibility}"/>                                                           
+                                                     <apex:actionFunction name="removeData" action="{!removeData}" rerender="selectListPanel,widgetPanelGrp,dataPanel,ButtonPanelGrp,removeButtonId,id_selectList" oncomplete="setData();"/>
+                                                   </apex:panelGroup>
+                                             </td>
+                                                
+                                         </tr>
+                                             
+                                     </table>
+                                  <div class="clsTemplateGridPanel" id="extGridPanel"></div>
+                                    
+                                </div>
+                                        
+                            </td>
+                          </tr>                          
+                          
+                          <tr class="clsRowGreyBg" valign="middle">                            
+                            <td valign="top" style="padding-top: 10px;" id="IncidentTemplateDS">
+                                <apex:outputPanel id="iframePanel" >                                    
+                                        <apex:iframe src="/apex/TemplateDetailPage?templateFor={!detailSectionFor}&templateid={!templateid}" id="templatedetailframe" height="175px"/>                                                                      
+                                </apex:outputPanel>
+                            </td>
+                        </tr>
+                    </table>                
+            </apex:outputPanel>      
+        </apex:form>
+    </div>
+    
+
+</apex:page>
+                            	

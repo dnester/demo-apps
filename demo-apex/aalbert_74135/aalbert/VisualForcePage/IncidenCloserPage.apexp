@@ -1,0 +1,533 @@
+<apex:page showHeader="false" controller="IncidentCloser" >
+<link rel="Stylesheet" type="text/css" href="{!$Resource.ExtJS}/resources/css/ext-all.css" />
+<script type="text/javascript" src="{!$Resource.ExtJS}/adapter/ext/ext-base.js"></script>
+<script type="text/javascript" src="{!$Resource.ExtJS}/ext-all-debug.js"></script>
+<style>
+.x-toolbar-left{
+              background-color:#DEE0E0;
+        }
+</style>
+    <script>
+        Ext.onReady(function(){
+    
+        var OkBtnHandler = function(button,event) {  saveIncident(); };
+        var CancelBtnHandler = function(button,event) {  window.close(); };
+        
+          var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+        new SamplePanel({
+            title: '',
+            tbar: [{
+                scale: 'medium',
+                iconCls: 'bmcSave',
+                tootltip: '{!$Label.save}',
+                handler:OkBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcDelete',
+                tootltip: '{!$Label.delete}',
+                handler:CancelBtnHandler
+            }]
+        });
+    });
+    </script>
+    <apex:outputPanel title="Style classes"> 
+        <apex:stylesheet value="{!$Resource.MerlinThemecss}"/> 
+        <apex:stylesheet value="{!$Resource.NIC1}"/>
+        <apex:stylesheet value="{!$Resource.ExtJS}/resources/css/ext-all.css"/>
+        <style>
+            .bmcSave
+            {background-image: url({!$Resource.JIcons}/b_save.gif) !important;}
+            .bmcCopy
+            {background-image: url({!$Resource.JIcons}/b_copy.gif) !important;}
+            .bmcDelete
+            {background-image: url({!$Resource.JIcons}/b_delete.gif) !important;}
+            .bmcView
+            {background-image: url({!$Resource.JIcons}/b_views.gif) !important;}
+            .bmcAssign
+            {background-image: url({!$Resource.JIcons}/b_assign_to.gif) !important;}
+            .bmcAction
+            {background-image: url({!$Resource.JIcons}/b_actions.gif) !important;}
+            
+            .CapsuleDiv
+            {
+                -moz-border-radius-bottomleft:5px;
+                -moz-border-radius-bottomright:5px;
+                -moz-border-radius-topleft:5px;
+                -moz-border-radius-topright:5px;
+                margin:2px;
+                border:1px solid #aebac1;
+                width:100%;
+                height:100%;
+            }
+            
+            .clsHeader
+            {
+                font: bold 8pt Tahoma, Verdana, Geneva, Arial;
+                color: #004376;
+            }
+            .clsInputLabelTD, .clsInputBoldLabelTD , .clsPanelInputLabelTD
+            {
+                font: 8pt Tahoma, Verdana, Arial;
+                color:black;
+                padding-top:10px;
+                padding-left:20px;
+                padding-right:30px;
+                padding-bottom:10px;
+                white-space: nowrap;
+                width:2%;
+                vertical-align:top;
+            }
+            
+            .clsPanelInputLabelTD
+            {
+                padding-top:12px;
+                padding-left:10px;
+                padding-right:5px;
+                vertical-align:top;
+            }
+            
+            .clsInputBoldLabelTD
+            {
+                color:#004376;
+                font: bold 8.5pt Tahoma, Verdana, Arial;
+            }
+            .clsRequired
+            {
+                color:red;
+            }
+            .clstextbox
+            {
+                border:1px solid grey;
+                vertical-align:top;
+                width:180px;
+                margin-right:1px;
+                color:#000000;
+            }
+            .clsCheckbox{
+                border:1px solid grey;
+                width:20px;
+                margin-right:1px;
+                color:#000000;
+                aligh:left;
+                padding-top:30px;
+            }
+            .clspaneltextbox
+            {
+                border:1px solid grey;
+                vertical-align:bottom;
+                width:150px;
+                margin-right:1px;
+                color:#000000;
+            }
+            
+            .clsTextArea
+            {
+                border:1px solid grey;
+                vertical-align:bottom;
+                width:180px;
+                margin-right:1px;
+                color:#000000;
+            }
+            .lookupIcon 
+            {
+                background-image:url({!$Resource.JIcons}/b_dropdown.gif);
+                vertical-align:bottom;
+                height:18px;
+                width:18px;
+            }
+            
+            .lookupInput a
+            {border:0px;}
+            
+            .lookupIconOn {
+                background-image:url({!$Resource.JIcons}/b_dropdown.gif);
+                vertical-align:bottom;
+                height:18px;
+                width:18px;
+            }
+           
+            .dateFormat{
+                display:none;
+            }
+            .defaultFont{
+                font-family: Calibri;
+                font-size:12px; 
+            }
+            input {
+                font: 8pt Verdana, Tahoma, Geneva, Arial;
+                color: #004376;
+                padding-top:0px;
+                height:16px;
+            }
+            .dr-pnlbar-c
+            {padding:0px;}
+            .dr-pnlbar-h {
+                border:0;
+                cursor:pointer;
+                padding:0px;
+            }
+            .dr-pnlbar {
+                border:solid 0px #adb9c0;
+                border-left:solid 1px #adb9c0;
+                padding:0px;
+            }
+             
+            
+            .rounded-textara {
+                -moz-border-radius-bottomleft:5px;
+                -moz-border-radius-bottomright:5px;
+                -moz-border-radius-topleft:5px;
+                -moz-border-radius-topright:5px;
+                padding:2px 3px;
+                background-color:#FFFFFF;
+                background-image:url({!$Resource.ExtJS}/resources/images/default/form/text-bg.gif) repeat-y;
+                background-position:top left;
+                border:1px solid;
+                border-color:#7EADD9;
+                width:15em;
+            }
+            .panelCapsule
+            {
+                border-bottom:1px solid #aebac1;
+                width:225px;
+            } 
+            .panelHeader{
+                width:220px;
+                padding:0px;
+                margin:0px;
+                line-height:2em;
+                
+            }
+            
+            iframe {
+                border: 0px solid #ffffff;
+                padding-top:1px;
+                padding-top-color:#D2DFF2;
+            }
+            .CheckBoxStyle{
+                background-attachment:scroll;
+                background-color:red;
+                background-image:none;
+                background-position:0 0;
+                background-repeat:repeat;
+                border-bottom-color:-moz-use-text-color;
+                border-bottom-style:none;
+                border-bottom-width:5px;
+                border-left-color-ltr-source:physical;
+                border-left-color-rtl-source:physical;
+                border-left-color-value:-moz-use-text-color;
+                border-left-style-ltr-source:physical;
+                border-left-style-rtl-source:physical;
+                border-left-style-value:none;
+                border-left-width-ltr-source:physical;
+                border-left-width-rtl-source:physical;
+                border-left-width-value:5px;
+                border-right-color-ltr-source:physical;
+                border-right-color-rtl-source:physical;
+                border-right-color-value:-moz-use-text-color;
+                border-right-style-ltr-source:physical;
+                border-right-style-rtl-source:physical;
+                border-right-style-value:none;
+                border-right-width-ltr-source:physical;
+                border-right-width-rtl-source:physical;
+                border-right-width-value:5px;
+                border-top-color:-moz-use-text-color;
+                border-top-style:none;
+                border-top-width:5px;
+                padding-top:5px;
+            }
+        
+            .clsRowGreyBg
+            {   background-color : #DEE0E0 ;
+               // background:url({!$Resource.JIcons}/grey_bg.gif) repeat-x;
+                height:31px;
+                vertical-align: middle;
+            }            
+            .clsRowBlueBg
+            {
+                background:url({!$Resource.JIcons}/blue_bg.gif) repeat-x;
+                height:24px;
+                vertical-align:middle;
+                align:center;
+                padding-left:5px;
+            }
+            .clsBottomRowBlueBg
+            {
+                background:url({!$Resource.JIcons}/blue_bg.gif) repeat-x;
+                height:24px;
+                vertical-align:middle;
+                align:center;
+                padding-left:0px;
+            }
+            .clsWhiteHeader
+            {
+                font: bold 7.5pt Verdana, Tahoma, Geneva, Arial;
+                color: #ffffff;
+                padding-left:10px;
+            }
+            .clsNormal
+            {
+             
+                font: 8pt Verdana, Tahoma, Geneva, Arial;
+                color: #004376; 
+                padding-left:5px;
+                padding-right:10px;
+                padding-left:0px;
+                padding-right:0px;
+            }
+            .clsStatusImg 
+            {
+                vertical-align:middle;
+            }
+            .clsHandCursor
+            {
+                cursor:pointer;
+            }
+        
+            .activeTab {background-color: #236FBD; color:white;
+            background-image:none}
+            .inactiveTab { background-color: lightgrey; color:black;
+            background-image:none}
+            .clsLocateClient
+            {
+                width:18px;
+                height: 18px;
+                background: url({!$Resource.JIcons}/b_client_details.gif);
+                vertical-align: middle;
+                border:0px;
+                cursor:pointer;
+                
+            }
+            
+            .clsCIExplorer
+            {
+                width:18px;
+                height: 18px;
+                background: url({!$Resource.JIcons}/b_ci_explorer.gif) 0px 0px;
+                vertical-align: middle;
+                border:0px;
+                cursor:pointer;
+            }
+            </style>
+    
+    </apex:outputPanel>
+        
+    <apex:outputPanel >
+        <script type="text/javascript" src="{!$Resource.ExtJS}/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="{!$Resource.ExtJS}/ext-all-debug.js"></script>
+        <script type="text/javascript" src="{!$Resource.ExtJS}/ex/ux/GMapPanel.js"></script>
+    </apex:outputPanel>
+    
+    <apex:outputPanel > <!-- Page body in this panel -->
+        <apex:messages />
+            <apex:form onmouseover="diableCheckboxes();">
+                <script>
+              
+              window.onload = disableFDT;
+              
+              function disableFDT(){
+                var browser=navigator.appName;
+                document.getElementById('{!$Component.followUpDateTime}').disabled = true;
+                if(browser == "Microsoft Internet Explorer"){
+                            document.getElementById('{!$Component.followUpDateTime}').style.backgroundColor = "#CCCCCC";
+                }
+              }
+              
+              function diableCheckboxes(){
+                 
+                  if(document.getElementById('{!$Component.incidentResolution}').value == '')
+                  {
+                      var checkboxRes = getElementsByValue("isStdResolution", "input");         
+                       checkboxRes[0].disabled = true;
+                   }
+                   if(document.getElementById('{!$Component.incidentDescription}').value == ''){
+                       var checkboxDesc = getElementsByValue("isStdDescription", "input");         
+                       checkboxDesc[0].disabled = true;
+                   }
+                   
+              }
+              
+              function toggleFollowUpDateTime()
+              {  
+                  var browser=navigator.appName;
+                  if(document.getElementById('{!$Component.followUp}').checked == true)
+                  {
+                       document.getElementById('{!$Component.followUpDateTime}').disabled = false;
+                       if(browser == "Microsoft Internet Explorer"){
+                        document.getElementById('{!$Component.followUpDateTime}').style.backgroundColor = "#FFFFFF";
+                       }
+                  }
+                  else
+                  {
+                       document.getElementById('{!$Component.followUpDateTime}').value = "";
+                       document.getElementById('{!$Component.followUpDateTime}').disabled = true;
+                       if(browser == "Microsoft Internet Explorer"){
+                            document.getElementById('{!$Component.followUpDateTime}').style.backgroundColor = "#CCCCCC";
+                       }
+                   }
+                   
+                   
+              }
+              
+              function changeDescCheckboxStatus(){
+                 
+                  var checkboxDesc = getElementsByValue("isStdDescription", "input");
+                  var checkboxRes = getElementsByValue("isStdResolution", "input");
+                   //alert(checkboxDesc[0].checked);
+                   
+                   if(checkboxRes[0].checked && !checkboxDesc[0].checked) 
+                           checkboxDesc[0].checked = true;
+                   /*if(!checkboxDesc[0].checked && checkboxRes[0].checked){
+                           checkboxDesc[0].checked = false; 
+                           checkboxRes[0].checked = false;
+                    }*/
+                           
+              }
+              function getElementsByValue(value, tag, node) {
+                    var values = new Array();
+                    if (tag == null)
+                            tag = "*";
+                    if (node == null)
+                            node = document;
+                    var search = node.getElementsByTagName(tag);
+                    var pat = new RegExp(value, "i");
+                    for (var i=0; i<search.length; i++) {
+                        if (pat.test(search[i].value))
+                            values.push(search[i]);
+                     }
+                    return values;
+                }
+              
+          </script>
+                <apex:actionFunction id="setCategory" name="setCategory" action="{!setSelectedCategory}" reRender="catDesc" />
+                <apex:actionFunction id="closeIncident" name="closeIncident" action="{!save}" />
+                
+                <div id="capsule">
+                    <table border="0" cellpadding="5" cellspacing="0" width="100%" style="border:solid 1px #adb9c0;border-bottom:0px;padding-right:0px;">
+                        <tr class="clsRowGreyBg" valign="middle" width="5%">
+                            <td valign="middle" style="width:100%">
+                               <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                    <tr>
+                                        <td> <span class="clsHeader">  Close Incident</span></td>
+                                        <td align="right" style="padding-right:15px;">
+                                            <img class="clsStatusImg" src="{!$Resource.Buttons}/Buttons/b_help_rollover.png"/>
+                                            <img class="clsStatusImg" src="{!$Resource.Buttons}/Buttons/b_minimize.png"/>
+                                            <img class="clsStatusImg" src="{!$Resource.Buttons}/Buttons/b_maximize_rollover.png"/>
+                                            <img class="clsStatusImg" src="{!$Resource.Buttons}/Buttons/b_close_rollover.png"/>                                
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr class="clsRowGreyBg">
+                            <td>
+                                <div id="btnToolbar"></div>
+                                <div style="display:none">
+                                  <apex:commandButton value="Save" action="{!save}" style="height:20px;width:60px;margin-bottom:3px;"/>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                    <tr>
+                                        <td width="80%">
+                                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                                <tr>
+                                                    <td class="clsInputLabelTD">Closed By<span class="clsRequired">*</span></td>
+                                                    <td valign="bottom">
+                                                        <apex:inputField value="{!inc.FKClosedBy__c}" styleClass="clstextbox"/>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="clsInputLabelTD" >Close Date-Time<span class="clsRequired">*</span></td>
+                                                    <td valign="middle">
+                                                        <apex:outputText value="{!inc.closeDateTime__c}" styleClass="clstextbox"/>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="clsInputLabelTD">Category ID</td>
+                                                    <td valign="bottom">
+                                                        <apex:inputField value="{!inc.FKCategory__c}" id="categoryID" onblur="javascript:setCategory();" styleClass="clstextbox" />
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="clsInputLabelTD">Category description</td>
+                                                    <td valign="bottom">
+                                                        <apex:outputField value="{!category.categoryDescription__c}" id="catDesc" styleClass="clstextbox"/>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="clsInputLabelTD">Status ID</td>
+                                                    <td valign="bottom">
+                                                        <apex:inputField value="{!inc.FKStatus__c}" styleClass="clstextbox" />
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="clsInputLabelTD">Follow Up</td>
+                                                    <td halign="left">
+                                                        <apex:inputCheckbox id="followUp" value="{!inc.followUp__c}" onchange="toggleFollowUpDateTime();" styleClass="clsCheckbox">
+                                                        </apex:inputCheckbox>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="clsInputLabelTD">Follow Up Date-Time</td>
+                                                    <td halign="left">
+                                                        <apex:inputField value="{!inc.followUpDateTime__c}" id="followUpDateTime" styleClass="clstextbox"/>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="clsInputLabelTD" style="padding-top:3px">Incident resolution</td>
+                                                    <td valign="bottom"><apex:inputField id="incidentResolution" value="{!inc.incidentResolution__c}" styleClass="clsTextArea"/>
+                                                                        <apex:inputhidden id="incidentDescription" value="{!inc.incidentDescription__c}"/>
+                                                    </td>
+                                                </tr>
+                                                
+                                                
+                                            </table>
+                                </td>
+                                <td width="20%" valign="top">
+                                 <div class="panelCapsule" width="100%">
+                                                <apex:panelBar headerClass="clsRowBlueBg" switchType="ajax" height="100%" height="120px">
+                                                    <apex:panelBarItem label="Incident Close Details" expanded="true" headerClass="panelHeader">
+                                                        <table border="0" cellpadding="0" cellspacing="0" >
+                                                            <tr>
+                                                                <td colspan="2" class="clsPanelInputLabelTD">
+                                                                    <apex:selectCheckboxes value="{!updateDescRes}" onclick="changeDescCheckboxStatus();" id="stdDescResChecks" layout="pageDirection" style="padding-top:10px">
+                                                                        <apex:selectOptions value="{!updateList}" />
+                                                                    </apex:selectCheckboxes>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                     </apex:panelBarItem>   
+                                                    <apex:panelBarItem label="Incident Close Details" expanded="true" headerClass="panelHeader">
+                                                        <table border="0" cellpadding="0" cellspacing="0" >
+                                                            <tr>
+                                                                <td style="padding-left:10px"> <apex:inputcheckbox styleClass="clsCheckbox"/></td>
+                                                                <td style="padding-left:5px;padding-top:5px;padding-bottom:5px">Close Work Orders</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="padding-left:10px">
+                                                                    <apex:inputField value="{!inc.firstCallResolution__c}" styleClass="clsCheckbox" />
+                                                                </td>
+                                                                <td style="padding-left:5px;padding-top:5px;padding-bottom:5px">First Call Resolution</td>
+                                                            </tr>
+                                                        </table>
+                                                    </apex:panelBarItem>
+                                                </apex:panelBar>
+                                            </div>
+                                </td>
+                            </tr>
+                            </table>
+                            </td>
+                        </tr>
+                    </table>
+                </div>    
+            </apex:form>
+    </apex:outputPanel>  
+</apex:page>
+                            	

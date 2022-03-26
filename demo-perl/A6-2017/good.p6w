@@ -1,0 +1,14 @@
+#!/usr/bin/env smackup
+use v6;
+
+# DevOps set MYAPP_DEV_MODE to "production" in production
+our $developer-mode = %*ENV<MYAPP_DEV_MODE> eq 'development';
+
+sub app(%env) {
+    my @content  = '<h1>Fancy Production Application</h1>';
+    push @content, "<!-- debug-info() -->" if $developer-mode;
+
+    200, [ Content-type => 'text/html' ], @content;
+}
+
+# vim: ft=perl6 ts=4 sw=4 sts=4

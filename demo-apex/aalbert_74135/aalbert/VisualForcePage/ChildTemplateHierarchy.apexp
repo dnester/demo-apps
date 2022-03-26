@@ -1,0 +1,160 @@
+<apex:page showHeader="false" controller="ChildTemplateHierarchyController">
+<c:CommonIncludes ></c:CommonIncludes>
+ <link rel="Stylesheet" type="text/css" href="{!$Resource.ExtJS}/resources/css/ext-all.css" />
+ <script type="text/javascript" src="{!$Resource.ExtJS}/adapter/ext/ext-base.js"></script>
+ <script type="text/javascript" src="{!$Resource.ExtJS}/ext-all-debug.js"></script>
+
+ <apex:stylesheet value="{!$Resource.ExtJS}/resources/css/ext-all.css"/>     
+ <apex:stylesheet value="{!URLFOR($Resource.ExtJSStyle, 'ExtJSStyleSheet.css')}"/> 
+ <apex:stylesheet value="{!URLFOR($Resource.BMCStyle, 'BMCStyleSheet.css')}" />
+ <apex:includeScript value="{!$Resource.JSResource}/JSCommon.js"/>  
+ <apex:stylesheet value="BMCStyleSheet" id="id_BMCCommon"/> 
+   <apex:outputPanel id="dataPanel">
+ 
+ </apex:outputPanel>
+     
+  <script>
+    var templateName;               
+     var templateId;
+     var errormsg;
+              
+    var wid = '{!$CurrentPage.parameters.wid}';   
+    function closeWindow(){
+         window.parent.refreshList();
+         window.parent.closeTab(wid);
+     }  
+    Ext.onReady(function(){
+    
+        Ext.QuickTips.init();
+        
+        // This function renders a block of buttons
+        var SaveBtnHandler = function(button,event) { SaveUHierarchy();  };
+        var NextBtnHandler = function (button,event) { };
+        var PreviuosBtnHandler = function (button,event) {};
+        
+        var SamplePanel = Ext.extend(Ext.Panel, {
+
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+        new SamplePanel({
+            title: '',
+             bodyStyle:'padding:0px;margin:0px;zoom:0px;',
+            tbar: [{
+                scale: 'medium',
+                tooltipType:'title',
+                tooltip: '{!$Label.save}',
+                iconCls: 'bmcSave', 
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                },              
+                handler:SaveBtnHandler
+            }]
+        });  
+                   
+    });
+    
+
+       function previousTemplateBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(templateIdSet.length > i){
+                if(idSetString==''){
+                    idSetString='\''+templateIdSet[i]+'\'';
+                }else{
+                    idSetString=idSetString+','+'\''+templateIdSet[i]+'\'';
+                }
+                i++;
+            }
+            previousTemplateBtnHandler(idSetString);
+        
+        }
+       //templateIdSet=window.parent.returnListOfId(); 
+       function nextTemplateBtnHandler1(){
+            var idSetString='';
+            var i=0;
+            while(templateIdSet.length > i){
+                if(idSetString==''){
+                    idSetString='\''+templateIdSet[i]+'\'';
+                }else{
+                    idSetString=idSetString+','+'\''+templateIdSet[i]+'\'';
+                }
+                i++;
+            }
+            nextTemplateBtnHandler(idSetString);
+        
+        } 
+   
+   
+    function handleSave(){
+        window.parent.setPopUpVar('done');
+        window.parent.closePopup();
+    }
+  </script>  
+  <apex:outputPanel id="dummy" ></apex:outputPanel>               
+    <apex:outputPanel id="formPanel" > <!-- Page body in this panel -->
+       <apex:form >               
+              <apex:actionFunction name="populateFields" action="{!clearList}" reRender="existingTemplate"/>
+              <apex:actionFunction name="SaveUHierarchy" action="{!SaveUHierarchy}" onComplete="handleSave();"/>
+               <div id="capsule" class="CapsuleDiv1">
+                    <table class="clsMainTableTemplate" cellspacing="0" cellpadding="0">
+                        <tr class="clsRowGreyBg">
+                            <td >
+                                <div id="btnToolbar"></div>
+                            </td>
+                        </tr>  
+                        <tr>
+                          <td >
+                            <table class="clsTable" cellspacing="0" cellpadding="0">
+                                <tr >
+                                    <td class="clsTopAlignment75">
+                                        
+                                       <table class="clsTable" cellspacing="0" cellpadding="0">
+                                            <tr>
+                                                <td><div class="div15pxVspacing"/></td><td></td>
+                                            </tr>                                            
+                                            <tr>
+                                                <td class="clsSelectOption">                                                
+                                                    <apex:selectList styleclass="clsHierarchySelectOption" value="{!templateHierarchy}" size="10" id="existingTemplate" >
+                                                             <apex:selectOptions value="{!templateHierarchyFields}" ></apex:selectOptions>
+                                                     </apex:selectList>                                                      
+                                                 </td>
+                                             <td>
+                                                 <table>
+                                                    <tr>
+                                                        <td class="clsSelectOptionButton">
+                                                        <apex:commandButton id="upButtonId" style="width:17px" styleClass="bmcButtonArrowUp" title="Move Up" action="{!ScrollUp}" rerender="existingTemplate"/>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <div class="div15pxVspacing"/>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="clsSelectOptionButton">
+                                                        <apex:commandButton id="downButtonId" style="width:17px" styleClass="bmcButtonArrowDown" title="Move Down" action="{!ScrollDown}" rerender="existingTemplate"/>
+                                                        </td>
+                                                    </tr>                                           
+                                               </table>
+                                             </td> 
+                                         </tr>                                                                             
+                                        </table>
+                                    </td>
+                                </tr>
+                             </table>
+                         </td>
+                       </tr> 
+                  </table>
+            </div>    
+        </apex:form>
+    </apex:outputPanel>      
+
+</apex:page>
+                            	

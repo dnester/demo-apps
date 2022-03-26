@@ -1,0 +1,296 @@
+<apex:page showHeader="false" controller="ChangeHistoryController">
+   <c:CommonIncludes />
+   
+   <!-- <script type="text/javascript"
+        src="{!$Resource.ExtJs}/ext-all-debug.js"></script> -->
+    
+    <script>
+    
+    var changeHistoryAction; 
+    var changeHistoryStaff;               
+    var changeHistoryId;
+    var errormsg;
+    
+       function openActionLookup(){ 
+            var actionId = window.showModalDialog("/apex/SearchPage?popupId=0011","searchpage","dialogWidth=600px; dialogHeight=600px; resizable=yes");
+           if(actionId != null && actionId != '' ){
+              setActionNext(actionId); 
+            }               
+        }
+        function openStaffLookup(){
+            var staffId = window.showModalDialog("/apex/SearchPage?popupId=0012","searchpage","dialogWidth=600px; dialogHeight=600px; resizable=yes");            
+            if(staffId != null && staffId != '' ){
+              setStaffNext(staffId); 
+            }               
+        }  
+        Ext.onReady(function(){
+        
+        Ext.QuickTips.init();
+        // This function renders a block of buttons
+        var NewBtnHandler = function(button,event) { newAction(); };
+        var SaveBtnHandler = function(button,event) {  saveAction(); };
+        var CopyBtnHandler = function(button,event) {/* copy();*/};        
+        var DeleteBtnHandler = function(button,event) {  /*deleteIncident();*/ };
+        var ResetBtnHandler = function(button,event) {  reset(); };
+        
+          var SamplePanel = Ext.extend(Ext.Panel, {
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+        new SamplePanel({
+            title: '',
+            bodyStyle:'padding:0px;margin:0px;zoom:0px;',
+            tbar: [{
+                scale: 'medium',
+                iconCls: 'bmcNew',
+				tooltipType : 'title',
+                 tooltip: '{!$Label.new}',
+                 listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcNewOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcNew');          
+                     }
+                },    
+                handler:NewBtnHandler
+            },' ',{
+                scale: 'medium',
+				tooltipType : 'title',
+                tooltip: '{!$Label.save}',
+                iconCls: 'bmcSave',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                },
+                handler:SaveBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcCopy',
+				tooltipType : 'title',
+                tooltip: '{!$Label.copy}',
+                id:'copyId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcCopyOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcCopy');          
+                     }
+                },
+                handler:CopyBtnHandler
+            },' ','-',' ',{
+                scale: 'medium',
+                iconCls: 'bmcDelete',
+				tooltipType : 'title',
+                tooltip: '{!$Label.delete}',
+                id:'deleteId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcDeleteOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcDelete');          
+                     }
+                },
+                handler:DeleteBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcClear',
+				tooltipType : 'title',
+                tooltip: '{!$Label.clear}',
+                id:'clearId',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcClearOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcClear');          
+                     }
+                },
+                handler:ResetBtnHandler 
+            }]
+        });
+        
+         changeHistoryId = '{!changeHistory.Id}';    
+        if(changeHistoryId == null || changeHistoryId == ''){                
+        Ext.getCmp('deleteId').setDisabled(true);
+        Ext.getCmp('copyId').setDisabled(true);
+         Ext.getCmp('clearId').setDisabled(true); 
+        }
+             
+    });
+    
+    function buttonValidator() {
+       if((changeHistoryAction != null || changeHistoryAction != '')&&(errormsg == null || errormsg ==''||errormsg=='Saved successfully.')){   
+	  		if((changeHistoryStaff != null || taskHistoryStaff != '')){
+	  		    Ext.getCmp('deleteId').setDisabled(false);
+		        Ext.getCmp('copyId').setDisabled(false);
+		        Ext.getCmp('clearId').setDisabled(false);    
+	        }  
+	   }
+    }
+ 
+    </script>
+    
+
+    <apex:outputPanel id="dummy"></apex:outputPanel>
+    
+    <apex:outputPanel id="panelId">
+        <script>
+        
+           changeHistoryAction = '{!changeHistory.actionId__c}';
+           changeHistoryStaff = '{!changeHistory.staffId__c}';                
+           changeHistoryId = '{!changeHistory.Id}';      
+        </script>
+    </apex:outputPanel>
+    
+    <apex:outputPanel id="errorId">
+        <script>
+                   errormsg = '{!messageString}';               
+         </script>
+    </apex:outputPanel>
+    
+    <apex:outputPanel ><!-- Page body in this panel -->
+        <apex:messages />
+        <apex:form >
+        <c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+                
+        <apex:actionFunction name="setStaffNext" action="{!staffQuery}" reRender="User_id_name"> 
+            <apex:param assignTo="{!staffId}" name="savedName" value=""/>
+        </apex:actionFunction>
+        <apex:actionFunction name="setActionNext" action="{!actionQuery}" reRender="Action__c_id_name,Action__c_id_description__c"> 
+            <apex:param assignTo="{!actionId}" name="saved" value=""/>
+        </apex:actionFunction>
+        <apex:actionFunction name="saveAction" action="{!save}" reRender="validationComponent,panelId,errorId" oncomplete="showError();buttonValidator();"/>
+        <apex:actionFunction name="newAction" action="{!newAction}" reRender="tablePanel"/>
+
+            <div id="capsule" class="CapsuleDiv1">
+           <table class="clsMainTable" cellspacing="0" cellpadding="0">                
+                <tr class="clsRowGreyBg">
+                    <td>
+                        <div id="btnToolbar"></div>
+                        
+                    </td>
+                    
+                </tr>                
+                <tr>
+                    <td>                    
+                    <table  class="clsTable" cellspacing="0" cellpadding="0">  
+                        <tr>
+                            <td class="clsTopAlignment75">
+                            <apex:outputPanel id="tablePanel">
+                            <table class="clsTable" cellspacing="0" cellpadding="0">                                                                
+                                <tr>
+                                               <td><div class="div15pxVspacing"/></td><td></td>
+                                </tr>
+                                
+                                <tr>
+                                    <td class="clsInputLabelTD" valign="top"><apex:outputLabel value="{!$Label.actionId}"></apex:outputLabel><span
+                                        class="clsRequiredBlack">*</span></td>
+                                    <td class="clsInputTextBoxTD">
+                                        <apex:inputField value="{!changeHistory.actionId__c}" id="Action__c_id_name" onblur="showalldata(event)" styleClass="clsInputTextBox"/>
+                                    </td>
+                                    <td class="lookupIconTD"> 
+									    <div class="lookUpIconDiv">
+                                        <apex:commandButton onclick="openActionLookup();" rerender="dummy" styleClass="lookupIconOn"/>
+										</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.staffId}"></apex:outputLabel><span
+                                        class="clsRequiredBlack">*</span></td>
+                                    <td class="clsInputTextBoxTD">                                    
+                                        <apex:inputField value="{!changeHistory.staffId__c}" id="User_id_name" onblur="showalldata(event);" styleClass="clsInputTextBox"/>
+                                    </td>
+                                    <td class="lookupIconTD">
+									<div class="lookUpIconDiv">
+                                        <apex:commandButton onclick="openStaffLookup();" rerender="dummy" styleClass="lookupIconOn"/>                                   
+										</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.changeHash}"></apex:outputLabel></td>
+                                    <td><apex:inputtext disabled="true"
+                                        id="change1" value="{!changeHistory.change__c}" styleClass="clsInputTextBox"/></td>
+                                </tr>
+                                </table>
+                                <table>
+                                <tr>
+                                    <td class="clsInputBoldLabelTableFirstRowTD"><apex:outputLabel value="{!$Label.description}"></apex:outputLabel><span
+                                        class="clsRequired"></span></td>
+                                </tr>
+                                <tr>
+                                    <td class="clsInputTextAreaTD" colspan="3">
+                                    <div class="clsRelativePosition">
+                                        <apex:inputTextarea value="{!changeHistory.description__c}" id="Action__c_id_description__c" styleClass="clsInputTextAreaPgWoSidePanel"/>
+                                     </div></td>
+                                </tr>
+                                </table>
+                                    <div class="div15pxVspacing"/>
+                                <table>
+                                <tr>
+                                    <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.dateAndTime}"></apex:outputLabel></td>
+                                    <td class="clsInputTextBoxTD"><apex:inputField id="dateAndTime"
+                                        value="{!changeHistory.date__c}" styleClass="clsInputTextBox"/></td>
+                                </tr>
+                                <tr>
+                                    <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.duration}"></apex:outputLabel></td>
+                                    <td><apex:inputField id="duration"
+                                        value="{!changeHistory.duration__c}" styleClass="clsInputTextBox"/></td>
+                                </tr>
+                                
+                                </table>
+                                   
+                                <table>
+                                                           
+                                <tr>
+                                    <td class="clsInputBoldLabelTD"><apex:outputLabel value="{!$Label.note}"></apex:outputLabel></td>
+                                </tr>
+                                <tr>
+                                    <td class="clsInputTextAreaTD" colspan="3">
+                                        <apex:inputTextarea value="{!changeHistory.note__c}" id="note" styleClass="clsInputTextAreaPgWoSidePanel"/>
+                                    </td>
+                                </tr>
+                                
+                                </table>
+                                    <div class="div13pxVspacing"/>
+                                <table>
+                                
+                                <tr>
+                                    <td class="clsInputCheckBox">
+                                        <apex:inputField value="{!changeHistory.inactive__c}" id="inactiveLabel" /> 
+                                        <label for="inactiveLabel" class="clsInputCheckBoxLabel">{!$Label.inactive}</label> 
+                                    </td>
+                                </tr>                                                           
+                            </table>
+                            </apex:outputPanel>
+                           </td>
+
+                        </tr>
+                    </table>                    
+                  </td>
+                </tr>
+                <tr class="clsRowGreyBg">
+                    <td >
+                     <table class="clsTable" cellspacing="0" cellpadding="0">
+                        <tr>
+                            <td>
+                               <div class="div15pxVspacing"></div>
+                            </td>
+                        </tr>
+                    </table>
+                    </td>
+                </tr>                
+            </table>
+          </div>
+        <c:tabOutComponent ></c:tabOutComponent>
+      </apex:form>
+    </apex:outputPanel>
+</apex:page>
+                            	

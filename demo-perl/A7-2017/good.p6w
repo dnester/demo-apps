@@ -1,0 +1,26 @@
+#!/usr/bin/env smackup
+use v6;
+
+sub app(%env) {
+    # Parse the parameters (naïvely)
+    my $qs       = %env<QUERY_STRING>;
+    my %params   = $qs.split('&')».split('=').flat; # naïve
+
+    # Load our input AND validate!
+    my $input = %params<input>;
+    return 400, [ Content-type => 'text/html' ], [ 'You are naughty.' ]
+        unless $input ~~ /^ \w+ $/;
+
+    # Prior to outputting, make sure we encode it for HTML
+    my $output = $input.trans([ '<',    '>',    '&' ],
+                              [ '&lt;', '&gt;', '&amp;' ]);
+
+    # BAD BAD BAD No validation, <script>...</script> gets through!
+    200, [ Content-type => 'text/html' ],
+    [
+        qq[<html><head><title>Hello</title></head>],
+        qq[<body><p>$input</p></body></html>],
+    ]
+}
+
+# vim: ft=perl6 ts=4 sw=4

@@ -1,0 +1,419 @@
+<apex:page showHeader="false" controller="ActionController" >
+<c:CommonIncludes />
+
+
+<!--<script type="text/javascript" src="{!$Resource.ExtJs}/ext-all-debug.js"></script>-->
+  
+
+    <script>
+    
+	 var actionName;               
+     var actionId;
+     var errormsg;
+     
+     var isLookup = "{!$CurrentPage.parameters.islookup}";
+     	function getACTid(incId){
+            if(isLookup){
+              window.parent.refreshDocs();  
+              window.parent.closePopup();
+           }else{
+               setId(incId); 
+           }
+        }
+		function callCopyPage(){
+        	window.parent.addTab("ActionPage?copyId={!action.Id}","Action","Action"); 
+    	}
+	    var wid = '{!$CurrentPage.parameters.wid}';
+        function closeWindow(){
+                window.parent.refreshList();
+                window.parent.closeTab(wid);
+        }
+        
+        var disableTrue = true;
+        Ext.onReady(function(){
+    
+         Ext.QuickTips.init(); 
+         if(isLookup){
+            disableTrue = true;
+          }else{ 
+          disableTrue = false; }
+        
+        // This function renders a block of buttons
+        var NewBtnHandler = function(button,event) { openPage("ActionPage","Action","Action"); };
+        var SaveBtnHandler = function(button,event) {  saveAction(); };
+        var CopyBtnHandler = function(button,event) {  callCopyPage();};
+        var DeleteBtnHandler = function(button,event) { 
+        												Ext.MessageBox.confirm('Delete', 'Are you sure ?', function(btn){
+														   if(btn === 'yes'){
+														        deleteAction(); 
+														   }
+														   else{
+														    
+														   }
+														 });
+        												
+        												 };
+        var FindBtnHandler = function(button,event) {  /*searchIncident();*/ };
+        var ResetBtnHandler = function(button,event) {  resetAction(); };
+        var ClearBtnHandler = function(button,event) {  clearAction(); };
+        var NextBtnHandler = function (button,event) { nextActionBtnHandler1();};
+        var PreviuosBtnHandler = function (button,event) { previousActionBtnHandler1();};
+        
+        var SamplePanel = Ext.extend(Ext.Panel, {
+
+            renderTo: 'btnToolbar',
+            defaults: {bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;'}
+        });
+        
+        new SamplePanel({
+            title: '',
+			 cls:'toolSpCls',
+             bodyStyle:'border:0px;padding:0px;margin:0px;zoom:0px;',
+            tbar: [{
+                scale: 'medium',
+				tooltipType : 'title',
+                tooltip: '{!$Label.new}',
+                iconCls: 'bmcNew',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcNewOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcNew');          
+                     }
+                },            
+                handler:NewBtnHandler
+            },{
+                scale: 'medium',
+				tooltipType : 'title',
+                tooltip: '{!$Label.save}',
+                iconCls: 'bmcSave', 
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcSaveOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcSave');          
+                     }
+                },              
+                handler:SaveBtnHandler
+                
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcCopy',
+				tooltipType : 'title',
+                tooltip: '{!$Label.copy}',
+				hidden:disableTrue, 
+                id:'copyId', 
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcCopyOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcCopy');          
+                     }
+                },               
+                handler:CopyBtnHandler
+            },' ','-',' ',{
+                scale: 'medium',
+                iconCls: 'bmcDelete',
+				tooltipType : 'title',
+                tooltip: '{!$Label.delete}',
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcDeleteOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcDelete');          
+                     }
+                },
+                id:'deleteId',
+                handler:DeleteBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcClear',
+				tooltipType : 'title',
+                tooltip: '{!$Label.clear}',
+                id:'clearId',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcClearOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcClear');          
+                     }
+                },  
+                handler:ClearBtnHandler
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcReset',
+				tooltipType : 'title',
+                tooltip: '{!$Label.Reset}',
+                id:'resetId',
+                hidden:disableTrue,
+                listeners: {
+                    mouseover: function(){
+                    this.setIconClass('bmcResetOn');    
+                     },
+                     mouseout: function(){
+                    this.setIconClass('bmcReset');          
+                     }
+                },  
+                handler:ResetBtnHandler
+            },
+            new Ext.Toolbar.Fill(),
+            {
+                scale: 'medium',
+                iconCls: 'bmcPrevious',
+				tooltipType : 'title',
+                tooltip: '{!$Label.previousRecord}',
+                hidden:disableTrue,
+                handler:PreviuosBtnHandler,
+                
+            },' ',{
+                scale: 'medium',
+                iconCls: 'bmcNext',
+				tooltipType : 'title',
+                tooltip: '{!$Label.nextRecord}',
+                hidden:disableTrue,
+                handler:NextBtnHandler,
+               
+            }]
+        });
+        
+        actionId = '{!action.Id}';    
+        if(actionId == null ||actionId == ''){                
+        Ext.getCmp('deleteId').setDisabled(true);
+        Ext.getCmp('copyId').setDisabled(true);
+        Ext.getCmp('clearId').setDisabled(true); 
+        }
+        
+    });
+
+    	var actionIdSet=window.parent.returnListOfId();
+        function previousActionBtnHandler1(){
+        	//alert('id string 2 ');
+        	var idSetString='';
+			var i=0;
+			//alert('id string 1 '+idset[0]);
+			while(actionIdSet.length > i){
+				if(idSetString==''){
+					idSetString='\''+actionIdSet[i]+'\'';
+				}else{
+					idSetString=idSetString+','+'\''+actionIdSet[i]+'\'';
+				}
+				i++;
+			}
+			previousActionBtnHandler(idSetString);
+        
+        }
+       
+       function nextActionBtnHandler1(){
+        	var idSetString='';
+			var i=0;
+			while(actionIdSet.length > i){
+				if(idSetString==''){
+					idSetString='\''+actionIdSet[i]+'\'';
+				}else{
+					idSetString=idSetString+','+'\''+actionIdSet[i]+'\'';
+				}
+				i++;
+			}
+			nextActionBtnHandler(idSetString);
+        
+        }
+    
+    function buttonValidator() {
+       
+       if((actionName != null && actionName != '')&&(errormsg == null||errormsg ==''||errormsg=='Saved successfully.')){   
+  
+        Ext.getCmp('deleteId').setDisabled(false);
+        Ext.getCmp('copyId').setDisabled(false);
+        Ext.getCmp('clearId').setDisabled(false);    
+       }       
+   }
+   
+    </script>
+   
+     <apex:outputPanel id="titlePanel">
+        <script>
+            function updateList(){
+               var newActionId = '{!action.Id}'; 
+                getACTid(newActionId);
+                window.parent.refreshList();
+            }
+        
+        </script>
+    </apex:outputPanel> 
+    <apex:outputPanel id="panelId">
+        <script>
+        
+           actionName = '{!action.Name}';               
+           actionId = '{!action.Id}';      
+        
+        </script>
+        </apex:outputPanel>
+        
+         <apex:outputPanel id="errorId">
+        <script>
+        
+           errormsg = '{!messageString}';               
+                
+        
+        </script>
+        </apex:outputPanel>
+           
+    <apex:outputPanel > <!-- Page body in this panel -->
+        <apex:messages />
+            <apex:form >
+            	<c:ValidationComponent errorMsgList="{!messageString}" id="validationComponent"></c:ValidationComponent>
+
+                <apex:actionFunction name="saveAction" action="{!saveAction}" reRender="validationComponent,panelId,errorId" oncomplete="showError();buttonValidator();updateList();"/>
+                <!-- apex:actionFunction name="saveAction" action="{!saveAction}"/ -->
+                <apex:actionFunction name="newAction" action="{!newAction}"/>
+                <apex:actionFunction name="clearAction" action="{!clear}"/>
+                <apex:actionFunction name="resetAction" action="{!reset}"/>
+                <apex:actionFunction name="deleteAction" action="{!deleteAction}" oncomplete="closeWindow();"/>
+				<apex:actionFunction action="{!nextBtnHandler}" name="nextActionBtnHandler" oncomplete="updateTitle();"
+            						rerender="actionPanelId, tablePanel, actionPanelBar" > 
+            						<apex:param assignTo="{!tempString}" name="idSetString" value=""/>
+	       		</apex:actionFunction>
+	        	<apex:actionFunction action="{!previousBtnHandler}" name="previousActionBtnHandler" oncomplete="updateTitle();"
+            						rerender="actionPanelId, tablePanel, actionPanelBar" > 
+            						<apex:param assignTo="{!tempString}" name="idSetString" value=""/>
+	        	</apex:actionFunction>
+                <div id="capsule" class="CapsuleDiv1">
+                    <table cellpadding="0" cellspacing="0" class="clsMainTable">
+                        <tr class="clsRowGreyBg">
+                            <td height="100%">
+                                <div id="btnToolbar"></div>
+                            </td>
+                        </tr>  
+                        <tr>
+                            <td>
+                            <table cellpadding="0" cellspacing="0" class="clsTable">
+                            <tr>
+                                <td class="clsTopAlignment75">
+                                    <apex:outputPanel id="tablePanel">
+                                        <table cellpadding="0" cellspacing="0" class="clsTable">
+                                            <tr>
+                                                <td colspan="3"><div class="div15pxVspacing"/></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="clsInputLabelTD"><apex:outputLabel value="{!$Label.actionId}"/><span class="clsRequiredBlack">*</span></td>
+                                                <td class="clsInputTextBoxTD">
+                                                    <apex:inputField value="{!action.Name}" styleClass="clsInputTextBox"/>
+                                                </td>
+                                            </tr>
+                                         </table>
+                                    
+                                   
+                                    
+                                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                    <tr>
+                                        <td class="clsInputBoldLabelTableFirstRowTD"><apex:outputLabel value="{!$Label.description}"/><span class="clsRequiredBlack">*</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3"  class="clsInputTextAreaTD" >
+                                           <div class="clsRelativePosition">
+                                            <apex:inputTextarea id="descriptionId" value="{!action.description__c}" styleClass="clsInputTextArea"/>
+                                           </div> 
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="div13pxVspacing"></div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="clsPanelInputCheckboxTD" colspan="3">
+                                            <apex:inputField value="{!action.inactive__c}" id="idInactive"/>
+                                            <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.inactive}"/>
+                                         </td>
+                                    </tr>
+                                    </table>
+								</apex:outputPanel>
+                                </td>
+                                  <td><div class="div17pxHspacing"/></td>
+                                <td class="clsTopAlignment25">
+                                    <div class="panelCapsule" width="100%">
+                                                <apex:panelBar headerClass="clsRowBlueBgPanel" switchType="ajax" id="actionPanelBar">
+                                                    <apex:panelBarItem label="Applies To" expanded="true" headerClass="panelHeader" contentClass="panelContent">
+                                                        <table cellpadding="0" cellspacing="0" class="clsTable">
+                                                            <tr>
+                                                                <td colspan="3"><div class="div15pxVspacing"/></td>
+                                                            </tr>
+                                                            <tr>
+                                                              <td class="clsPanelInputCheckboxTDS">
+                                                                    <apex:inputField id="appliesToCI" value="{!action.appliesToConfigurationItems__c}"/>
+                                                                    <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.configurationItems}"/>
+                                                                 </td>
+                                                            </tr>
+                                                            <tr>
+                                                                
+                                                                 <td class="clsPanelInputCheckboxTDS">
+                                                                    <apex:inputField id="appliesToIncident" value="{!action.appliesToIncident__c}"/>
+                                                                    <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.incidents}"/>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td class="clsPanelInputCheckboxTDS">
+                                                                    <apex:inputField id="appliesToTask" value="{!action.appliesToTask__c}"/>
+                                                                    <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.tasks}"/>
+                                                                 </td>
+                                                            </tr>
+                                                            
+                                                            
+                                                        </table>
+                                                    </apex:panelBarItem>
+                                                    <apex:panelBarItem label="Details" expanded="true" headerClass="panelHeader" contentClass="panelContent">
+                                                        <table cellpadding="0" cellspacing="0" class="clsTable">
+                                                            <tr>
+                                                                <td><div class="div15pxVspacing"/></td><td></td>
+                                                            </tr>
+                                                            <tr>
+                                                                  <td class="clsPanelInputCheckboxTDS">
+                                                                    <apex:inputField id="autoModify" value="{!action.autoModify__c}" />
+                                                                    <label for="autoModify" ><apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.AutoModify}"/></label>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td class="clsPanelInputCheckboxTDS">
+                                                                    <apex:inputField id="displayInSelfService" value="{!action.displayInSelfService__c}"/>
+                                                                    <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.displayInSelfServiceDesk}"/>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                               <td class="clsPanelInputCheckboxTDS">
+                                                                    <apex:inputField id="appliesToSystem" value="{!action.system__c}"/>
+                                                                    <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.system}"/>
+                                                                 </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td class="clsPanelInputCheckboxTDS">
+                                                                    <apex:inputField id="appliesToTrackTime" value="{!action.trackTime__c}"/>
+                                                                    <apex:outputLabel styleClass="clsPanelCheckBoxLabel" value="{!$Label.trackTime}"/>
+                                                                </td>
+                                                            </tr>
+                                                           
+                                                        </table>
+                                                    </apex:panelBarItem>
+                                                
+                                                
+                                               
+                                             </apex:panelBar>
+                                            </div>
+                                </td>
+                            </tr>
+                            </table>
+                            </td>
+                        </tr>
+                        
+                    </table>
+                </div>    
+            </apex:form>
+    </apex:outputPanel>  
+</apex:page>
+                            	

@@ -1,0 +1,484 @@
+<apex:page sidebar="false" controller="IncidentRelatedList" showHeader="false" standardStylesheets="false">
+<apex:form >
+<apex:stylesheet value="{!$Resource.ExtJS}/resources/css/ext-all.css" />
+
+    <!-- overrides to base library -->
+    <apex:stylesheet value="{!$Resource.ExtJS}/ex/ux/css/Portal.css" />
+    <apex:stylesheet value="{!$Resource.ExtJS}/ex/ux/css/GroupTab.css" />
+    <apex:stylesheet value="{!$Resource.NIC1}"/>
+
+      <!-- page specific -->
+    <style type="text/css">
+        /* styles for iconCls */
+        .x-icon-tickets {
+            background-image: url('{!$Resource.ExtJs}/ex/grouptabs/images/tickets.png');
+        }
+        .x-icon-subscriptions {
+            background-image: url('{!$Resource.ExtJs}/ex/grouptabs/images/templates.png');
+        }
+        .x-icon-users {
+            background-image: url('{!$Resource.ExtJs}/ex/grouptabs/images/group.png');
+        }
+        .x-icon-templates {
+            background-image: url('{!$Resource.ExtJs}/ex/grouptabs/images/templates.png');
+        }
+
+        .x-grouptabs-panel ul.x-grouptabs-sub li.x-tab-with-icon a.x-grouptabs-text {
+             font-weight:bold;
+             background-repeat:no-repeat;
+             padding-left:20px;
+             font-size:12px;
+             /*color:black;*/
+        }
+        
+        .x-grouptabs-panel {
+background-color:#CCCCCC;
+border:15px solid white;
+}
+        .x-grid3-hd-row td, .x-grid3-row td, .x-grid3-summary-row td {
+            font-size:12px;
+            font-family: Tahoma, Verdana, Arial, Geneva, Helvetica, sans-serif, 'MS Sans Serif';
+
+        }
+        
+        
+        
+        
+        
+       
+        /*
+        .x-dd-drag-proxy .x-grid3-hd-inner {
+            background-color:#EBF3FD;
+            /*background:url({!$Resource.NIC1}/INC_extracted/blue_bg.gif) repeat-x;*/
+
+            border-color:#AACCF6;
+        }
+        
+        .x-grid3-header {
+            background-color:#F9F9F9;
+            background:url({!$Resource.NIC1}/INC_extracted/blue_bg.gif) repeat-x;
+
+        }
+        .x-grid3-row-over {
+            background-color:#EFEFEF;
+            background:url({!$Resource.NIC1}/INC_extracted/blue_bg.gif) repeat-x;
+            border-color:#DDDDDD;
+        }*/
+        td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-asc .x-grid3-hd-inner, td.x-grid3-hd-menu-open .x-grid3-hd-inner {
+            background-color:#EBF3FD;
+            background-image: url({!$Resource.NIC1}/blue_bg.gif);
+            
+        }
+        
+        
+     
+        .x-grid3-header {
+            font-weight:900;
+            color:white;
+            
+            -webkit-background-clip: border-box;
+            -webkit-background-origin: padding-box;
+            background-attachment: scroll;
+            background-color: rgb(249, 249, 249);
+            background-image: url({!$Resource.NIC1}/blue_bg.gif);
+            background-repeat: repeat-x;
+            cursor: default;
+            display: block;
+            height: 22px;
+            margin-bottom: 0px;
+            margin-left: 0px;
+            margin-right: 0px;
+            margin-top: 0px;
+            padding-bottom: 0px;
+            padding-left: 0px;
+            padding-right: 0px;
+            padding-top: 1px;
+            width: 1114px;
+            zoom: 1;
+        }
+        .x-grid3-hd-inner {
+            cursor:inherit;
+            font-weight:bold;
+            padding:4px 3px 4px 5px;
+            position:relative;
+            }
+            
+            
+            .x-grouptabs-panel .x-grouptabs-corner {
+background-image:url(../images/x-grouptabs-corners.gif);
+display:none;
+font-size:1px;
+height:11px;
+line-height:6px;
+overflow:hidden;
+position:absolute;
+width:11px;
+}
+      
+    </style> 
+
+
+<!-- ** Javascript ** -->
+    <!-- ExtJS library: base/adapter -->
+    <apex:includeScript value="{!$Resource.ExtJS}/adapter/ext/ext-base.js"/>
+    <apex:includeScript value="{!$Resource.ExtJS}/ext-all.js"/>
+    <apex:includeScript value="{!$Resource.ExtJS}/ex/ux/GroupTabPanel.js"/>
+    <apex:includeScript value="{!$Resource.ExtJS}/ex/ux/GroupTab.js"/>
+    
+    <script type="text/javascript" src="{!$Resource.ExtJS}/ex/ux/Portal.js"></script>
+    <script type="text/javascript" src="{!$Resource.ExtJS}/ex/ux/PortalColumn.js"></script>
+    <script type="text/javascript" src="{!$Resource.ExtJS}/ex/ux/Portlet.js"></script>
+    <script type="text/javascript" src="{!$Resource.ExtJS}/ex/shared/examples.js"></script>
+
+   <!-- <apex:includeScript value="{!$Resource.ExtJS}/ex/portal/sample-grid.js"/> -->
+    <apex:includeScript value="{!$Resource.DataGrid}"/>
+    <apex:includeScript value="{!$Resource.WorkOrderGrid}"/>
+    <apex:includeScript value="{!$Resource.AttachmentGrid}"/>
+    <style>
+    
+    
+    .x-grid3-row-alt{
+          background-color:#CCCCCC;
+        }
+
+      .clsNormal
+            {
+             
+                font-family: Tahoma, Verdana, Arial, Geneva, Helvetica, sans-serif, 'MS Sans Serif';
+                font-size: 12px;
+                font-style: normal;
+                font-variant: normal;
+                font-weight: normal;
+                color: #004376; 
+                   background-image: url({!$Resource.NIC1}/blue_bg.gif);
+                padding-left:5px;
+                padding-right:10px;
+                padding-left:0px;
+                padding-right:0px;
+            }
+    
+    
+
+    
+    </style>
+    <script>
+          TaskGrid = function(){        
+        
+                var columns = [
+                    {id:'workOrder',header: "Task #", width: 52, sortable: true, dataIndex: 'workOrder'},
+                    {header: "Client ID", width: 114, sortable: true,  dataIndex: 'clientId'},
+                    {header: "Category", width: 89, sortable: true,  dataIndex: 'category'},
+                    {header: "Impact", width: 74, sortable: true, dataIndex: 'impact'},
+                    {header: "Open Date", width: 90, sortable: true,  renderer: Ext.util.Format.dateRenderer('m/d/Y'), dataIndex: 'openDate'},
+                    {header: "Due Date", width: 90, sortable: true, renderer: Ext.util.Format.dateRenderer('m/d/Y'), dataIndex: 'dueDate'}
+                ];
+            
+                          
+            TaskGrid.superclass.constructor.call(this, {
+                store: new Ext.data.Store({
+                    reader: new Ext.data.ArrayReader({}, [
+                           {name: 'workOrder'},
+                           {name: 'clientId'},
+                           {name: 'category'},
+                           {name: 'impact'},
+                           {name: 'openDate'},
+                           {name: 'dueDate'}
+                          
+                      ]),
+                      
+                      data:taskarr
+                   
+                }),
+                columns: columns,
+                autoExpandColumn: 'workOrder',
+                height:250,
+                width:600
+            });
+        
+        
+        }
+        
+        Ext.extend(TaskGrid, Ext.grid.GridPanel);
+            
+    </script>
+    <script>
+           IncidentDetailsGrid = function(limitColumns){
+    
+    
+    
+        var columns = [
+            {id:'supportingStaff',header: "Support Staff", width: 120, sortable: true, dataIndex: 'supportingStaff',style:'font-size:12px'},
+            {header: "Action", width: 110, sortable: true,  dataIndex: 'action',style:'font-size:12px'},
+            {header: "Description", width: 120, sortable: true,  dataIndex: 'actionDescription',style:'font-size:12px'},
+            {header: "Note", width: 78, sortable: true, dataIndex: 'note',style:'font-size:12px'},
+            {header: "Date", width: 90, sortable: true, renderer: Ext.util.Format.dateRenderer('m/d/Y'), dataIndex: 'actionDate',style:'font-size:12px'}
+        ];
+    
+        // allow samples to limit columns
+       if(limitColumns){
+            var cs = [];
+            for(var i = 0, len = limitColumns.length; i < len; i++){
+                cs.push(columns[limitColumns[i]]);
+            }
+            columns = cs;
+        }
+
+    
+        IncidentDetailsGrid.superclass.constructor.call(this, {
+            store: new Ext.data.Store({
+                reader: new Ext.data.ArrayReader({}, [
+                       {name: 'supportingStaff'},
+                       {name: 'action'},
+                       {name: 'actionDescription'},
+                       {name: 'note'},
+                       {name: 'actionDate'}
+                  ]),
+                  
+                  data:detArr
+               
+            }),
+            columns: columns,
+            stripeRows: true,
+            autoExpandColumn: 'supportingStaff',
+            height:250,
+            width:600
+        });
+    
+    
+    }
+    
+    Ext.extend(IncidentDetailsGrid, Ext.grid.GridPanel);
+        
+        
+    
+    </script>
+    
+      <script>
+       AttachmentGrid = function(){        
+        
+                var columns = [
+                    {id:'attachmentName',header: "Name", width: 160, sortable: true, dataIndex: 'attachmentName'},
+                    {header: "Created Date", width: 75, sortable: true,  dataIndex: 'createdDate'}
+                    
+                ];
+            
+                          
+            AttachmentGrid.superclass.constructor.call(this, {
+                store: new Ext.data.Store({
+                    reader: new Ext.data.ArrayReader({}, [
+                           {name: 'attachmentName'},
+                           {name: 'createdDate'}                          
+                      ]),
+                      
+                      data:attachmentarr
+                   
+                }),
+                columns: columns,
+                autoExpandColumn: 'attachmentName',
+                height:250,
+                width:600
+            });
+          alert("Attachment Array" +attachmentarr);
+        
+        }
+        
+        Ext.extend(AttachmentGrid, Ext.grid.GridPanel);
+   
+   
+   </script>
+   
+    <script>
+       DocumentGrid = function(){  
+       function addLink(data, metadata, record, rowIndex, columnIndex, store){
+        // alert('<a href="/servlet/servlet.FileDownload?file='+record.get('documentId')+'">'+data+'</a>');
+         return '<a href="/servlet/servlet.FileDownload?file='+record.get('documentId')+'" target="_blank"><img src='/resource/JIcons/b_download.gif' width="16" height="16"></a>  '+data;
+       
+       }      
+        
+                var columns = [
+                    {id:'documentName',header: "Name", width: 160,renderer:addLink, sortable: true, dataIndex: 'documentName'},
+                    {header: "Content Type", width: 150, sortable: true,  dataIndex: 'contentType'},
+                    {header: "Created Date", width: 200, sortable: true,  dataIndex: 'createdDate'},
+                    {header: "Size", width: 75, sortable: true,  dataIndex: 'bodyLength'},
+                    {header: "File Extension", width: 95, sortable: true,  dataIndex: 'fileType',hidden:true},
+                    {header: "Document Id", width: 75, sortable: true,  dataIndex: 'documentId',hidden:true}
+                    
+                    
+                ];
+            
+                          
+            DocumentGrid.superclass.constructor.call(this, {
+                store: new Ext.data.Store({
+                    reader: new Ext.data.ArrayReader({}, [
+                           {name: 'documentName'},
+                           {name:'contentType'},
+                           {name: 'createdDate'},
+                           {name:'bodyLength'},
+                           {name:'fileType'},
+                           {name:'documentId'}
+                                                     
+                      ]),
+                      
+                      data:documentarr
+                   
+                }),
+                columns: columns,
+                autoExpandColumn: 'documentName',
+                height:250,
+                width:600
+            });
+          
+         
+        
+        
+        }
+        
+        Ext.extend(DocumentGrid , Ext.grid.GridPanel);   
+   
+   </script>
+     
+    
+    
+    <script>
+       
+      Ext.onReady(function() {
+    Ext.QuickTips.init();
+    
+    
+    var viewport = new Ext.Viewport({
+        layout:'fit',
+        items:[{
+            xtype: 'grouptabpanel',
+            tabWidth: 130,
+            activeGroup: 0,
+            items: [{
+                mainItem: 1,
+                items: [{
+                  title: 'Incident History',
+                  
+                    layout: 'fit',
+                    iconCls: 'x-icon-tickets',
+                    tabTip: 'Incident History',
+
+                    items: [new IncidentDetailsGrid()]
+                }, 
+                {
+                    title: '',                    
+                    items: [{    
+                    layout: 'fit',
+                    iconCls: 'x-icon-tickets',
+                    tabTip: 'Actions',
+                    style: 'padding: 0px;',
+                    items: [new IncidentDetailsGrid()]
+                    }]
+                }, {
+                    title: 'Tasks',
+                    iconCls: 'x-icon-subscriptions',
+                    tabTip: 'Tasks',
+                    style: 'padding: 0px;',
+                    layout: 'fit',
+                        
+                       items: [new TaskGrid()]
+                      
+                }, {
+                    title: 'Attachments',
+                    iconCls: 'x-icon-subscriptions',
+                    tabTip: 'Attachments',
+                    style: 'padding: 0px;',
+                    layout: 'fit',
+                     items: [new DocumentGrid()]          
+                }]
+            } ]
+        }]
+        
+    });
+    
+});
+
+    
+    
+
+   </script>
+   <script>
+       var i=0;
+       var listsize="{!listSize}";
+      
+       var taskarr = new Array(listsize);
+   </script>
+   
+   <apex:repeat value="{!IncidentWorkOrders}" var="workorder" >
+        <script>         
+          taskarr[i] = new Array(6);
+          taskarr[i][0]="{!workorder.Name}";
+          taskarr[i][1]="{!workorder.FKClient__r.Name}";
+          taskarr[i][2]="{!workorder.FKCategory__r.Name}";
+          taskarr[i][3]="{!workorder.FKImpact__r.Name}";
+          taskarr[i][4]="{!workorder.openDateTime__c}";          
+          taskarr[i][5]="{!workorder.dueDateTime__c}";
+          i = i+1;
+         
+        </script>
+  </apex:repeat>
+
+   <script>
+         var j=0;
+         var detailsSize = "{!detailsSize}";
+         var detArr = new Array(detailsSize);      
+   </script>
+   <apex:repeat value="{!IncidentDetails}" var="incidentDetail">
+     <script>
+     
+     
+        detArr[j] = new Array(5);  
+        detArr[j][0] = "";        
+        detArr[j][1] = "{!incidentDetail.FKAction__r.Name}";
+        detArr[j][2] = "{!incidentDetail.FKAction__r.description__c}";
+        detArr[j][3] = "{!incidentDetail.note__c}";
+        detArr[j][4] = "{!incidentDetail.date__c}";
+        j = j+1;
+        
+     </script>
+   </apex:repeat>
+   
+ <!--  
+   <script>
+     var k=0;
+     var attachmentSize = "{!attachmentCount}";
+     alert("attachment size"+attachmentSize  );
+     var attachmentarr= new Array(attachmentSize);   
+   </script>
+   <apex:repeat value="{!IncidentAttachment}" var="incattchment">
+    <script>
+      attachmentarr[k] = new Array(2);
+      attachmentarr[k][0] ="{!incattchment.Title}";
+      attachmentarr[k][1]="{!incattchment.CreatedDate}";
+      k= k+1;
+    </script>
+   </apex:repeat> 
+  
+   -->
+   <script>
+     var l=0;
+     var documentsList = "{!documentsList}";
+     var documentarr = new Array(documentsList);   
+   </script>
+   <apex:repeat value="{!Documents}" var="document">
+    <script> 
+    
+        
+                           
+       documentarr[l] = new Array(6);
+       documentarr[l][0] = "{!document.Name}";
+       documentarr[l][1] = "{!document.ContentType}";
+       documentarr[l][2] = "{!MONTH(document.CreatedDate)}/{!DAY(document.CreatedDate)}/{!YEAR(document.CreatedDate)}";
+       documentarr[l][3] = "{!document.BodyLength}";
+       documentarr[l][4] = "{!document.Type}";
+       documentarr[l][5] = "{!document.Id}";
+      l= l+1;
+    </script>
+   </apex:repeat>
+   
+   
+    </apex:form>
+</apex:page>
+                            	

@@ -1,0 +1,58 @@
+<apex:page Controller="BroadcastWidgetController"  showheader="false" sidebar="false"> 
+      <c:CommonIncludes />
+    <link rel="stylesheet" type="text/css" href="{!$Resource.SDEFExtJS}/ex/ux/css/Portal.css" />
+    
+    
+    <script>
+        function callNewPage(id){
+            window.parent.addNewTab("BroadcastsPage","BroadcastsPage","BroadcastsPage?id="+id);
+        }
+    </script>
+    
+    <div id="brdContents">
+        <apex:form id="theForm">  
+        <apex:actionfunction name="getBroadcastDetails" action="{!getBroadcastDetails}" rerender="detailcontainer"/>
+        
+            <apex:datatable var="a" value="{!broadcastsDataList}"  width="100%" cellspacing="1" cellpadding="1" style="height:120px">
+            <apex:column > </apex:column>
+            <apex:column >                      
+            <apex:panelGrid columns="4" >    
+                <img class="clsImg" src="{!$Resource.SDEFimages}/{!a.image}"  />
+                <apex:outputLabel ></apex:outputLabel>    
+                <apex:commandLink value="{!a.broadcast.name}" action="{!getBroadcastDetails}" ondblclick="callNewPage('{!a.broadcast.id}');" rerender="detailcontainer" styleClass="portletTdFont">                                             
+                        <apex:param name="BroadcastId"  value="{!a.broadcast.id}"/>
+                </apex:commandlink>  
+            </apex:panelGrid>
+            </apex:column>
+            </apex:dataTable>    
+            
+ <div id="tableDiv" >
+            <table class="clsTable1" cellspacing="0" cellpadding="0">
+            <tr align="center">
+            <td align="center">
+                <apex:commandbutton action="{!previous}" styleClass="clsImage1"/>
+                <apex:commandbutton value="{!currentPageNumberDisplay}" styleClass="portletTdFont1"/>
+                <apex:commandbutton action="{!next}" styleClass="clsImage2"/>
+            </td>
+            </tr>
+            </table>
+            </div>                                           
+      </apex:form> 
+                    
+    </div>
+    <div id="detailSection" class="clsFont10">
+        <apex:outputpanel id="detailcontainer">     
+            <apex:outputText value="Details :{!selectedBroadcast.broadcastDescription__c} " styleClass="portletTdFont" /> 
+
+            <apex:outputText />
+
+            <apex:outputText value="Priority : {!selectedBroadcast.FKPriority__r.Name}" styleClass="portletTdFont"/> 
+
+            <apex:outputText value="Date : {!selectedBroadcast.postDate__c}" styleClass="portletTdFont"/> 
+        
+        </apex:outputpanel> 
+    </div>
+    
+
+</apex:page>
+                            	
